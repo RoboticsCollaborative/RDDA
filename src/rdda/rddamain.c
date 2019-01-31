@@ -1,21 +1,81 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <math.h>
 
 #include "ethercat.h"
 #include "rddamain.h"
+#include "init_BEL.h"
 
-/* SOEM vars */
+
+/* SOEM global vars */
 char IOmap[4096];
 int expectedWKC;
 volatile int wkc;
+/*
 uint8 currentgroup = 0;
+*/
+
+/** Declare slave identifier */
+rdda_slavet *rdda_slave;
+
+
+/** Locate and identify EtherCAT slaves
+ *
+ * @param rdda_slave    = Slave index group.
+ * @return 0.
+ */
+static int slaveIdentify(rdda_slavet *rdda_slave)
+{
+    uint16 slaveIdx = 0;
+    int buf = 0;
+    for (slaveIdx = 1; slaveIdx <= ec_slavecount; slaveIdx++)
+    {
+        /* BEL motor drive */
+        if ((ec_slave[slaveIdx].eep_man == 0x000000ab) && (ec_slave[slaveIdx].eep_id == 0x00001110))
+        {
+            uint32 serial_num;
+            buf = sizeof(serial_num);
+            ec_SDOread(slaveIdx, 0x1018, 4, FALSE, &buf, &serial_num, EC_TIMEOUTRXM);
+
+            /* motor1 */
+            if (serial_num == 0x2098302)
+            {
+                rdda_slave->motor1 = slaveIdx;
+                /* CompleteAccess disabled for BEL drive */
+                ec_slave[slaveIdx].CoEdetails ^= ECT_COEDET_SDOCA;
+                /* Set PDO mapping */
+                printf("Found %s at position %d\n", ec_slave[slaveIdx].name, slaveIdx);
+                mapMotorPDOs_callback(slaveIdx);
+            }
+            /* motor2 */
+            if (serial_num == 0x2098303)
+            {
+                rdda_slave->motor2 = slaveIdx;
+                /* CompleteAccess disabled for BEL drive */
+                ec_slave[slaveIdx].CoEdetails ^= ECT_COEDET_SDOCA;
+                /* Set PDO mapping */
+                printf("Found %s at position %d\n", ec_slave[slaveIdx].name, slaveIdx);
+                mapMotorPDOs_callback(slaveIdx);
+            }
+        }
+        /* pressure sensor */
+        if ((ec_slave[slaveIdx].eep_man == 0x00000002) && (ec_slave[slaveIdx].eep_id == 0x0c1e3052))
+        {
+            rdda_slave->psensor = slaveIdx;
+        }
+    }
+
+    return 0;
+}
+
 
 /** Set up EtherCAT NIC and state machine to request all slaves to work properly.
  *
- * @param[in] ifnameptr = NIC interface pointer
+ * @param ifnameptr = NIC interface pointer
+ * @return 0.
  */
-void rdda_ecat_config(void *ifnameptr)
+void rddaEcatConfig(void *ifnameptr)
 {
     char *ifname  = (char *)ifnameptr;
     
@@ -44,4 +104,48 @@ void rdda_ecat_config(void *ifnameptr)
 	ec_close(); /* stop SOEM, close socket */
 	return;
     }
+
+    /* Request for PRE-OP mode */
+    ec_statecheck(0, EC_STATE_PRE_OP, EC_TIMEOUTSTATE);
+
+    /* Locate slaves */
+    slaveIdentify(rdda_slave);
+
+    /* If Complete Access (CA) disabled => auto-mapping work */
+    ec_config_map(&IOmap);
+
+    /* Let DC off for the time being */
+    //ec_configdc();
+
+    printf("Slaves mapped, state to SAFE_OP\n");
+    /* Wait for all salves to reach SAFE_OP state */
+    ec_statecheck(0, EC_STATE_SAFE_OP, EC_TIMEOUTSTATE * 4);
+
+    /* Initialize motor params */
+    initMotor(rdda_slave->motor1);
+    initMotor(rdda_slave->motor2);
+
+    printf("Slaves initialized, state to OP\n");
+    /* Request for OP mode */
+    ec_slave[0].state = EC_STATE_OPERATIONAL;
+    /* Send one valid process data to make outputs in slave happy */
+    ec_send_processdata();
+    wkc = ec_receive_processdata(EC_TIMEOUTRET);
+    /* Request OP state for all slaves */
+    ec_writestate(0);
+    /* Wait for all slaves to reach OP state */
+    ec_statecheck(0, EC_STATE_OPERATIONAL, EC_TIMEOUTSTATE);
+    /* Recheck */
+    if (ec_slave[0].state == EC_STATE_OPERATIONAL)
+    {
+        printf("Operational state reached for all slaves\n");
+    }
+    else
+    {
+        printf("Operational state failed\n");
+        printf("Close socket\n");
+        ec_close(); /* stop SOEM, close socket */
+        return;
+    }
 }
+

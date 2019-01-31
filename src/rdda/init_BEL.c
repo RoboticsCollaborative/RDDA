@@ -1,0 +1,115 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "ethercat.h"
+
+
+/** SOEM wrapper for ec_SDOwrite().
+ *
+ * @param slave     = Slave index.
+ * @param index     = SDO index.
+ * @param subindex  = SDO sub-index.
+ * @param value     = Output value.
+ * @return working counter.
+ */
+static int SDO_write8(uint16 slave, uint16 index, uint8 subindex, uint8 value) {
+    int wkc;
+    wkc = ec_SDOwrite (slave, index, subindex, FALSE, sizeof(value), &value, EC_TIMEOUTRXM);
+    return wkc;
+}
+
+static int SDO_write16(uint16 slave, uint16 index, uint8 subindex, uint16 value) {
+    int wkc;
+    wkc = ec_SDOwrite (slave, index, subindex, FALSE, sizeof(value), &value, EC_TIMEOUTRXM);
+    return wkc;
+}
+
+static int SDO_write32 (uint16 slave, uint16 index, uint8 subindex, uint32 value) {
+    int wkc;
+    wkc = ec_SDOwrite (slave, index, subindex, FALSE, sizeof(value), &value, EC_TIMEOUTRXM);
+    return wkc;
+}
+
+
+/** Map BEL motor drive PDOs in CSP mode.
+ *
+ * @param[in] slaveIdx    = Slave index.
+ * @return 0.
+ */
+int mapMotorPDOs(uint16 slaveIdx)
+{
+    int wkc = 0;
+
+    /** Reset the sync manager SM2 (0x1C12:0) and SM3 (0x1C13:0) before they are configured,
+     *  and then list the PDO in sub-indices (1, 2, etc), and finally set the number of PDOs
+     *  mapped on sub-index 0, which we previously cleared.
+     *  These mapping are documented in the slave ESI file.
+     */
+
+    /* BEL CSP RxPDOs (master outputs) */
+    wkc += SDO_write8(slaveIdx, 0x1C12, 0, 0);           /* clear SM2 (slave RxPDOs) */
+    wkc += SDO_write16(slaveIdx, 0x1C12, 1, 0x1700);     /* pre-mapped PDO */
+    wkc += SDO_write8(slaveIdx, 0x1C12, 0, 1);           /* set # of mapped PDOs */
+
+    /* BEL CSP TxPDOs (master inputs) */
+    /* Use user-defined PDO to map the load encoder position and velocity, you
+     * need to reference documentation on PDO mapping objects to understand the
+     * values set here.  In a nutshell:  {object index,sub-index,size in bits}
+     * These mapping defines user TxPDOs (inputs to master)
+     */
+    wkc += SDO_write8(slaveIdx, 0x1A00, 0, 0);           /* clear the PDO first */
+    wkc += SDO_write32(slaveIdx, 0x1A00, 1, 0x22310020); /* Load encoder velocity */
+    wkc += SDO_write32(slaveIdx, 0x1A00, 2, 0x22420020); /* Load encoder position */
+    wkc += SDO_write8(slaveIdx, 0x1A00, 0, 2);           /* set number of objects mapped by PDO */
+
+    /* pre-mapped PDOs that the slave sends to the master */
+    wkc += SDO_write8(slaveIdx, 0x1C13, 0, 0);           /* clear SM3 (slave TxPDOs) */
+    wkc += SDO_write16(slaveIdx, 0x1C13, 1, 0x1B00);     /* pre-mapped PDO */
+    wkc += SDO_write16(slaveIdx, 0x1C13, 2, 0x1A00);     /* user-PDO */
+    wkc += SDO_write8(slaveIdx, 0x1C13, 0, 2);           /* set # of mapped PDOs */
+
+    /* as specified in ESI file, set control word during PRE->SAFE transition */
+    SDO_write16(slaveIdx, 0x6060, 0, 8);                 /* BEL set to CSP mode */
+
+    return 0;
+}
+
+
+/** Attach a callback function for PRE->SAFE transition
+ *
+ * @param slaveIdx      = Slave index.
+ * @return 0.
+ */
+int mapMotorPDOs_callback(uint16 slaveIdx)
+{
+    ec_slave[slaveIdx].PO2SOconfig = mapMotorPDOs;
+
+    return 0;
+}
+
+
+/** Initialize BEL/motor parameters via SDO
+ *
+ * @param slaveIdx      = Slave index.
+ * @return 0.
+ */
+int initMotor(uint16 slaveIdx)
+{
+    printf("Motor drive %d init\n", slaveIdx);
+
+    /* Motor params */
+    SDO_write32(slaveIdx, 0x2383, 12, 25456);   /* motor torque constant */
+    SDO_write32(slaveIdx, 0x2383, 13, 650000);  /* motor peak torque */
+    SDO_write32(slaveIdx, 0x2383, 14, 20000);   /* motor continuous torque */
+    SDO_write32(slaveIdx, 0x6076, 0, 200);      /* motor rated torque */
+
+    /* Loop gains */
+    SDO_write16(slaveIdx, 0x2382, 1, 0);        /* position loop gain (Pp) */
+    SDO_write16(slaveIdx, 0x2381, 1, 0);        /* velocity loop gain (Vp) */
+
+    /* Motor limits */
+    SDO_write16(slaveIdx, 0x2110, 0, 1400);     /* peak current limit */
+    SDO_write16(slaveIdx, 0x2111, 0, 700);      /* continuous current limit (units of 0.01A) */
+
+    return 0;
+}
