@@ -4,148 +4,269 @@
 #include <math.h>
 
 #include "ethercat.h"
-#include "rddamain.h"
-#include "init_BEL.h"
+#include "rdda/rddaconfig.h"
+#include "rdda/rddamain.h"
+
+/** BEL drive CSP Mode inputs to master */
+PACKED_BEGIN
+typedef struct PACKED
+{
+    uint16 stat_wd;   /* status word (0x6041) */
+    int32 act_pos;    /* position actual value (0x6064) */
+    int32 pos_err;    /* position error (0x60F4) */
+    int32 act_vel;    /* actual velocity (0x606C) */
+    int16 act_tau;    /* torque actual value (0x6077) */
+    int32 load_vel;   /* load encoder velocity (0x2231) */
+    int32 load_pos;   /* load encoder position (0x2242) */
+} in_motor_t;
+PACKED_END
+
+/** BEL drive CSP Mode outputs from master */
+PACKED_BEGIN
+typedef struct PACKED
+{
+    uint16 ctrl_wd;   /* control word (0x6040) */
+    int32 tg_pos;     /* target position (0x607A) */
+    int32 vel_off;    /* velocity offset (0x60B1) */
+    int16 tau_off;    /* torque offset (0x60B2) */
+} out_motor_t;
+PACKED_END
+
+/** EL3102 pressure sensor inputs to master */
+PACKED_BEGIN
+typedef struct PACKED
+{
+    uint8 stat1;
+    int16 val1;
+    uint8 stat2;
+    int16 val2;
+} in_pressure_t;
+PACKED_END
 
 
-/* SOEM global vars */
-char IOmap[4096];
-int expectedWKC;
-volatile int wkc;
-/*
-uint8 currentgroup = 0;
-*/
-
-/** Declare slave identifier */
-rdda_slavet *rdda_slave;
+/** General macros */
+#define     COUNTS_PER_RADIAN   52151.8917
+#define     PASCAL_PER_COUNT    21.04178
+#define     NM_PER_PASCAL       2.822e-6
+#define     UNITS_PER_NM        5000
 
 
-/** Locate and identify EtherCAT slaves
+/** Read motor actual position via motor encoder [units in radian].
  *
- * @param rdda_slave    = Slave index group.
+ * @param slaveIdx  =   Slave index.
+ * @return position actual value.
+ */
+static double readMotorPos_t(uint16 slaveIdx)
+{
+    in_motor_t *in_motor = (in_motor_t *)ec_slave[slaveIdx].inputs;
+    return (double)(in_motor->act_pos)/COUNTS_PER_RADIAN;
+}
+
+
+/** Read motor actual velocity via motor encoder [units in radian/s].
+ *
+ * @param slaveIdx  =   Slave index.
+ * @return velocity actual value.
+ */
+static double readMotorVel_t(uint16 slaveIdx)
+{
+    in_motor_t *in_motor = (in_motor_t *)ec_slave[slaveIdx].inputs;
+    return (double)(in_motor->act_vel)/COUNTS_PER_RADIAN/10.0;
+}
+
+
+/** Read finger actual position via loaded encoder [units in radian].
+ *
+ * @param slaveIdx  =   Slave index.
+ * @return loaded position actual value.
+ */
+static double readLoadPos_t(uint16 slaveIdx)
+{
+    in_motor_t *in_motor = (in_motor_t *)ec_slave[slaveIdx].inputs;
+    return (double)(in_motor->load_pos)/COUNTS_PER_RADIAN;
+}
+
+
+/** Read finger actual velocity via loaded encoder [units in radian/s].
+ *
+ * @param slaveIdx
+ * @return loaded velocity actual value.
+ */
+static double readLoadVel_t(uint16 slaveIdx)
+{
+    in_motor_t *in_motor = (in_motor_t *)ec_slave[slaveIdx].inputs;
+    return (double)(in_motor->load_vel)/COUNTS_PER_RADIAN/10.0;
+}
+
+
+/** Read pressure value on finger1 [units in Nm].
+ *
+ * @param slaveIdx  =   Slave index.
+ * @return pressure actual value.
+ */
+static double readPre1Val_t(uint16 slaveIdx)
+{
+    in_pressure_t *in_pressure = (in_pressure_t *)ec_slave[slaveIdx].inputs;
+    return (double)(in_pressure->val1) * PASCAL_PER_COUNT * NM_PER_PASCAL;
+}
+
+
+/** Read pressure value on finger2 [units in Nm].
+ *
+ * @param slaveIdx  =   Slave index.
+ * @return pressure actual value.
+ */
+static double readPre2Val_t(uint16 slaveIdx)
+{
+    in_pressure_t *in_pressure = (in_pressure_t *)ec_slave[slaveIdx].inputs;
+    return (double)(in_pressure->val2) * PASCAL_PER_COUNT * NM_PER_PASCAL;
+}
+
+
+/** Write control word to motor.
+ *  control word 15 =>  run motor.
+ *
+ * @param slavIdx   =   Slave index.
+ * @param value     =   Control word.
  * @return 0.
  */
-static int slaveIdentify(rdda_slavet *rdda_slave)
+static int writeCtrlWd_t(uint16 slaveIdx, uint16 value)
 {
-    uint16 slaveIdx = 0;
-    int buf = 0;
-    for (slaveIdx = 1; slaveIdx <= ec_slavecount; slaveIdx++)
-    {
-        /* BEL motor drive */
-        if ((ec_slave[slaveIdx].eep_man == 0x000000ab) && (ec_slave[slaveIdx].eep_id == 0x00001110))
-        {
-            uint32 serial_num;
-            buf = sizeof(serial_num);
-            ec_SDOread(slaveIdx, 0x1018, 4, FALSE, &buf, &serial_num, EC_TIMEOUTRXM);
-
-            /* motor1 */
-            if (serial_num == 0x2098302)
-            {
-                rdda_slave->motor1 = slaveIdx;
-                /* CompleteAccess disabled for BEL drive */
-                ec_slave[slaveIdx].CoEdetails ^= ECT_COEDET_SDOCA;
-                /* Set PDO mapping */
-                printf("Found %s at position %d\n", ec_slave[slaveIdx].name, slaveIdx);
-                mapMotorPDOs_callback(slaveIdx);
-            }
-            /* motor2 */
-            if (serial_num == 0x2098303)
-            {
-                rdda_slave->motor2 = slaveIdx;
-                /* CompleteAccess disabled for BEL drive */
-                ec_slave[slaveIdx].CoEdetails ^= ECT_COEDET_SDOCA;
-                /* Set PDO mapping */
-                printf("Found %s at position %d\n", ec_slave[slaveIdx].name, slaveIdx);
-                mapMotorPDOs_callback(slaveIdx);
-            }
-        }
-        /* pressure sensor */
-        if ((ec_slave[slaveIdx].eep_man == 0x00000002) && (ec_slave[slaveIdx].eep_id == 0x0c1e3052))
-        {
-            rdda_slave->psensor = slaveIdx;
-        }
-    }
+    out_motor_t *out_motor = (out_motor_t *)ec_slave[slaveIdx].outputs;
+    out_motor->ctrl_wd = value;
 
     return 0;
 }
 
 
-/** Set up EtherCAT NIC and state machine to request all slaves to work properly.
+/** Write target position value to motor [units in radian].
  *
- * @param ifnameptr = NIC interface pointer
+ * @param slavIdx   =   Slave index.
+ * @param value     =   Motor angle.
  * @return 0.
  */
-void rddaEcatConfig(void *ifnameptr)
+static int writeTarPos_t(uint16 slaveIdx, double value)
 {
-    char *ifname  = (char *)ifnameptr;
-    
-    printf("Begin network configuration\n");
+    out_motor_t *out_motor = (out_motor_t *)ec_slave[slaveIdx].outputs;
+    out_motor->tg_pos = (int32)(value * COUNTS_PER_RADIAN);
 
-    /* Initialize SOEM, bind socket to ifname */
-    if (ec_init(ifname))
-    {
-	printf("Socket connection on %s succeeded.\n", ifname);
-    }
-    else
-    {
-	printf("No socket connection on %s.\nExcecuted as root\n", ifname);
-	return;
-    }
-
-    /* Find and configure slaves */
-    if (ec_config_init(FALSE)>0)
-    {
-	printf("%d slaves found and configured.\n", ec_slavecount);
-    }
-    else
-    {
-	printf("No slaves found!\n");
-	printf("Close socket\n");
-	ec_close(); /* stop SOEM, close socket */
-	return;
-    }
-
-    /* Request for PRE-OP mode */
-    ec_statecheck(0, EC_STATE_PRE_OP, EC_TIMEOUTSTATE);
-
-    /* Locate slaves */
-    slaveIdentify(rdda_slave);
-
-    /* If Complete Access (CA) disabled => auto-mapping work */
-    ec_config_map(&IOmap);
-
-    /* Let DC off for the time being */
-    //ec_configdc();
-
-    printf("Slaves mapped, state to SAFE_OP\n");
-    /* Wait for all salves to reach SAFE_OP state */
-    ec_statecheck(0, EC_STATE_SAFE_OP, EC_TIMEOUTSTATE * 4);
-
-    /* Initialize motor params */
-    initMotor(rdda_slave->motor1);
-    initMotor(rdda_slave->motor2);
-
-    printf("Slaves initialized, state to OP\n");
-    /* Request for OP mode */
-    ec_slave[0].state = EC_STATE_OPERATIONAL;
-    /* Send one valid process data to make outputs in slave happy */
-    ec_send_processdata();
-    wkc = ec_receive_processdata(EC_TIMEOUTRET);
-    /* Request OP state for all slaves */
-    ec_writestate(0);
-    /* Wait for all slaves to reach OP state */
-    ec_statecheck(0, EC_STATE_OPERATIONAL, EC_TIMEOUTSTATE);
-    /* Recheck */
-    if (ec_slave[0].state == EC_STATE_OPERATIONAL)
-    {
-        printf("Operational state reached for all slaves\n");
-    }
-    else
-    {
-        printf("Operational state failed\n");
-        printf("Close socket\n");
-        ec_close(); /* stop SOEM, close socket */
-        return;
-    }
+    return 0;
 }
 
+
+/** Write torque offset value to motor [Units in Nm].
+ *
+ * @param slaveIdx  =   Slave index.
+ * @param value     =   Motor torque.
+ * @return 0.
+ */
+static int writeTauOffset_t(uint16 slaveIdx, double value)
+{
+    out_motor_t *out_motor = (out_motor_t *)ec_slave[slaveIdx].outputs;
+    out_motor->tau_off = (int16)(value * (double)UNITS_PER_NM);
+
+    return 0;
+}
+
+
+double readMotor1Pos()
+{
+    return readMotorPos_t(rdda_slave->motor1);
+}
+
+
+double readMotor2Pos()
+{
+    return readMotorPos_t(rdda_slave->motor2);
+}
+
+
+double readMotor1Vel()
+{
+    return readMotorVel_t(rdda_slave->motor1);
+}
+
+
+double readMotor2Vel()
+{
+    return readMotorVel_t(rdda_slave->motor2);
+}
+
+
+double readLoad2Pos()
+{
+    return readLoadPos_t(rdda_slave->motor2);
+}
+
+
+double readLoad2Vel()
+{
+    return readLoadVel_t(rdda_slave->motor2);
+}
+
+
+double readPre1Val()
+{
+    return readPre1Val_t(rdda_slave->psensor);
+}
+
+
+double readPre2Val()
+{
+    return readPre2Val_t(rdda_slave->psensor);
+}
+
+
+void writeMotor1CtrlWd(uint16 value)
+{
+    writeCtrlWd_t(rdda_slave->motor1, value);
+}
+
+
+void writeMotor2CtrlWd(uint16 value)
+{
+    writeCtrlWd_t(rdda_slave->motor2, value);
+}
+
+
+void writeMotor1Pos(double value)
+{
+    writeTarPos_t(rdda_slave->motor1, value);
+}
+
+
+void writeMotor2Pos(double value)
+{
+    writeTarPos_t(rdda_slave->motor2, value);
+}
+
+
+void writeMotor1Tau(double value)
+{
+    writeTauOffset_t(rdda_slave->motor1, value);
+}
+
+
+void writeMotor2Tau(double value)
+{
+    writeTauOffset_t(rdda_slave->motor2, value);
+}
+
+
+/** Connect local  with EtherCAT
+ *
+ * @param in_motor
+ * @param out_motor
+ * @param rdda_slave
+ * @param slaveIdx
+ * @return
+ */
+/*
+int motorConnect(in_motor_t **in_motor, out_motor_t **out_motor, rdda_slavet *rdda_slave, uint16 slaveIdx)
+{
+   *in_motor = (in_motor_t *)ec_slave[slaveIdx].inputs;
+   *out_motor = (out_motor_t *)ec_slave[slaveIdx].outputs;
+
+   return 0;
+}
+*/

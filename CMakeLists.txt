@@ -18,7 +18,7 @@ include_directories(include)
 include_directories(src/${PROJECT_NAME}/)
 
 # Add the source files from the <src> directory
-add_library(${PROJECT_NAME}_rddamain src/${PROJECT_NAME}/rddamain.c src/rdda/init_BEL.c include/init_BEL.h)
+add_library(${PROJECT_NAME}_rddamain src/${PROJECT_NAME}/rddaconfig.c src/rdda/init_BEL.c include/rdda/init_BEL.h src/rdda/rddamain.c include/rdda/rddamain.h)
 
 # Linking for libraries
 target_link_libraries(${PROJECT_NAME}_rddamain)

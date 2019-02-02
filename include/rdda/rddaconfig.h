@@ -13,6 +13,7 @@ typedef struct PACKED
 extern rdda_slavet *rdda_slave;
 
 void rdda_ecat_config(void *ifnameptr);
+void rddaStop();
 
 
 #endif //RDDAMAIN_H
