@@ -34,7 +34,7 @@ static int SDO_write32 (uint16 slave, uint16 index, uint8 subindex, uint32 value
 /** Map BEL motor drive PDOs in CSP mode.
  *
  * @param[in] slaveIdx    = Slave index.
- * @return 0.
+ * @return 0 on success, -1 on failure.
  */
 int mapMotorPDOs(uint16 slaveIdx)
 {
@@ -70,6 +70,12 @@ int mapMotorPDOs(uint16 slaveIdx)
 
     /* as specified in ESI file, set control word during PRE->SAFE transition */
     SDO_write16(slaveIdx, 0x6060, 0, 8);                 /* BEL set to CSP mode */
+
+    if (wkc != 12)
+    {
+        printf("PDO mapping failed!");
+        return -1;
+    }
 
     return 0;
 }

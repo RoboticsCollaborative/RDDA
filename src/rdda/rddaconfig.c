@@ -6,7 +6,7 @@
 #include "ethercat.h"
 #include "rdda/rddaconfig.h"
 #include "rdda/init_BEL.h"
-#include "rdda/rddamain.h"
+#include "rdda/rddauser.h"
 
 
 /* SOEM global vars */
@@ -44,7 +44,7 @@ static int slaveIdentify(rdda_slavet *rdda_slave)
             {
                 rdda_slave->motor1 = slaveIdx;
                 /* CompleteAccess disabled for BEL drive */
-                ec_slave[slaveIdx].CoEdetails ^= ECT_COEDET_SDOCA;
+                //ec_slave[slaveIdx].CoEdetails ^= ECT_COEDET_SDOCA;
                 /* Set PDO mapping */
                 printf("Found %s at position %d\n", ec_slave[slaveIdx].name, slaveIdx);
                 mapMotorPDOs_callback(slaveIdx);
@@ -54,7 +54,7 @@ static int slaveIdentify(rdda_slavet *rdda_slave)
             {
                 rdda_slave->motor2 = slaveIdx;
                 /* CompleteAccess disabled for BEL drive */
-                ec_slave[slaveIdx].CoEdetails ^= ECT_COEDET_SDOCA;
+                //ec_slave[slaveIdx].CoEdetails ^= ECT_COEDET_SDOCA;
                 /* Set PDO mapping */
                 printf("Found %s at position %d\n", ec_slave[slaveIdx].name, slaveIdx);
                 mapMotorPDOs_callback(slaveIdx);

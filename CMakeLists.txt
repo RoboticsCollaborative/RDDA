@@ -6,11 +6,11 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror")
 
 # SOEM
 # find_package(SOEM REQUIRED)
-include_directories(/home/ethercat-master/SOEM-master/soem)
-include_directories(/home/ethercat-master/SOEM-master/osal)
-include_directories(/home/ethercat-master/SOEM-master/osal/linux)
-include_directories(/home/ethercat-master/SOEM-master/oshw/linux)
-# link_directories(/home/ethercat-master/SOEM-master/soem)
+include_directories(../SOEM/soem)
+include_directories(../SOEM/osal)
+include_directories(../SOEM/osal/linux)
+include_directories(../SOEM/oshw/linux)
+# link_directories(../SOEM/soem)
 
 
 # Add the headers from the <include> directory
@@ -18,7 +18,7 @@ include_directories(include)
 include_directories(src/${PROJECT_NAME}/)
 
 # Add the source files from the <src> directory
-add_library(${PROJECT_NAME}_rddamain src/${PROJECT_NAME}/rddaconfig.c src/rdda/init_BEL.c include/rdda/init_BEL.h src/rdda/rddamain.c include/rdda/rddamain.h)
+add_library(${PROJECT_NAME}_rddamain src/${PROJECT_NAME}/rddaconfig.c src/rdda/init_BEL.c include/rdda/init_BEL.h src/rdda/rddauser.c include/rdda/rddauser.h)
 
 # Linking for libraries
 target_link_libraries(${PROJECT_NAME}_rddamain)
