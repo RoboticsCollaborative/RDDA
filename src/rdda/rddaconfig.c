@@ -17,9 +17,6 @@ volatile int wkc;
 uint8 currentgroup = 0;
 */
 
-/** Declare slave identifier */
-rdda_slavet *rdda_slave;
-
 
 /** Locate and identify EtherCAT slaves
  *
