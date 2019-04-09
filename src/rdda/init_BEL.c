@@ -1,3 +1,5 @@
+/* init_BEL.c */
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -72,10 +74,7 @@ int mapMotorPDOs(uint16 slaveIdx)
     SDO_write16(slaveIdx, 0x6060, 0, 8);                 /* BEL set to CSP mode */
 
     if (wkc != 12)
-    {
-        printf("PDO mapping failed!");
-        return -1;
-    }
+        return 1;
 
     return 0;
 }

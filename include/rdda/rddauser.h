@@ -9,7 +9,7 @@ typedef struct PACKED
     uint16 psensor;
 }rdda_slavet;
 
-extern rdda_slavet *rdda_slave;
+//extern rdda_slavet *rdda_slave;
 
 /** BEL drive CSP Mode inputs to master */
 PACKED_BEGIN
