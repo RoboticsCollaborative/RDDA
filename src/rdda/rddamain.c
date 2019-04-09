@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <sched.h>
 #include <pthread.h>
+#include <signal.h>
 
 #include "ethercat.h"
 #include "rdda/rddaconfig.h"
@@ -16,13 +17,27 @@
 #define STACK_SIZE (64 * 1024)
 
 //struct sched_param schedp;
+volatile sig_atomic_t done = 0;
+
+/** Sig-int handler function */
+void intHandler(int sig)
+{
+    if (sig == SIGINT)
+    {
+        done = 1;
+        printf("User requests termination.\n");
+    }
+}
 
 int main(int argc, char **argv)
 {
+    signal(SIGINT, intHandler);
+
     printf("SOEM (Simple Open EtherCAT Master)\nRDDA-HAND Run\n");
 
     if (argc > 1)
     {
+        int i;
         int err;
         pthread_t RTthread;
         pthread_t Configthread;
@@ -75,7 +90,12 @@ int main(int argc, char **argv)
             exit(1);
         }
 
-        while(1);
+        i = 0;
+        while(!done || i <= 120000)
+        {
+            i++;
+        }
+        rddaStop();
     }
     else
     {

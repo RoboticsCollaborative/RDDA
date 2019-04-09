@@ -22,6 +22,13 @@ boolean inOP;
 boolean needlf;
 uint8 currentgroup = 0;
 
+/** Close socket */
+void rddaStop()
+{
+    printf("Close socket\n");
+    ec_close(); /* stop SOEM, close socket */
+}
+
 /** Locate and identify EtherCAT slaves.
  *
  * @param rdda_slave    = Slave index group.
@@ -77,13 +84,6 @@ static int slaveIdentify(rdda_slavet *rdda_slave)
     }
 
     return 0;
-}
-
-/** Close socket */
-void rddaStop()
-{
-    printf("Close socket\n");
-    ec_close(); /* stop SOEM, close socket */
 }
 
 /** Set up EtherCAT NIC and state machine to request all slaves to work properly.
@@ -154,11 +154,15 @@ void *rddaEcatConfig(void *ifnameptr)
     ec_statecheck(0, EC_STATE_SAFE_OP, EC_TIMEOUTSTATE);
 
     /* Initialize motor params */
+    /*
     if (initMotor(rdda_slave->motor1) || initMotor(rdda_slave->motor2))
     {
         rddaStop();
         fprintf(stderr, "Motor initialization failure!");
     }
+     */
+    initMotor(rdda_slave->motor1);
+    initMotor(rdda_slave->motor2);
     printf("Slaves initialized, state to OP\n");
 
     /* Check if all slaves are working properly */
