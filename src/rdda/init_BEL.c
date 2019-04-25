@@ -1,10 +1,6 @@
-/* init_BEL.c */
+/** init_BEL.c */
 
-#include <stdio.h>
-#include <stdlib.h>
-
-#include "ethercat.h"
-
+#include "../../include/rdda/init_BEL.h"
 
 /** SOEM wrapper for ec_SDOwrite().
  *

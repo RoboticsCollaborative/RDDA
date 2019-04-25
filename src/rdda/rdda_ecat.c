@@ -1,4 +1,4 @@
-/* rddaconfig.c */
+/** rdda_ecat.c */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -6,18 +6,11 @@
 #include <math.h>
 
 #include "ethercat.h"
-#include "rdda/rddaconfig.h"
-#include "rdda/init_BEL.h"
-#include "rdda/rddauser.h"
-
-#define NSEC_PER_SEC 1000000000
-#define EC_TIMEOUTMON 500
-#define COUNTS_PER_RADIAN 52151.8917
+#include "init_BEL.h"
+#include "rdda_ecat.h"
 
 /* SOEM global vars */
 char IOmap[4096];
-int expectedWKC;
-volatile int wkc;
 boolean inOP;
 boolean needlf;
 uint8 currentgroup = 0;
@@ -34,28 +27,28 @@ void rddaStop()
  * @param rdda_slave    = Slave index group.
  * @return 0 on success.
  */
-static int slaveIdentify(rdda_slavet *rdda_slave)
+static int slaveIdentify(SlaveIndex *network)
 {
-    uint16 slaveIdx = 0;
+    uint16 idx = 0;
     int buf = 0;
-    for (slaveIdx = 1; slaveIdx <= ec_slavecount; slaveIdx++)
+    for (idx = 1; idx <= ec_slavecount; idx++)
     {
         /* BEL motor drive */
-        if ((ec_slave[slaveIdx].eep_man == 0x000000ab) && (ec_slave[slaveIdx].eep_id == 0x00001110))
+        if ((ec_slave[idx].eep_man == 0x000000ab) && (ec_slave[idx].eep_id == 0x00001110))
         {
             uint32 serial_num;
             buf = sizeof(serial_num);
-            ec_SDOread(slaveIdx, 0x1018, 4, FALSE, &buf, &serial_num, EC_TIMEOUTRXM);
+            ec_SDOread(idx, 0x1018, 4, FALSE, &buf, &serial_num, EC_TIMEOUTRXM);
 
             /* motor1 */
             if (serial_num == 0x2098302)
             {
-                rdda_slave->motor1 = slaveIdx;
+                network->motor[0] = idx;
                 /* CompleteAccess disabled for BEL drive */
                 //ec_slave[slaveIdx].CoEdetails ^= ECT_COEDET_SDOCA;
                 /* Set PDO mapping */
-                printf("Found %s at position %d\n", ec_slave[slaveIdx].name, slaveIdx);
-                if (1 == mapMotorPDOs_callback(slaveIdx))
+                printf("Found %s at position %d\n", ec_slave[idx].name, idx);
+                if (1 == mapMotorPDOs_callback(idx))
                 {
                     fprintf(stderr, "Motor1 mapping failed!\n");
                     exit(1);
@@ -64,12 +57,12 @@ static int slaveIdentify(rdda_slavet *rdda_slave)
             /* motor2 */
             if (serial_num == 0x2098303)
             {
-                rdda_slave->motor2 = slaveIdx;
+                network->motor[1] = idx;
                 /* CompleteAccess disabled for BEL drive */
                 //ec_slave[slaveIdx].CoEdetails ^= ECT_COEDET_SDOCA;
                 /* Set PDO mapping */
-                printf("Found %s at position %d\n", ec_slave[slaveIdx].name, slaveIdx);
-                if (1 == mapMotorPDOs_callback(slaveIdx))
+                printf("Found %s at position %d\n", ec_slave[idx].name, idx);
+                if (1 == mapMotorPDOs_callback(idx))
                 {
                     fprintf(stderr, "Motor2 mapping failed!\n");
                     exit(1);
@@ -77,9 +70,9 @@ static int slaveIdentify(rdda_slavet *rdda_slave)
             }
         }
         /* pressure sensor */
-        if ((ec_slave[slaveIdx].eep_man == 0x00000002) && (ec_slave[slaveIdx].eep_id == 0x0c1e3052))
+        if ((ec_slave[idx].eep_man == 0x00000002) && (ec_slave[idx].eep_id == 0x0c1e3052))
         {
-            rdda_slave->psensor = slaveIdx;
+            network->psensor = idx;
         }
     }
 
@@ -91,28 +84,29 @@ static int slaveIdentify(rdda_slavet *rdda_slave)
  * @param ifnameptr = NIC interface pointer
  * @return 0.
  */
-void *rddaEcatConfig(void *ifnameptr)
+SlaveIndex *rddaEcatConfig(void *ifnameptr)
 {
     char *ifname  = (char *)ifnameptr;
 
-    inOP = FALSE;
-    needlf = FALSE;
-    rdda_slavet *rdda_slave;
-    rdda_slave = (rdda_slavet *)malloc(sizeof(rdda_slavet));
-    if (rdda_slave == NULL)
+//    inOP = FALSE;
+//    needlf = FALSE;
+    int expectedWKC;
+    int wkc;
+
+    SlaveIndex *slaveIndex;
+    slaveIndex = (SlaveIndex *)malloc(sizeof(SlaveIndex));
+    if ( slaveIndex == NULL)
     {
         return NULL;
     }
-    rdda_slave->motor1 = 0;
-    rdda_slave->motor2 = 0;
-    rdda_slave->psensor = 0;
+    memset(slaveIndex, 0, sizeof(SlaveIndex));
     
     printf("Begin network configuration\n");
 
     /* Initialize SOEM, bind socket to ifname */
     if (ec_init(ifname))
     {
-	    fprintf(stderr, "Socket connection on %s succeeded.\n", ifname);
+	    printf("Socket connection on %s succeeded.\n", ifname);
     }
     else
     {
@@ -123,7 +117,7 @@ void *rddaEcatConfig(void *ifnameptr)
     /* Find and configure slaves */
     if (ec_config_init(FALSE) > 0)
     {
-	    fprintf(stderr, "%d slaves found and configured.\n", ec_slavecount);
+	    printf("%d slaves found and configured.\n", ec_slavecount);
     }
     else
     {
@@ -136,8 +130,8 @@ void *rddaEcatConfig(void *ifnameptr)
     ec_statecheck(0, EC_STATE_PRE_OP, EC_TIMEOUTSTATE);
 
     /* Locate slaves */
-    slaveIdentify(rdda_slave);
-    if (rdda_slave->motor1 == 0 || rdda_slave->motor2 == 0 || rdda_slave->psensor == 0)
+    slaveIdentify(slaveIndex);
+    if (slaveIndex->motor[0] == 0 || slaveIndex->motor[1] == 0 || slaveIndex->psensor == 0)
     {
         fprintf(stderr, "Slaves identification failure!");
         exit(1);
@@ -161,8 +155,8 @@ void *rddaEcatConfig(void *ifnameptr)
         fprintf(stderr, "Motor initialization failure!");
     }
      */
-    initMotor(rdda_slave->motor1);
-    initMotor(rdda_slave->motor2);
+    initMotor(slaveIndex->motor[0]);
+    initMotor(slaveIndex->motor[1]);
     printf("Slaves initialized, state to OP\n");
 
     /* Check if all slaves are working properly */
@@ -173,8 +167,13 @@ void *rddaEcatConfig(void *ifnameptr)
     ec_slave[0].state = EC_STATE_OPERATIONAL;
     /* Send one valid process data to make outputs in slave happy */
     ec_send_processdata();
-    ec_receive_processdata(EC_TIMEOUTRET);
-    //wkc = ec_receive_processdata(EC_TIMEOUTRET);
+    wkc = ec_receive_processdata(EC_TIMEOUTRET);
+    if (wkc < expectedWKC)
+    {
+        fprintf(stderr, "WKC failure.\n");
+        exit(1);
+    }
+
     /* Request OP state for all slaves */
     ec_writestate(0);
     /* Wait for all slaves to reach OP state */
@@ -183,15 +182,14 @@ void *rddaEcatConfig(void *ifnameptr)
     if (ec_slave[0].state == EC_STATE_OPERATIONAL)
     {
         printf("Operational state reached for all slaves\n");
+        return slaveIndex;
     }
     else
     {
         rddaStop();
         fprintf(stderr, "Operational state failed\n");
-        pthread_exit(NULL);
+        exit(1);
     }
-
-    return rdda_slave;
 }
 
 /** Add ns to timespec.
@@ -202,6 +200,7 @@ void *rddaEcatConfig(void *ifnameptr)
 void add_timespec(struct timespec *ts, int64 addtime)
 {
     int64 sec, nsec;
+    int64 NSEC_PER_SEC = 1000000000;
 
     nsec = addtime % NSEC_PER_SEC;
     sec = (addtime - nsec) / NSEC_PER_SEC;
@@ -237,20 +236,12 @@ void ec_sync(int64 reftime, int64 cycletime, int64 *offsettime)
  *
  * @param[in] rdda_slave     =   Slave indices.
  */
-void rddaCyclic(void *rdda_slave)
+void pdoUpdate()
 {
     struct timespec ts, tleft;
     int ht;
     int64 cycletime, toff;
     int ctime;
-//    rdda_slavet *slave;
-    double theta1_rad;
-
-
-//    slave = (rdda_slavet *)rdda_slave;
-
-    /* Free the slave structure */
-    free(rdda_slave);
 
     clock_gettime(CLOCK_MONOTONIC, &ts);
     ht = (ts.tv_nsec / 1000000) + 1; /* round to nearest ms */
@@ -268,13 +259,13 @@ void rddaCyclic(void *rdda_slave)
         /* wait to cycle start */
         clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &ts, &tleft);
 
-        wkc = ec_receive_processdata(EC_TIMEOUTRET);
+//        wkc = ec_receive_processdata(EC_TIMEOUTRET);
 
         /**
          *  Cylic part
          */
-        theta1_rad = readMotor1Pos()/COUNTS_PER_RADIAN;
-        printf("Motor1 Position: %lf\n", (double)theta1_rad);
+//        theta1_rad = readMotor1Pos()/COUNTS_PER_RADIAN;
+//        printf("Motor1 Position: %lf\n", (double)theta1_rad);
         needlf = TRUE;
 
         /* Calulate toff to get linux time and DC synced */
@@ -284,14 +275,17 @@ void rddaCyclic(void *rdda_slave)
     }
 }
 
+#define EC_TIMEOUTMON 500
+
 /** Error handling in OP mode.
  *
  * @param ptr   =   NULL;
  */
+/*
 void ecatcheck(void *ptr)
 {
     int slave;
-    (void)ptr;                  /* Not used */
+    (void)ptr;
 
     while(1)
     {
@@ -302,7 +296,7 @@ void ecatcheck(void *ptr)
                 needlf = FALSE;
                 printf("\n");
             }
-            /* one ore more slaves are not responding */
+            // one ore more slaves are not responding
             ec_group[currentgroup].docheckstate = FALSE;
             ec_readstate();
             for (slave = 1; slave <= ec_slavecount; slave++)
@@ -332,7 +326,7 @@ void ecatcheck(void *ptr)
                     }
                     else if(!ec_slave[slave].islost)
                     {
-                        /* re-check state */
+                        // re-check state
                         ec_statecheck(slave, EC_STATE_OPERATIONAL, EC_TIMEOUTRET);
                         if (ec_slave[slave].state == EC_STATE_NONE)
                         {
@@ -364,3 +358,4 @@ void ecatcheck(void *ptr)
         osal_usleep(10000);
     }
 }
+*/
