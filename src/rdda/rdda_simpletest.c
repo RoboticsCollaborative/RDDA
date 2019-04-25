@@ -22,15 +22,13 @@ void rdda_simpletest(void *ifnameptr)
     char *ifname = ifnameptr;
     SlaveIndex *slaveIndex;
     int motor[2], psensor;
-//    double theta_rad[2];
-//    double comp_Nm[2];
+    double theta_rad[2];
+    double comp_Nm[2];
 
 //    int64 NSEC_PER_SEC = 1000000000;
-/*
     double COUNTS_PER_RADIAN = 52151.8917;
     double PASCAL_PER_COUNT = 21.04178;
     double NM_PER_PASCAL = 2.822e-6;
-*/
 
     /* Configure ethercat network and slaves. */
     slaveIndex= rddaEcatConfig(ifname);
@@ -51,12 +49,11 @@ void rdda_simpletest(void *ifnameptr)
         motorIn[mot_id] = (MotorIn *) ec_slave[motor[mot_id]].inputs;
     }
     PressureIn *pressureIn = (PressureIn *) ec_slave[psensor].inputs;
-    printf("motor: %lf. pressure: %lf\n", (double)motorIn[0]->act_pos, (double)pressureIn->val1);
+//    printf("motor: %lf. pressure: %lf\n", (double)motorIn[0]->act_pos, (double)pressureIn->val1);
 
     /**
      *  PDO transfer
      */
-/*
     for (int i=1; i<20000; i++)
     {
         ec_receive_processdata(EC_TIMEOUTRET);
@@ -71,7 +68,6 @@ void rdda_simpletest(void *ifnameptr)
 
         ec_send_processdata();
     }
-*/
 
     printf("\nRequest init state for all slaves\n");
     ec_slave[0].state = EC_STATE_INIT;
