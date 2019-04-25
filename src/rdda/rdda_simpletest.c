@@ -38,21 +38,20 @@ void rdda_simpletest(void *ifnameptr)
     motor[1] = slaveIndex->motor[1];
     psensor = slaveIndex->psensor;
 
-    printf("motor0: %d, motor1: %d, psensor: %d", motor[0], motor[1], psensor);
+    printf("motor0: %d, motor1: %d, psensor: %d\n", motor[0], motor[1], psensor);
 
     free(slaveIndex);
 
     /**
      *  Initialize input/ouput interface
      */
-/*
     MotorIn *motorIn[2];
     for (int mot_id = 0; mot_id < 2; mot_id ++)
     {
         motorIn[mot_id] = (MotorIn *) ec_slave[motor[mot_id]].inputs;
     }
     PressureIn *pressureIn = (PressureIn *) ec_slave[psensor].inputs;
-*/
+    printf("motor: %lf. pressure: %lf\n", (double)motorIn[0]->act_pos, (double)pressureIn->val1);
 
     /**
      *  PDO transfer
