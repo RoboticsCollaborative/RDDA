@@ -1,6 +1,6 @@
 /* rdda_simpletest.c */
 
-#define _GNU_SOURCE
+//#define _GNU_SOURCE
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -64,9 +64,10 @@ void rdda_simpletest(void *ifnameptr)
 //        comp_Nm[1] = (double)(pressureIn->val2) * PASCAL_PER_COUNT * NM_PER_PASCAL;
 
 //        printf("theta1: %+2.4lf, theta2: %+2.4lf, pressure1: %+2.4f, pressure2: %+2.4lf\r", theta_rad[0], theta_rad[1], comp_Nm[0], comp_Nm[1]);
+
         printf("theta1: %+2.4lf, theta2: %+2.4lf, pressure1: %+2.4f, pressure2: %+2.4lf\r",
-                (double)(motorIn[motor[0]]->act_pos)/COUNTS_PER_RADIAN,
-                (double)(motorIn[motor[1]]->act_pos)/COUNTS_PER_RADIAN,
+                (double)(motorIn[0]->act_pos)/COUNTS_PER_RADIAN,
+                (double)(motorIn[1]->act_pos)/COUNTS_PER_RADIAN,
                 (double)(pressureIn->val1) * PASCAL_PER_COUNT * NM_PER_PASCAL,
                 (double)(pressureIn->val2) * PASCAL_PER_COUNT * NM_PER_PASCAL);
         fflush(stdout);
