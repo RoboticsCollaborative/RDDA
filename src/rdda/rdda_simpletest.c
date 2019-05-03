@@ -33,11 +33,11 @@ void rdda_simpletest(void *ifnameptr)
     rddaSlave = rddaEcatConfig(ifname);
     if (rddaSlave == NULL)
     {
-        fprintf(stderr, "Init data failed.");
+        fprintf(stderr, "Init data failed.\n");
         exit(1);
     }
 
-    printf("Network configuration succeed.");
+    printf("Network configuration succeed.\n");
     /**
      *  PDO transfer
      */

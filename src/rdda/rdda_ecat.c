@@ -119,7 +119,7 @@ RDDA_slave *rddaEcatConfig(void *ifnameptr)
 */
 
     /* Initialize data structure */
-    printf("Init data structure.");
+    printf("Init data structure.\n");
     RDDA_slave *rddaSlave;
     rddaSlave = (RDDA_slave *)malloc(sizeof(RDDA_slave));
     if (rddaSlave == NULL)
@@ -140,7 +140,6 @@ RDDA_slave *rddaEcatConfig(void *ifnameptr)
     }
 
     printf("Begin network configuration\n");
-
     /* Initialize SOEM, bind socket to ifname */
     if (ec_init(ifname))
     {
@@ -169,6 +168,7 @@ RDDA_slave *rddaEcatConfig(void *ifnameptr)
 
     /* Locate slaves */
     slaveIdentify(rddaSlave);
+    printf("motor_id: %d\n", rddaSlave->motor[0]->slave_id);
     if (rddaSlave->motor[0]->slave_id == 0 || rddaSlave->motor[1]->slave_id == 0 || rddaSlave->psensor->slave_id == 0)
     {
         fprintf(stderr, "Slaves identification failure!");
