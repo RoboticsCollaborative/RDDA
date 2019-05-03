@@ -119,25 +119,26 @@ RDDA_slave *rddaEcatConfig(void *ifnameptr)
 */
 
     /* Initialize data structure */
+    printf("Init data structure.");
     RDDA_slave *rddaSlave;
     rddaSlave = (RDDA_slave *)malloc(sizeof(RDDA_slave));
-    if ( rddaSlave == NULL)
+    if (rddaSlave == NULL)
     {
         return NULL;
     }
     rddaSlave->motor = (BEL_slave **)malloc(2 * sizeof(BEL_slave *));
-    if ( rddaSlave->motor == NULL)
+    if (rddaSlave->motor == NULL)
     {
         free(rddaSlave);
         return NULL;
     }
     rddaSlave->psensor = (EL3102_slave *)malloc(sizeof(EL3102_slave));
-    if ( rddaSlave->psensor == NULL)
+    if (rddaSlave->psensor == NULL)
     {
         free(rddaSlave);
         return NULL;
     }
-    
+
     printf("Begin network configuration\n");
 
     /* Initialize SOEM, bind socket to ifname */

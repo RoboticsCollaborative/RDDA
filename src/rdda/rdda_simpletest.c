@@ -31,6 +31,11 @@ void rdda_simpletest(void *ifnameptr)
 
     /* Configure ethercat network and slaves. */
     rddaSlave = rddaEcatConfig(ifname);
+    if (rddaSlave == NULL)
+    {
+        fprintf(stderr, "Init data failed.");
+        exit(1);
+    }
 
     printf("Network configuration succeed.");
     /**
