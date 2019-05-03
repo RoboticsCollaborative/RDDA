@@ -168,7 +168,7 @@ RDDA_slave *rddaEcatConfig(void *ifnameptr)
 
     /* Locate slaves */
     slaveIdentify(rddaSlave);
-    printf("motor_id: %d\n", rddaSlave->motor[0]->slave_id);
+    printf("psensor_id: %d\n", rddaSlave->psensor->slave_id);
     if (rddaSlave->motor[0]->slave_id == 0 || rddaSlave->motor[1]->slave_id == 0 || rddaSlave->psensor->slave_id == 0)
     {
         fprintf(stderr, "Slaves identification failure!");
