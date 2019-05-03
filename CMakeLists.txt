@@ -38,7 +38,7 @@ add_library(${PROJECT_NAME}_src
 target_link_libraries(${PROJECT_NAME}_src soem ${OS_LIBS})
 
 # Add the executable files
-add_executable(${PROJECT_NAME}_simpletest src/${PROJECT_NAME}/rdda_simpletest.c)
+add_executable(${PROJECT_NAME}_simpletest src/${PROJECT_NAME}/rdda_simpletest.c include/rdda/rdda_simpletest.h)
 # Linking for libraries
 target_link_libraries(${PROJECT_NAME}_simpletest
         ${PROJECT_NAME}_src
