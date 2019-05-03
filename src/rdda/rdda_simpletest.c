@@ -32,6 +32,7 @@ void rdda_simpletest(void *ifnameptr)
     /* Configure ethercat network and slaves. */
     rddaSlave = rddaEcatConfig(ifname);
 
+    printf("Network configuration succeed.");
     /**
      *  PDO transfer
      */
