@@ -56,8 +56,8 @@ typedef struct
 /** EtherCAT slave class */
 typedef struct
 {
-    BEL_slave **motor;
-    EL3102_slave *psensor;
+    BEL_slave motor[2];
+    EL3102_slave psensor;
 } RDDA_slave;
 
 /** EtherCAT slave index class */

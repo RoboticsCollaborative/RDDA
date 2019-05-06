@@ -17,11 +17,13 @@ uint8 currentgroup = 0;
 
 void delete_RDDA_slave(RDDA_slave *slave)
 {
+    /*
     for (int mot_id = 0; mot_id < 2; mot_id ++)
     {
         free(slave->motor[mot_id]);
     }
     free(slave->psensor);
+    */
     free(slave);
 }
 
@@ -58,7 +60,7 @@ static int slaveIdentify(RDDA_slave *slave)
             if (serial_num == 0x2098302)
             {
                 //network->motor[0] = idx;
-                slave->motor[0]->slave_id = idx;
+                slave->motor[0].slave_id = idx;
                 /* CompleteAccess disabled for BEL drive */
                 //ec_slave[slaveIdx].CoEdetails ^= ECT_COEDET_SDOCA;
                 /* Set PDO mapping */
@@ -72,7 +74,7 @@ static int slaveIdentify(RDDA_slave *slave)
             /* motor2 */
             if (serial_num == 0x2098303)
             {
-                slave->motor[1]->slave_id = idx;
+                slave->motor[1].slave_id = idx;
                 /* CompleteAccess disabled for BEL drive */
                 //ec_slave[slaveIdx].CoEdetails ^= ECT_COEDET_SDOCA;
                 /* Set PDO mapping */
@@ -87,7 +89,7 @@ static int slaveIdentify(RDDA_slave *slave)
         /* pressure sensor */
         if ((ec_slave[idx].eep_man == 0x00000002) && (ec_slave[idx].eep_id == 0x0c1e3052))
         {
-            slave->psensor->slave_id = idx;
+            slave->psensor.slave_id = idx;
         }
     }
 
@@ -126,6 +128,8 @@ RDDA_slave *rddaEcatConfig(void *ifnameptr)
     {
         return NULL;
     }
+
+    /*
     rddaSlave->motor = (BEL_slave **)malloc(2 * sizeof(BEL_slave *));
     if (rddaSlave->motor == NULL)
     {
@@ -138,6 +142,7 @@ RDDA_slave *rddaEcatConfig(void *ifnameptr)
         free(rddaSlave);
         return NULL;
     }
+    */
 
     printf("Begin network configuration\n");
     /* Initialize SOEM, bind socket to ifname */
@@ -168,8 +173,8 @@ RDDA_slave *rddaEcatConfig(void *ifnameptr)
 
     /* Locate slaves */
     slaveIdentify(rddaSlave);
-    printf("psensor_id: %d\n", rddaSlave->psensor->slave_id);
-    if (rddaSlave->motor[0]->slave_id == 0 || rddaSlave->motor[1]->slave_id == 0 || rddaSlave->psensor->slave_id == 0)
+    printf("psensor_id: %d\n", rddaSlave->psensor.slave_id);
+    if (rddaSlave->motor[0].slave_id == 0 || rddaSlave->motor[1].slave_id == 0 || rddaSlave->psensor.slave_id == 0)
     {
         fprintf(stderr, "Slaves identification failure!");
         exit(1);
@@ -193,8 +198,8 @@ RDDA_slave *rddaEcatConfig(void *ifnameptr)
         fprintf(stderr, "Motor initialization failure!");
     }
      */
-    initMotor(rddaSlave->motor[0]->slave_id);
-    initMotor(rddaSlave->motor[1]->slave_id);
+    initMotor(rddaSlave->motor[0].slave_id);
+    initMotor(rddaSlave->motor[1].slave_id);
     printf("Slaves initialized, state to OP\n");
 
     /* Check if all slaves are working properly */
@@ -219,9 +224,9 @@ RDDA_slave *rddaEcatConfig(void *ifnameptr)
 
     for (int mot_id = 0; mot_id < 2; mot_id ++)
     {
-        rddaSlave->motor[mot_id]->in_motor = (MotorIn *)ec_slave[rddaSlave->motor[mot_id]->slave_id].inputs;
+        rddaSlave->motor[mot_id].in_motor = (MotorIn *)ec_slave[rddaSlave->motor[mot_id].slave_id].inputs;
     }
-    rddaSlave->psensor->in_pressure = (PressureIn *)ec_slave[rddaSlave->psensor->slave_id].inputs;
+    rddaSlave->psensor.in_pressure = (PressureIn *)ec_slave[rddaSlave->psensor.slave_id].inputs;
 
     /* Recheck */
     if (ec_slave[0].state == EC_STATE_OPERATIONAL)
