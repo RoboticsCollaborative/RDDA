@@ -25,9 +25,9 @@ void rdda_simpletest(void *ifnameptr)
     double comp_Nm[2];
 
 //    int64 NSEC_PER_SEC = 1000000000;
-    double COUNTS_PER_RADIAN = 52151.8917;
-    double PASCAL_PER_COUNT = 21.04178;
-    double NM_PER_PASCAL = 2.822e-6;
+//    double COUNTS_PER_RADIAN = 52151.8917;
+//    double PASCAL_PER_COUNT = 21.04178;
+//    double NM_PER_PASCAL = 2.822e-6;
 
     /* Configure ethercat network and slaves. */
     rddaSlave = rddaEcatConfig(ifname);

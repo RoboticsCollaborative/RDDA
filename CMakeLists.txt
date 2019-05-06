@@ -26,19 +26,23 @@ include_directories(/usr/include/soem)
 #link_directories(/home/step/SOEM/build)
 
 # Add the headers from the <include> directory
-include_directories(include/${PROJECT_NAME}/)
-include_directories(src/${PROJECT_NAME}/)
+include_directories(include/${PROJECT_NAME}/ include/shm)
+include_directories(src/${PROJECT_NAME}/ src/shm)
 
 # Add the source files from the <src> directory
 add_library(${PROJECT_NAME}_src
         src/${PROJECT_NAME}/rdda_ecat.c
         src/${PROJECT_NAME}/init_BEL.c
-        src/${PROJECT_NAME}/rdda_base.c)
+        src/${PROJECT_NAME}/rdda_base.c
+        src/shm/shm.c
+#        src/shm/shm_master.c
+#        src/shm/shm_slave.c
+        )
 
 target_link_libraries(${PROJECT_NAME}_src soem ${OS_LIBS})
 
 # Add the executable files
-add_executable(${PROJECT_NAME}_simpletest src/${PROJECT_NAME}/rdda_simpletest.c include/rdda/rdda_simpletest.h)
+add_executable(${PROJECT_NAME}_simpletest src/${PROJECT_NAME}/rdda_simpletest.c)
 # Linking for libraries
 target_link_libraries(${PROJECT_NAME}_simpletest
         ${PROJECT_NAME}_src

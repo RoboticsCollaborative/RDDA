@@ -4,6 +4,14 @@
 // #define NSEC_PER_SEC 1000000000
 // #define COUNTS_PER_RADIAN 52151.8917
 
+#define COUNTS_PER_RADIAN   52151.8917
+#define COUNTS_PER_REV      327680
+#define LOAD_COUNTS_PER_REV 40000
+#define UNITS_PER_NM        5000
+#define MAX_NM              5.0
+#define PASCAL_PER_COUNT    21.04178
+#define NM_PER_PASCAL 2.822e-6
+
 /** BEL drive CSP Mode inputs to master */
 typedef struct PACKED
 {
@@ -59,15 +67,6 @@ typedef struct
     BEL_slave motor[2];
     EL3102_slave psensor;
 } RDDA_slave;
-
-/** EtherCAT slave index class */
-/*
-typedef struct
-{
-    int motor[2];
-    int psensor;
-} SlaveIndex;
-*/
 
 RDDA_slave *rddaEcatConfig(void *ifnameptr);
 void rddaStop(RDDA_slave *rddaSlave);

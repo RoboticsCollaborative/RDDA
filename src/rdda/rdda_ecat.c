@@ -8,6 +8,8 @@
 #include "ethercat.h"
 #include "init_BEL.h"
 #include "rdda_ecat.h"
+#include "shm_data.h"
+#include "shm.h"
 
 /* SOEM global vars */
 char IOmap[4096];
@@ -280,6 +282,39 @@ void ec_sync(int64 reftime, int64 cycletime, int64 *offsettime)
     if (delta > 0) { integral++; }
     if (delta < 0) { integral--; }
     *offsettime = -(delta/100)-(integral/20);
+}
+
+
+void rdda_update(RDDA_slave *rddaSlave, JointCommands *jointCommands, JointStates *jointStates)
+{
+    ec_receive_processdata(EC_TIMEOUTRET);
+
+    /* Update joint states */
+    mutex_lock(&jointStates->mutex);
+
+    for (int i = 0; i < 2; i++) {
+        jointStates->stat_wd[i] = (int)(rddaSlave->motor[i].in_motor->stat_wd);
+        jointStates->act_pos[i] = (double)(rddaSlave->motor[i].in_motor->act_pos/COUNTS_PER_RADIAN);
+        jointStates->act_vel[i] = (double)(rddaSlave->motor[i].in_motor->act_vel/COUNTS_PER_RADIAN/10.0);
+    }
+    jointStates->act_tau[0] = (double)(rddaSlave->psensor.in_pressure->val1 * PASCAL_PER_COUNT * NM_PER_PASCAL);
+    jointStates->act_tau[1] = (double)(rddaSlave->psensor.in_pressure->val2 * PASCAL_PER_COUNT * NM_PER_PASCAL);
+
+    mutex_unlock(&jointStates->mutex);
+
+    /* Update joint commands */
+    mutex_lock(&jointCommands->mutex);
+
+    for (int j = 0; j < 2; j++) {
+        rddaSlave->motor[j].out_motor->ctrl_wd = (uint16)(jointCommands->ctrl_wd[j]);
+        rddaSlave->motor[j].out_motor->tg_pos = (int32)(jointCommands->tg_pos[j] * (double)COUNTS_PER_RADIAN);
+        rddaSlave->motor[j].out_motor->vel_off = (int32)(jointCommands->vel_off[j] * (double)COUNTS_PER_RADIAN * 10.0);
+        rddaSlave->motor[j].out_motor->tau_off = (int16)(jointCommands->tau_off[j] * (double)UNITS_PER_NM);
+    }
+
+    mutex_unlock(&jointCommands->mutex);
+
+    ec_send_processdata();
 }
 
 /** Thread for PDO cyclic transmission.
