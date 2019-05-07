@@ -79,7 +79,7 @@ typedef struct
 } RDDA_slave;
 
 RDDA_slave *rddaEcatConfig(void *ifnameptr);
-void rdda_update(RDDA_slave *rddaSlave, JointCommands *jointCommands, JointStates *jointStates);
+void rdda_update(RDDA_slave *rddaSlave, JointStates *jointStates);
 void rddaStop(RDDA_slave *rddaSlave);
 void pdoUpdata(void *slave_id);
 void ecatcheck(void *ptr);

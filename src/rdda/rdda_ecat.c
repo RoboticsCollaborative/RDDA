@@ -276,7 +276,7 @@ void ec_sync(int64 reftime, int64 cycletime, int64 *offsettime)
 }
 
 
-void rdda_update(RDDA_slave *rddaSlave, JointCommands *jointCommands, JointStates *jointStates)
+void rdda_update(RDDA_slave *rddaSlave, JointStates *jointStates)
 {
     ec_receive_processdata(EC_TIMEOUTRET);
 
@@ -294,6 +294,7 @@ void rdda_update(RDDA_slave *rddaSlave, JointCommands *jointCommands, JointState
     mutex_unlock(&jointStates->mutex);
 
     /* Update joint commands */
+/*
     mutex_lock(&jointCommands->mutex);
 
     for (int j = 0; j < 2; j++) {
@@ -304,7 +305,7 @@ void rdda_update(RDDA_slave *rddaSlave, JointCommands *jointCommands, JointState
     }
 
     mutex_unlock(&jointCommands->mutex);
-
+*/
     /*
     if (ec_slave[0].hasdc) {
         ec_sync(ec_DCtime, cycletime, &toff);

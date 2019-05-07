@@ -72,6 +72,7 @@ void rdda_run (void *ifnameptr)
         fprintf(stderr, "Init rddaSlave failed.\n");
         exit(1);
     }
+    printf("Network configuration succeed.\n");
 
     /* Initialize user-friendly struct */
     jointCommands = initJointCommands();
@@ -84,11 +85,12 @@ void rdda_run (void *ifnameptr)
         fprintf(stderr, "Init jointStates failed.\n");
         exit(1);
     }
+    printf("Input/output interface succeed.\n");
 
     for (loopnum = 0; loopnum < 2000; loopnum ++) {
 
-        rdda_update(rddaSlave, jointCommands, jointStates);
-        printf("act_pos[0]: %lf, act_pos[1]: %lf\n", jointStates->act_pos[0], jointStates->act_pos[1]);
+        rdda_update(rddaSlave, jointStates);
+        printf("act_tau[0]: %lf, act_tau[1]: %lf\r", jointStates->act_tau[0], jointStates->act_tau[1]);
     }
 
     rddaStop(rddaSlave);

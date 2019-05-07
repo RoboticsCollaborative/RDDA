@@ -130,6 +130,13 @@ JointStates *initJointStates() {
         return NULL;
     }
 
+    for (int i = 0; i < 2; i++) {
+        jointStates->stat_wd[i] = 0;
+        jointStates->act_pos[i] = 0.0;
+        jointStates->act_vel[i] = 0.0;
+        jointStates->act_tau[i] = 0.0;
+    }
+
     /* initialise mutex lock */
     mutex_init(&jointStates->mutex);
 
