@@ -12,6 +12,8 @@
 #include "ethercat.h"
 #include "rdda_ecat.h"
 #include "rdda_base.h"
+#include "shm_data.h"
+#include "shm.h"
 
 
 void rdda_simpletest(void *ifnameptr)
@@ -23,11 +25,6 @@ void rdda_simpletest(void *ifnameptr)
     RDDA_slave *rddaSlave;
     double theta_rad[2];
     double comp_Nm[2];
-
-//    int64 NSEC_PER_SEC = 1000000000;
-//    double COUNTS_PER_RADIAN = 52151.8917;
-//    double PASCAL_PER_COUNT = 21.04178;
-//    double NM_PER_PASCAL = 2.822e-6;
 
     /* Configure ethercat network and slaves. */
     rddaSlave = rddaEcatConfig(ifname);
@@ -59,13 +56,53 @@ void rdda_simpletest(void *ifnameptr)
     rddaStop(rddaSlave);
 }
 
+void rdda_run (void *ifnameptr)
+{
+    char *ifname = ifnameptr;
+    /* EtherCAT struct */
+    RDDA_slave *rddaSlave;
+    /* User friendly struct */
+    JointCommands   *jointCommands;
+    JointStates     *jointStates;
+    int loopnum;
+
+    /* Configure ethercat network and slaves. */
+    rddaSlave = rddaEcatConfig(ifname);
+    if (rddaSlave == NULL) {
+        fprintf(stderr, "Init rddaSlave failed.\n");
+        exit(1);
+    }
+
+    /* Initialize user-friendly struct */
+    jointCommands = initJointCommands();
+    if (jointCommands == NULL) {
+        fprintf(stderr, "Init jointCommands failed.\n");
+        exit(1);
+    }
+    jointStates = initJointStates();
+    if (jointStates == NULL) {
+        fprintf(stderr, "Init jointStates failed.\n");
+        exit(1);
+    }
+
+    for (loopnum = 0; loopnum < 2000; loopnum ++) {
+
+        rdda_update(rddaSlave, jointCommands, jointStates);
+        printf("act_pos[0]: %lf, act_pos[1]: %lf\n", jointStates->act_pos[0], jointStates->act_pos[1]);
+    }
+
+    rddaStop(rddaSlave);
+}
+
 int main(int argc, char **argv)
 {
+
     printf("SOEM (Simple Open EtherCAT Master)\nRDDA-HAND Run\n");
 
     if (argc > 1)
     {
-        rdda_simpletest(argv[1]);
+//        rdda_simpletest(argv[1]);
+        rdda_run(argv[1]);
     }
     else
     {

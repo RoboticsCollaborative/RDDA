@@ -1,5 +1,7 @@
 #include "shm.h"
-#include "shm_data.h"
+
+char* JOINT_COMMANDS    = (char*)"/joint_commands";
+char* JOINT_STATES      = (char*)"/joint_states";
 
 /** Acuqire robust mutex
   *
@@ -42,7 +44,8 @@ int mutex_unlock(pthread_mutex_t *mutex) {
   * @param[in] mutex    =       mutex lock.
   * return 1 on success.
   */
-int mutex_init(pthread_mutex_t *mutex) {
+static int
+mutex_init(pthread_mutex_t *mutex) {
     /* Initialise mutex */
     pthread_mutexattr_t mattr;
     pthread_mutexattr_init(&mattr);
@@ -60,7 +63,8 @@ int mutex_init(pthread_mutex_t *mutex) {
  * @param[in] p =       Intermediate pointer.
  * return 0 on success.
  */
-int openSharedMemory(char *shm_name, void **p) {
+static int
+openSharedMemory(char *shm_name, void **p) {
 
     int fd = 0, ret = 0, err = 0; /* error detector*/
 
@@ -86,4 +90,48 @@ int openSharedMemory(char *shm_name, void **p) {
     }
 
     return err;
+}
+
+/** Initialize jointCommands to shared memory and robust mutex.
+ *
+ * @return jointCommands pointer.
+ */
+JointCommands *initJointCommands() {
+
+    JointCommands *jointCommands;
+    void *p;
+
+    if (!openSharedMemory(JOINT_COMMANDS, &p)) {
+        jointCommands = (JointCommands *) p;
+    } else {
+        fprintf(stderr, "open(joint_commands)\n");
+        return NULL;
+    }
+
+    /* initialise mutex lock */
+    mutex_init(&jointCommands->mutex);
+
+    return jointCommands;
+}
+
+/** Initialize jointStates to shared memory and robust mutex.
+ *
+ * @return jointStates pointer.
+ */
+JointStates *initJointStates() {
+
+    JointStates *jointStates;
+    void *p;
+
+    if (!openSharedMemory(JOINT_STATES, &p)) {
+        jointStates = (JointStates *) p;
+    } else {
+        fprintf(stderr, "open(joint_states)\n");
+        return NULL;
+    }
+
+    /* initialise mutex lock */
+    mutex_init(&jointStates->mutex);
+
+    return jointStates;
 }

@@ -1,6 +1,16 @@
 #ifndef RDDA_ECAT_H
 #define RDDA_ECAT_H
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+
+#include "ethercat.h"
+#include "init_BEL.h"
+#include "shm_data.h"
+#include "shm.h"
+
 // #define NSEC_PER_SEC 1000000000
 // #define COUNTS_PER_RADIAN 52151.8917
 
@@ -69,6 +79,7 @@ typedef struct
 } RDDA_slave;
 
 RDDA_slave *rddaEcatConfig(void *ifnameptr);
+void rdda_update(RDDA_slave *rddaSlave, JointCommands *jointCommands, JointStates *jointStates);
 void rddaStop(RDDA_slave *rddaSlave);
 void pdoUpdata(void *slave_id);
 void ecatcheck(void *ptr);

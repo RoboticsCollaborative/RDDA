@@ -1,15 +1,6 @@
 /** rdda_ecat.c */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
-
-#include "ethercat.h"
-#include "init_BEL.h"
 #include "rdda_ecat.h"
-#include "shm_data.h"
-#include "shm.h"
 
 /* SOEM global vars */
 char IOmap[4096];
@@ -186,7 +177,7 @@ RDDA_slave *rddaEcatConfig(void *ifnameptr)
     ec_config_map(&IOmap);
 
     /* Let DC off for the time being */
-    //ec_configdc(); // DC should be launched for each identified slave
+    ec_configdc(); // DC should be launched for each identified slave
 
     printf("Slaves mapped, state to SAFE_OP\n");
     /* Wait for all salves to reach SAFE_OP state */
@@ -258,8 +249,8 @@ void add_timespec(struct timespec *ts, int64 addtime)
     sec = (addtime - nsec) / NSEC_PER_SEC;
     ts->tv_sec += sec;
     ts->tv_nsec += nsec;
-    if (ts->tv_nsec > NSEC_PER_SEC)
-    {
+
+    if (ts->tv_nsec > NSEC_PER_SEC) {
         nsec = ts->tv_nsec % NSEC_PER_SEC;
         ts->tv_sec += (ts->tv_nsec - nsec) / NSEC_PER_SEC;
         ts->tv_nsec = nsec;
@@ -313,6 +304,12 @@ void rdda_update(RDDA_slave *rddaSlave, JointCommands *jointCommands, JointState
     }
 
     mutex_unlock(&jointCommands->mutex);
+
+    /*
+    if (ec_slave[0].hasdc) {
+        ec_sync(ec_DCtime, cycletime, &toff);
+    }
+    */
 
     ec_send_processdata();
 }

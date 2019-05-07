@@ -9,15 +9,14 @@
 #include <pthread.h>
 #include <errno.h>
 
+#include "shm_data.h"
+
 #define OPEN_FLAG   (O_RDWR|O_CREAT|O_TRUNC)
 #define MODE_FLAG   0777
 #define SHM_SIZE    4096
 
-//char* SHARED_IN = (char*)"/shared_input";
-//char* SHARED_OUT = (char*)"/shared_output";
-
-int mutex_init(pthread_mutex_t *mutex);
-int openSharedMemory(char *shm_name, void **p);
+JointCommands *initJointCommands();
+JointStates *initJointStates();
 int mutex_lock(pthread_mutex_t *mutex);
 int mutex_unlock(pthread_mutex_t *mutex);
 
