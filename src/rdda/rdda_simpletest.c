@@ -87,7 +87,7 @@ void rdda_run (void *ifnameptr)
     }
     printf("Input/output interface succeed.\n");
 
-    for (loopnum = 0; loopnum < 2000; loopnum ++) {
+    for (loopnum = 0; loopnum < 20000; loopnum ++) {
 
         rdda_update(rddaSlave, jointStates);
         printf("act_tau[0]: %lf, act_tau[1]: %lf\r", jointStates->act_tau[0], jointStates->act_tau[1]);
