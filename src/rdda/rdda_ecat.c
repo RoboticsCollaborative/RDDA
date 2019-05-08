@@ -310,11 +310,6 @@ void rdda_update(RDDA_slave *rddaSlave, JointStates *jointStates)
 
     mutex_unlock(&jointCommands->mutex);
 */
-    /*
-    if (ec_slave[0].hasdc) {
-        ec_sync(ec_DCtime, cycletime, &toff);
-    }
-    */
 
     ec_send_processdata();
 }
