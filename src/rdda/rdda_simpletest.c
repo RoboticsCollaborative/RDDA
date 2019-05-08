@@ -67,7 +67,7 @@ void rdda_run (void *ifnameptr)
         clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &ts, NULL);
 
         rdda_update(rddaSlave, jointStates);
-        printf("pos[0]: %lf, vel[0]: %lf, tau[0]: %lf, pos[1]: %lf, vel[1]: %lf, tau[1]: %lf\r",
+        printf("pos[0]: +%lf, vel[0]: +%lf, tau[0]: +%lf, pos[1]: +%lf, vel[1]: +%lf, tau[1]: +%lf\r",
                 jointStates->act_pos[0], jointStates->act_vel[0], jointStates->act_tau[0],
                 jointStates->act_pos[1], jointStates->act_vel[1], jointStates->act_tau[1]
                 );
