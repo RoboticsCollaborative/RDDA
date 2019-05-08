@@ -58,9 +58,10 @@ void rdda_run (void *ifnameptr)
 
         rdda_gettime(rddaSlave);
         rdda_update(rddaSlave, jointStates);
-        printf("pos[0]: +%lf, vel[0]: +%lf, tau[0]: +%lf, pos[1]: +%lf, vel[1]: +%lf, tau[1]: +%lf\r",
+        printf("pos[0]: +%lf, vel[0]: +%lf, tau[0]: +%lf, pos[1]: +%lf, vel[1]: +%lf, tau[1]: +%lf\r, ctime: %lf",
                 jointStates->act_pos[0], jointStates->act_vel[0], jointStates->act_tau[0],
-                jointStates->act_pos[1], jointStates->act_vel[1], jointStates->act_tau[1]
+                jointStates->act_pos[1], jointStates->act_vel[1], jointStates->act_tau[1],
+                (cycletime - (double)(rddaSlave->time.delta_time) / 1000000)
                 );
 
         rdda_gettime(rddaSlave);
