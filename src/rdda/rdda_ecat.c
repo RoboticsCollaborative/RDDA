@@ -333,7 +333,8 @@ void rdda_sleep(RDDA_slave *rddaSlave, int cycletime)
     if (ec_slave[0].hasdc) {
         toff = ec_sync(ec_DCtime, cycletime);
     }
-    add_timespec(&rddaSlave->time.ts, cycletime_ns - rddaSlave->time.delta_time + toff);
+//    add_timespec(&rddaSlave->time.ts, cycletime_ns - rddaSlave->time.delta_time + toff);
+    add_timespec(&rddaSlave->time.ts, cycletime_ns + toff);
     clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &rddaSlave->time.ts, NULL);
 }
 

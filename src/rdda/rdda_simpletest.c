@@ -51,7 +51,7 @@ void rdda_run (void *ifnameptr)
     printf("Input/output interface succeed.\n");
 
     /* timer */
-    cycletime = 500; /* 500us */
+    cycletime = 1000; /* 500us */
 
     nsec_per_sec = 1000000000;
 /*
