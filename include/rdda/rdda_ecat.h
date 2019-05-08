@@ -81,7 +81,8 @@ typedef struct
 RDDA_slave *rddaEcatConfig(void *ifnameptr);
 void rdda_update(RDDA_slave *rddaSlave, JointStates *jointStates);
 void rddaStop(RDDA_slave *rddaSlave);
-void pdoUpdata(void *slave_id);
+void add_timespec(struct timespec *ts, int64 addtime);
+void ec_sync(int64 reftime, int64 cycletime, int64 *offsettime);
 void ecatcheck(void *ptr);
 
 #endif //RDDA_ECAT_H

@@ -275,7 +275,11 @@ void ec_sync(int64 reftime, int64 cycletime, int64 *offsettime)
     *offsettime = -(delta/100)-(integral/20);
 }
 
-
+/** Sync PDO data by layers
+ *
+ * @param rddaSlave
+ * @param jointStates
+ */
 void rdda_update(RDDA_slave *rddaSlave, JointStates *jointStates)
 {
     ec_receive_processdata(EC_TIMEOUTRET);
@@ -315,48 +319,7 @@ void rdda_update(RDDA_slave *rddaSlave, JointStates *jointStates)
     ec_send_processdata();
 }
 
-/** Thread for PDO cyclic transmission.
- *
- * @param[in] rdda_slave     =   Slave indices.
- */
-void pdoUpdate()
-{
-    struct timespec ts, tleft;
-    int ht;
-    int64 cycletime, toff;
-    int ctime;
 
-    clock_gettime(CLOCK_MONOTONIC, &ts);
-    ht = (ts.tv_nsec / 1000000) + 1; /* round to nearest ms */
-    ts.tv_nsec = ht * 1000000;
-    ctime = 500; /* cycletime in us */
-    cycletime = ctime * 1000; /* cycletime in ns */
-    toff = 0;
-    inOP = TRUE;
-    ec_send_processdata();
-
-    while(1)
-    {
-        /* calculate next cycle start */
-        add_timespec(&ts, cycletime + toff);
-        /* wait to cycle start */
-        clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &ts, &tleft);
-
-//        wkc = ec_receive_processdata(EC_TIMEOUTRET);
-
-        /**
-         *  Cylic part
-         */
-//        theta1_rad = readMotor1Pos()/COUNTS_PER_RADIAN;
-//        printf("Motor1 Position: %lf\n", (double)theta1_rad);
-        needlf = TRUE;
-
-        /* Calulate toff to get linux time and DC synced */
-        ec_sync(ec_DCtime, cycletime, &toff);
-        ec_send_processdata();
-
-    }
-}
 
 #define EC_TIMEOUTMON 500
 

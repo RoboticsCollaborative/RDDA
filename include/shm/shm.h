@@ -11,7 +11,7 @@
 
 #include "shm_data.h"
 
-#define OPEN_FLAG   (O_RDWR|O_CREAT|O_TRUNC)
+#define OPEN_FLAG   O_RDWR | O_CREAT | O_TRUNC
 #define MODE_FLAG   0777
 #define SHM_SIZE    4096
 
