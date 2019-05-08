@@ -263,7 +263,7 @@ void add_timespec(struct timespec *ts, int64 addtime)
  * @param cycletime    =   Cycle time of PDO transfer.
  * @param offsettime    =   Offset time.
  */
-void ec_sync(int64 reftime, int64 cycletime, int64 *offsettime)
+int64 ec_sync(int64 reftime, int64 cycletime)
 {
     static int64 integral = 0;
     int64 delta;
@@ -272,7 +272,7 @@ void ec_sync(int64 reftime, int64 cycletime, int64 *offsettime)
     if (delta > (cycletime/2)) { delta=delta-cycletime; }
     if (delta > 0) { integral++; }
     if (delta < 0) { integral--; }
-    *offsettime = -(delta/100)-(integral/20);
+    return -(delta/100)-(integral/20);
 }
 
 /** Sync PDO data by layers
@@ -319,7 +319,28 @@ void rdda_update(RDDA_slave *rddaSlave, JointStates *jointStates)
     ec_send_processdata();
 }
 
+void rdda_gettime(RDDA_slave *rddaSlave)
+{
+    int64 ht, pre_time, current_time;
+    int64 nsec_per_sec = 1000000000, msec_per_sec = 1000000;
+    pre_time = rddaSlave->time.ts.tv_sec * nsec_per_sec + rddaSlave->time.ts.tv_nsec;
+    clock_gettime(CLOCK_MONOTONIC, &rddaSlave->time.ts);
+    ht = (rddaSlave->time.ts.tv_nsec / msec_per_sec) + 1; /* round to nearest ms */
+    rddaSlave->time.ts.tv_nsec = ht * msec_per_sec;
+    current_time = rddaSlave->time.ts.tv_sec * nsec_per_sec + rddaSlave->time.ts.tv_nsec;
+    rddaSlave->time.delta_time = current_time - pre_time;
+}
 
+void rdda_sleep(RDDA_slave *rddaSlave, int cycletime)
+{
+    int64 cycletime_ns = cycletime * 1000;
+    int toff = 0;
+    if (ec_slave[0].hasdc) {
+        toff = ec_sync(ec_DCtime, cycletime);
+    }
+    add_timespec(&rddaSlave->time.ts, cycletime_ns - rddaSlave->time.delta_time + toff);
+    clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &rddaSlave->time.ts, NULL);
+}
 
 #define EC_TIMEOUTMON 500
 

@@ -24,11 +24,9 @@ void rdda_run (void *ifnameptr)
     /* User friendly struct */
     JointCommands   *jointCommands;
     JointStates     *jointStates;
-    struct timespec ts;
-    int64_t toff, cycletime;
-    int ht;
 //    double current_time;
 //    int nsec_per_sec;
+    int cycletime;
     int loopnum;
 
     /* Configure ethercat network and slaves. */
@@ -53,28 +51,20 @@ void rdda_run (void *ifnameptr)
     printf("Input/output interface succeed.\n");
 
     /* timer */
-    clock_gettime(CLOCK_MONOTONIC, &ts);
-    ht = (ts.tv_nsec / 1000000) + 1; /* round to nearest ms */
-    ts.tv_nsec = ht * 1000000;
-    cycletime = 500 * 1000; /* cycletime in ns (500us) */
-    toff = 0;
+    cycletime = 500; /* 500us */
 
 //    nsec_per_sec = 1000000000;
     for (loopnum = 0; loopnum < 20000; loopnum ++) {
 
-//        current_time = (double)(ts.tv_sec * nsec_per_sec + ts.tv_nsec) / (nsec_per_sec);
-        add_timespec(&ts, cycletime + toff);
-        clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &ts, NULL);
-
+        rdda_gettime(rddaSlave);
         rdda_update(rddaSlave, jointStates);
         printf("pos[0]: +%lf, vel[0]: +%lf, tau[0]: +%lf, pos[1]: +%lf, vel[1]: +%lf, tau[1]: +%lf\r",
                 jointStates->act_pos[0], jointStates->act_vel[0], jointStates->act_tau[0],
                 jointStates->act_pos[1], jointStates->act_vel[1], jointStates->act_tau[1]
                 );
 
-        if (ec_slave[0].hasdc) {
-            ec_sync(ec_DCtime, cycletime, &toff);
-        }
+        rdda_gettime(rddaSlave);
+        rdda_sleep(rddaSlave, cycletime);
     }
 
     rddaStop(rddaSlave);

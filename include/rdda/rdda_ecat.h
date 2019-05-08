@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <time.h>
 
 #include "ethercat.h"
 #include "init_BEL.h"
@@ -71,18 +72,25 @@ typedef struct
     PressureIn *in_pressure;
 } EL3102_slave;
 
+typedef struct
+{
+    struct timespec ts;
+    int64 delta_time;
+} Run_time;
+
 /** EtherCAT slave class */
 typedef struct
 {
     BEL_slave motor[2];
     EL3102_slave psensor;
+    Run_time time;
 } RDDA_slave;
 
 RDDA_slave *rddaEcatConfig(void *ifnameptr);
 void rdda_update(RDDA_slave *rddaSlave, JointStates *jointStates);
 void rddaStop(RDDA_slave *rddaSlave);
-void add_timespec(struct timespec *ts, int64 addtime);
-void ec_sync(int64 reftime, int64 cycletime, int64 *offsettime);
+void rdda_gettime(RDDA_slave *rddaSlave);
+void rdda_sleep(RDDA_slave *rddaSlave, int cycletime);
 void ecatcheck(void *ptr);
 
 #endif //RDDA_ECAT_H
