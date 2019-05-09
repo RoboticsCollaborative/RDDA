@@ -25,12 +25,10 @@ void rdda_run (void *ifnameptr)
     /* User friendly struct */
     JointCommands   *jointCommands;
     JointStates     *jointStates;
-//    double current_time;
-//    int nsec_per_sec;
     int cycletime;
     int start_time, end_time;
     int delta_time;
-//    int loopnum;
+    int loopnum;
 
     /* Configure ethercat network and slaves. */
     rddaSlave = rddaEcatConfig(ifname);
@@ -56,29 +54,19 @@ void rdda_run (void *ifnameptr)
     /* timer */
     cycletime = 500; /* 500us */
 
-//    nsec_per_sec = 1000000000;
-/*
     for (loopnum = 0; loopnum < 20000; loopnum ++) {
 
-        rdda_gettime(rddaSlave);
+        start_time = rdda_gettime(rddaSlave);
         rdda_update(rddaSlave, jointStates);
-        printf("pos[0]: +%lf, vel[0]: +%lf, tau[0]: +%lf, pos[1]: +%lf, vel[1]: +%lf, tau[1]: +%lf, ctime: %lf\n",
-                jointStates->act_pos[0], jointStates->act_vel[0], jointStates->act_tau[0],
-                jointStates->act_pos[1], jointStates->act_vel[1], jointStates->act_tau[1],
-                (double)(rddaSlave->time.delta_time)
-                );
-
-        rdda_gettime(rddaSlave);
-        rdda_sleep(rddaSlave, cycletime);
+        end_time = rdda_gettime(rddaSlave);
+        delta_time = cycletime - (end_time - start_time);
+        rdda_sleep(rddaSlave, delta_time);
+        printf("pos[0]: +%lf, vel[0]: +%lf, tau[0]: +%lf, pos[1]: +%lf, vel[1]: +%lf, tau[1]: +%lf, ctime: %d\r",
+               jointStates->act_pos[0], jointStates->act_vel[0], jointStates->act_tau[0],
+               jointStates->act_pos[1], jointStates->act_vel[1], jointStates->act_tau[1],
+               delta_time
+        );
     }
-*/
-
-    start_time = rdda_gettime(rddaSlave);
-    rdda_update(rddaSlave, jointStates);
-    end_time = rdda_gettime(rddaSlave);
-    delta_time = end_time - start_time;
-    rdda_sleep(rddaSlave, cycletime - delta_time);
-    printf("sleep for %d us\n", cycletime - delta_time);
 
     rddaStop(rddaSlave);
 }
