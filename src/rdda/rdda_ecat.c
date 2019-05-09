@@ -4,9 +4,9 @@
 
 /* SOEM global vars */
 char IOmap[4096];
-boolean inOP;
-boolean needlf;
-uint8 currentgroup = 0;
+//boolean inOP;
+//boolean needlf;
+//uint8 currentgroup = 0;
 
 void delete_RDDA_slave(RDDA_slave *slave)
 {
@@ -316,12 +316,13 @@ void rdda_update(RDDA_slave *rddaSlave, JointStates *jointStates)
 
 void rdda_gettime(RDDA_slave *rddaSlave)
 {
-    int64 ht, pre_time, current_time;
-    int64 nsec_per_sec = 1000000000, usec_per_msec = 1000000;
+//    int64 ht;
+    int64 pre_time, current_time;
+    int64 nsec_per_sec = 1000000000; // int64 usec_per_msec = 1000000;
     pre_time = rddaSlave->time.ts.tv_sec * nsec_per_sec + rddaSlave->time.ts.tv_nsec;
     clock_gettime(CLOCK_MONOTONIC, &rddaSlave->time.ts);
-    ht = (rddaSlave->time.ts.tv_nsec / usec_per_msec) + 1; /* round to nearest ms */
-    rddaSlave->time.ts.tv_nsec = ht * usec_per_msec;
+//    ht = (rddaSlave->time.ts.tv_nsec / usec_per_msec) + 1; /* round to nearest ms */
+//    rddaSlave->time.ts.tv_nsec = ht * usec_per_msec;
     current_time = rddaSlave->time.ts.tv_sec * nsec_per_sec + rddaSlave->time.ts.tv_nsec;
     rddaSlave->time.delta_time = current_time - pre_time;
 }
@@ -329,16 +330,17 @@ void rdda_gettime(RDDA_slave *rddaSlave)
 void rdda_sleep(RDDA_slave *rddaSlave, int cycletime)
 {
     int64 cycletime_ns = cycletime * 1000;
-    int toff = 0;
-    if (ec_slave[0].hasdc) {
-        toff = ec_sync(ec_DCtime, cycletime);
-    }
+//    int toff = 0;
+//    if (ec_slave[0].hasdc) {
+//        toff = ec_sync(ec_DCtime, cycletime);
+//    }
 //    add_timespec(&rddaSlave->time.ts, cycletime_ns - rddaSlave->time.delta_time + toff);
-    add_timespec(&rddaSlave->time.ts, cycletime_ns + toff);
+//    add_timespec(&rddaSlave->time.ts, cycletime_ns + toff);
+    add_timespec(&rddaSlave->time.ts, cycletime_ns);
     clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &rddaSlave->time.ts, NULL);
 }
 
-#define EC_TIMEOUTMON 500
+//#define EC_TIMEOUTMON 500
 
 /** Error handling in OP mode.
  *

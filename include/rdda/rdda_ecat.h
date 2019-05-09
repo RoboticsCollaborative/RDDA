@@ -24,7 +24,7 @@
 #define NM_PER_PASCAL 2.822e-6
 
 /** BEL drive CSP Mode inputs to master */
-typedef struct PACKED
+typedef struct
 {
     /* PDO */
     uint16 stat_wd;   /* status word (0x6041) */
@@ -37,7 +37,7 @@ typedef struct PACKED
 } MotorIn;
 
 /** BEL drive CSP Mode outputs from master */
-typedef struct PACKED
+typedef struct
 {
     uint16 ctrl_wd;   /* control word (0x6040) */
     int32 tg_pos;     /* target position (0x607A) */
@@ -46,7 +46,7 @@ typedef struct PACKED
 } MotorOut;
 
 /** EL3102 pressure sensor inputs to master */
-typedef struct PACKED
+typedef struct
 {
     uint8 stat1;
     int16 val1;
