@@ -318,7 +318,7 @@ void rdda_gettime(RDDA_slave *rddaSlave)
 {
     int64 ht;
     int64 pre_time, current_time;
-    int64 nsec_per_sec = 1000000000; int64 msec_per_nsec = 1000000;
+    int64 nsec_per_sec = 1000000000; int64 msec_per_nsec = 1000;
     pre_time = rddaSlave->time.ts.tv_sec * nsec_per_sec + rddaSlave->time.ts.tv_nsec;
     clock_gettime(CLOCK_MONOTONIC, &rddaSlave->time.ts);
     ht = (rddaSlave->time.ts.tv_nsec / msec_per_nsec) + 1; /* round to nearest ms */
