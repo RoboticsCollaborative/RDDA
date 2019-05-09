@@ -27,7 +27,7 @@ void rdda_run (void *ifnameptr)
     JointStates     *jointStates;
 //    double current_time;
     int nsec_per_sec;
-    int cycletime;
+//    int cycletime;
 //    int loopnum;
 
     /* Configure ethercat network and slaves. */
@@ -52,7 +52,7 @@ void rdda_run (void *ifnameptr)
     printf("Input/output interface succeed.\n");
 
     /* timer */
-    cycletime = 500; /* 500us */
+//    cycletime = 500; /* 500us */
 
     nsec_per_sec = 1000000000;
 /*
@@ -70,15 +70,17 @@ void rdda_run (void *ifnameptr)
         rdda_sleep(rddaSlave, cycletime);
     }
 */
-    double current_time;
+    double current_time, pre_time;
     rdda_gettime(rddaSlave);
     current_time = (rddaSlave->time.ts.tv_sec * nsec_per_sec + rddaSlave->time.ts.tv_nsec) / 1000;
-    printf("start at: %lf\n", current_time);
+//    printf("start at: %lf\n", current_time);
     rdda_update(rddaSlave, jointStates);
-    rdda_sleep(rddaSlave, cycletime);
+//    rdda_sleep(rddaSlave, cycletime);
     rdda_gettime(rddaSlave);
     current_time = (rddaSlave->time.ts.tv_sec * nsec_per_sec + rddaSlave->time.ts.tv_nsec) / 1000;
-    printf("end at: %lf\n", current_time);
+    pre_time = (double)rddaSlave->time.delta_time / 1000;
+    printf("current_time: %lf, delta_time: %lf\n", current_time, pre_time);
+//    printf("end at: %lf\n", current_time);
 
     rddaStop(rddaSlave);
 }

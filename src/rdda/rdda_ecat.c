@@ -316,13 +316,13 @@ void rdda_update(RDDA_slave *rddaSlave, JointStates *jointStates)
 
 void rdda_gettime(RDDA_slave *rddaSlave)
 {
-    int64 ht;
+//    int64 ht;
     int64 pre_time, current_time;
-    int64 nsec_per_sec = 1000000000; int64 msec_per_nsec = 1000;
+    int64 nsec_per_sec = 1000000000; //int64 msec_per_nsec = 1000;
     pre_time = rddaSlave->time.ts.tv_sec * nsec_per_sec + rddaSlave->time.ts.tv_nsec;
     clock_gettime(CLOCK_MONOTONIC, &rddaSlave->time.ts);
-    ht = (rddaSlave->time.ts.tv_nsec / msec_per_nsec) + 1; /* round to nearest us */
-    rddaSlave->time.ts.tv_nsec = ht * msec_per_nsec;
+//    ht = (rddaSlave->time.ts.tv_nsec / msec_per_nsec) + 1; /* round to nearest us */
+//    rddaSlave->time.ts.tv_nsec = ht * msec_per_nsec;
     current_time = rddaSlave->time.ts.tv_sec * nsec_per_sec + rddaSlave->time.ts.tv_nsec;
     rddaSlave->time.delta_time = current_time - pre_time;
 }
