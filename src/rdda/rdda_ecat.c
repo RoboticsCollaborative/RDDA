@@ -321,7 +321,7 @@ void rdda_gettime(RDDA_slave *rddaSlave)
     int64 nsec_per_sec = 1000000000; int64 msec_per_nsec = 1000;
     pre_time = rddaSlave->time.ts.tv_sec * nsec_per_sec + rddaSlave->time.ts.tv_nsec;
     clock_gettime(CLOCK_MONOTONIC, &rddaSlave->time.ts);
-    ht = (rddaSlave->time.ts.tv_nsec / msec_per_nsec) + 1; /* round to nearest ms */
+    ht = (rddaSlave->time.ts.tv_nsec / msec_per_nsec) + 1; /* round to nearest us */
     rddaSlave->time.ts.tv_nsec = ht * msec_per_nsec;
     current_time = rddaSlave->time.ts.tv_sec * nsec_per_sec + rddaSlave->time.ts.tv_nsec;
     rddaSlave->time.delta_time = current_time - pre_time;
@@ -330,13 +330,13 @@ void rdda_gettime(RDDA_slave *rddaSlave)
 void rdda_sleep(RDDA_slave *rddaSlave, int cycletime)
 {
     int64 cycletime_ns = cycletime * 1000;
-//    int toff = 0;
+    int toff = 0;
 //    if (ec_slave[0].hasdc) {
 //        toff = ec_sync(ec_DCtime, cycletime);
 //    }
-//    add_timespec(&rddaSlave->time.ts, cycletime_ns - rddaSlave->time.delta_time + toff);
+    add_timespec(&rddaSlave->time.ts, cycletime_ns - rddaSlave->time.delta_time + toff);
 //    add_timespec(&rddaSlave->time.ts, cycletime_ns + toff);
-    add_timespec(&rddaSlave->time.ts, cycletime_ns);
+//    add_timespec(&rddaSlave->time.ts, cycletime_ns);
     clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &rddaSlave->time.ts, NULL);
 }
 
