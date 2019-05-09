@@ -26,7 +26,7 @@ void rdda_run (void *ifnameptr)
     JointCommands   *jointCommands;
     JointStates     *jointStates;
 //    double current_time;
-    int nsec_per_sec;
+//    int nsec_per_sec;
     int cycletime;
 //    int loopnum;
 
@@ -54,7 +54,7 @@ void rdda_run (void *ifnameptr)
     /* timer */
     cycletime = 500; /* 500us */
 
-    nsec_per_sec = 1000000000;
+//    nsec_per_sec = 1000000000;
 /*
     for (loopnum = 0; loopnum < 20000; loopnum ++) {
 
@@ -70,16 +70,17 @@ void rdda_run (void *ifnameptr)
         rdda_sleep(rddaSlave, cycletime);
     }
 */
-    double current_time, delta_time;
+    // double current_time;
+    double delta_time;
     rdda_gettime(rddaSlave);
-    current_time = (rddaSlave->time.ts.tv_sec * nsec_per_sec + rddaSlave->time.ts.tv_nsec) / 1000;
-    printf("start at: %lf\n", current_time);
+//    current_time = (rddaSlave->time.ts.tv_sec * nsec_per_sec + rddaSlave->time.ts.tv_nsec) / 1000;
+//    printf("start at: %lf\n", current_time);
     rdda_update(rddaSlave, jointStates);
-    rdda_sleep(rddaSlave, cycletime);
     rdda_gettime(rddaSlave);
-    current_time = (rddaSlave->time.ts.tv_sec * nsec_per_sec + rddaSlave->time.ts.tv_nsec) / 1000;
+//    current_time = (rddaSlave->time.ts.tv_sec * nsec_per_sec + rddaSlave->time.ts.tv_nsec) / 1000;
+    rdda_sleep(rddaSlave, cycletime);
     delta_time = (double)rddaSlave->time.delta_time / 1000;
-    printf("current_time: %lf, delta_time: %lf\n", current_time, delta_time);
+    printf("delta_time: %lf\n", delta_time);
 //    printf("end at: %lf\n", current_time);
 
     rddaStop(rddaSlave);
