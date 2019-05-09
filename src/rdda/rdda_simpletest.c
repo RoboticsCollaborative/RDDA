@@ -94,8 +94,10 @@ int main(int argc, char **argv)
 
     if (argc > 1)
     {
+
+
         /* Create realtime thread */
-        pthread_create(&rt_thread, NULL, (void *)&rdda_run, (void *)&argv[1]);
+        pthread_create(&rt_thread, NULL, (void *)&rdda_run, (void *)argv[1]);
         // rdda_run(argv[1]);
 
         /* Scheduler */
