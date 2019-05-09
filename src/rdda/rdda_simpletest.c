@@ -74,7 +74,7 @@ void rdda_run (void *ifnameptr)
     rdda_gettime(rddaSlave);
     current_time = (rddaSlave->time.ts.tv_sec * nsec_per_sec + rddaSlave->time.ts.tv_nsec) / 1000;
     printf("start at: %lf\n", current_time);
-//    rdda_update(rddaSlave, jointStates);
+    rdda_update(rddaSlave, jointStates);
     rdda_sleep(rddaSlave, cycletime);
     rdda_gettime(rddaSlave);
     current_time = (rddaSlave->time.ts.tv_sec * nsec_per_sec + rddaSlave->time.ts.tv_nsec) / 1000;
