@@ -1,12 +1,13 @@
 /* rdda_simpletest.c */
 
-//#define _GNU_SOURCE
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <sched.h>
 #include <pthread.h>
+#include <sched.h>
 #include <signal.h>
 #include <time.h>
 
@@ -85,12 +86,31 @@ void rdda_run (void *ifnameptr)
 
 int main(int argc, char **argv)
 {
+    pthread_t rt_thread;
+    struct sched_param param;
+    int policy = SCHED_FIFO;
 
     printf("SOEM (Simple Open EtherCAT Master)\nRDDA-HAND Run\n");
 
     if (argc > 1)
     {
-        rdda_run(argv[1]);
+        /* Create realtime thread */
+        pthread_create(&rt_thread, NULL, (void *)&rdda_run, (void *)&argv[1]);
+        // rdda_run(argv[1]);
+
+        /* Scheduler */
+        memset(&param, 0, sizeof(param));
+        param.sched_priority = 40;
+        pthread_setschedparam(rt_thread, policy, &param);
+
+        /* Core-Iso */
+        cpu_set_t CPU3;
+        CPU_ZERO(&CPU3);
+        CPU_SET(3, &CPU3);
+        pthread_setaffinity_np(rt_thread, sizeof(CPU3), &CPU3);
+
+        /* Wait until sub-thread is finished */
+        pthread_join(rt_thread, NULL);
     }
     else
     {
