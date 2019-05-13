@@ -24,7 +24,7 @@
 #define NM_PER_PASCAL 2.822e-6
 
 /** BEL drive CSP Mode inputs to master */
-typedef struct
+typedef struct PACKED
 {
     /* PDO */
     uint16 stat_wd;   /* status word (0x6041) */
@@ -34,43 +34,43 @@ typedef struct
     int16 act_tau;    /* torque actual value (0x6077) */
     int32 load_vel;   /* load encoder velocity (0x2231) */
     int32 load_pos;   /* load encoder position (0x2242) */
-} MotorIn;
+} motor_input;
 
 /** BEL drive CSP Mode outputs from master */
-typedef struct
+typedef struct PACKED
 {
     uint16 ctrl_wd;   /* control word (0x6040) */
     int32 tg_pos;     /* target position (0x607A) */
     int32 vel_off;    /* velocity offset (0x60B1) */
     int16 tau_off;    /* torque offset (0x60B2) */
-} MotorOut;
+} motor_output;
 
 /** EL3102 pressure sensor inputs to master */
-typedef struct
+typedef struct PACKED
 {
     uint8 stat1;
     int16 val1;
     uint8 stat2;
     int16 val2;
-} PressureIn;
+} analog_input;
 
 /** BEL slave class */
 typedef struct
 {
     int slave_id;
     /* Input/output interface */
-    MotorIn *in_motor;
-    MotorOut *out_motor;
+    motor_input *in_motor;
+    motor_output *out_motor;
     /* Motor attributes */
     int64 countsPerRad;
-} BEL_slave;
+} bel_slave;
 
 /** EL3102 slave class */
 typedef struct
 {
     int slave_id;
-    PressureIn *in_pressure;
-} EL3102_slave;
+    analog_input *in_analog;
+} el3102_slave;
 
 /*
 typedef struct
@@ -83,16 +83,16 @@ typedef struct
 /** EtherCAT slave class */
 typedef struct
 {
-    BEL_slave motor[2];
-    EL3102_slave psensor;
+    bel_slave motor[2];
+    el3102_slave slave;
     struct timespec ts;
-} RDDA_slave;
+} ecat_slave;
 
-RDDA_slave *rddaEcatConfig(void *ifnameptr);
-void rdda_update(RDDA_slave *rddaSlave, JointStates *jointStates);
-void rddaStop(RDDA_slave *rddaSlave);
-int rdda_gettime(RDDA_slave *rddaSlave);
-void rdda_sleep(RDDA_slave *rddaSlave, int cycletime);
+ecat_slave *rddaEcatConfig(void *ifnameptr);
+void rdda_update(ecat_slave *ecatSlave, RDDA_slave *rddaSlave);
+void rddaStop(ecat_slave *rddaSlave);
+int rdda_gettime(ecat_slave *rddaSlave);
+void rdda_sleep(ecat_slave *rddaSlave, int cycletime);
 void ecatcheck(void *ptr);
 
 #endif //RDDA_ECAT_H

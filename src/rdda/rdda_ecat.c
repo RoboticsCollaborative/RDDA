@@ -8,25 +8,18 @@ char IOmap[4096];
 //boolean needlf;
 //uint8 currentgroup = 0;
 
-void delete_RDDA_slave(RDDA_slave *slave)
+void delete_rdda_slave(ecat_slave *slave)
 {
-    /*
-    for (int mot_id = 0; mot_id < 2; mot_id ++)
-    {
-        free(slave->motor[mot_id]);
-    }
-    free(slave->psensor);
-    */
     free(slave);
 }
 
 /** Close socket */
-void rddaStop(RDDA_slave *slave)
+void rddaStop(ecat_slave *slave)
 {
     printf("\nRequest init state for all slaves\n");
     ec_slave[0].state = EC_STATE_INIT;
     ec_writestate(0);
-    delete_RDDA_slave(slave);
+    delete_rdda_slave(slave);
     printf("Close socket\n");
     ec_close(); /* stop SOEM, close socket */
 }
@@ -36,7 +29,7 @@ void rddaStop(RDDA_slave *slave)
  * @param rdda_slave    = Slave index group.
  * @return 0 on success.
  */
-static int slaveIdentify(RDDA_slave *slave)
+static int slaveIdentify(ecat_slave *slave)
 {
     uint16 idx = 0;
     int buf = 0;
@@ -82,7 +75,7 @@ static int slaveIdentify(RDDA_slave *slave)
         /* pressure sensor */
         if ((ec_slave[idx].eep_man == 0x00000002) && (ec_slave[idx].eep_id == 0x0c1e3052))
         {
-            slave->psensor.slave_id = idx;
+            slave->slave.slave_id = idx;
         }
     }
 
@@ -94,7 +87,7 @@ static int slaveIdentify(RDDA_slave *slave)
  * @param ifnameptr = NIC interface pointer
  * @return 0.
  */
-RDDA_slave *rddaEcatConfig(void *ifnameptr)
+ecat_slave *rddaEcatConfig(void *ifnameptr)
 {
     char *ifname  = (char *)ifnameptr;
 
@@ -103,39 +96,14 @@ RDDA_slave *rddaEcatConfig(void *ifnameptr)
     int expectedWKC;
     int wkc;
 
-/*
-    SlaveIndex *slaveIndex;
-    slaveIndex = (SlaveIndex *)malloc(sizeof(SlaveIndex));
-    if ( slaveIndex == NULL)
-    {
-        return NULL;
-    }
-    memset(slaveIndex, 0, sizeof(SlaveIndex));
-*/
-
     /* Initialize data structure */
     printf("Init data structure.\n");
-    RDDA_slave *rddaSlave;
-    rddaSlave = (RDDA_slave *)malloc(sizeof(RDDA_slave));
-    if (rddaSlave == NULL)
+    ecat_slave *ecatSlave;
+    ecatSlave = (ecat_slave *)malloc(sizeof(ecat_slave));
+    if (ecatSlave == NULL)
     {
         return NULL;
     }
-
-    /*
-    rddaSlave->motor = (BEL_slave **)malloc(2 * sizeof(BEL_slave *));
-    if (rddaSlave->motor == NULL)
-    {
-        free(rddaSlave);
-        return NULL;
-    }
-    rddaSlave->psensor = (EL3102_slave *)malloc(sizeof(EL3102_slave));
-    if (rddaSlave->psensor == NULL)
-    {
-        free(rddaSlave);
-        return NULL;
-    }
-    */
 
     printf("Begin network configuration\n");
     /* Initialize SOEM, bind socket to ifname */
@@ -165,9 +133,9 @@ RDDA_slave *rddaEcatConfig(void *ifnameptr)
     ec_statecheck(0, EC_STATE_PRE_OP, EC_TIMEOUTSTATE);
 
     /* Locate slaves */
-    slaveIdentify(rddaSlave);
-    printf("psensor_id: %d\n", rddaSlave->psensor.slave_id);
-    if (rddaSlave->motor[0].slave_id == 0 || rddaSlave->motor[1].slave_id == 0 || rddaSlave->psensor.slave_id == 0)
+    slaveIdentify(ecatSlave);
+    printf("psensor_id: %d\n", ecatSlave->slave.slave_id);
+    if (ecatSlave->motor[0].slave_id == 0 || ecatSlave->motor[1].slave_id == 0 || ecatSlave->slave.slave_id == 0)
     {
         fprintf(stderr, "Slaves identification failure!");
         exit(1);
@@ -183,16 +151,8 @@ RDDA_slave *rddaEcatConfig(void *ifnameptr)
     /* Wait for all salves to reach SAFE_OP state */
     ec_statecheck(0, EC_STATE_SAFE_OP, EC_TIMEOUTSTATE);
 
-    /* Initialize motor params */
-    /*
-    if (initMotor(rdda_slave->motor1) || initMotor(rdda_slave->motor2))
-    {
-        ec_close();
-        fprintf(stderr, "Motor initialization failure!");
-    }
-     */
-    initMotor(rddaSlave->motor[0].slave_id);
-    initMotor(rddaSlave->motor[1].slave_id);
+    initMotor(ecatSlave->motor[0].slave_id);
+    initMotor(ecatSlave->motor[1].slave_id);
     printf("Slaves initialized, state to OP\n");
 
     /* Check if all slaves are working properly */
@@ -217,15 +177,15 @@ RDDA_slave *rddaEcatConfig(void *ifnameptr)
 
     for (int mot_id = 0; mot_id < 2; mot_id ++)
     {
-        rddaSlave->motor[mot_id].in_motor = (MotorIn *)ec_slave[rddaSlave->motor[mot_id].slave_id].inputs;
+        ecatSlave->motor[mot_id].in_motor = (motor_input *)ec_slave[ecatSlave->motor[mot_id].slave_id].inputs;
     }
-    rddaSlave->psensor.in_pressure = (PressureIn *)ec_slave[rddaSlave->psensor.slave_id].inputs;
+    ecatSlave->slave.in_analog = (analog_input *)ec_slave[ecatSlave->slave.slave_id].inputs;
 
     /* Recheck */
     if (ec_slave[0].state == EC_STATE_OPERATIONAL)
     {
         printf("Operational state reached for all slaves\n");
-        return rddaSlave;
+        return ecatSlave;
     }
     else
     {
@@ -275,53 +235,24 @@ int64 ec_sync(int64 reftime, int64 cycletime)
     return -(delta/100)-(integral/20);
 }
 
-/** Sync PDO data by layers
+/** Get system time in microseconds (us)
  *
- * @param rddaSlave
- * @param jointStates
+ * @param rddaSlave     =   rdda structure.
+ * @return system time at nearest us.
  */
-void rdda_update(RDDA_slave *rddaSlave, JointStates *jointStates)
-{
-    ec_receive_processdata(EC_TIMEOUTRET);
-
-    /* Update joint states */
-    mutex_lock(&jointStates->mutex);
-
-    for (int i = 0; i < 2; i++) {
-        jointStates->stat_wd[i] = (int)(rddaSlave->motor[i].in_motor->stat_wd);
-        jointStates->act_pos[i] = (double)(rddaSlave->motor[i].in_motor->act_pos/COUNTS_PER_RADIAN);
-        jointStates->act_vel[i] = (double)(rddaSlave->motor[i].in_motor->act_vel/COUNTS_PER_RADIAN/10.0);
-    }
-    jointStates->act_tau[0] = (double)(rddaSlave->psensor.in_pressure->val1 * PASCAL_PER_COUNT * NM_PER_PASCAL);
-    jointStates->act_tau[1] = (double)(rddaSlave->psensor.in_pressure->val2 * PASCAL_PER_COUNT * NM_PER_PASCAL);
-
-    mutex_unlock(&jointStates->mutex);
-
-    /* Update joint commands */
-/*
-    mutex_lock(&jointCommands->mutex);
-
-    for (int j = 0; j < 2; j++) {
-        rddaSlave->motor[j].out_motor->ctrl_wd = (uint16)(jointCommands->ctrl_wd[j]);
-        rddaSlave->motor[j].out_motor->tg_pos = (int32)(jointCommands->tg_pos[j] * (double)COUNTS_PER_RADIAN);
-        rddaSlave->motor[j].out_motor->vel_off = (int32)(jointCommands->vel_off[j] * (double)COUNTS_PER_RADIAN * 10.0);
-        rddaSlave->motor[j].out_motor->tau_off = (int16)(jointCommands->tau_off[j] * (double)UNITS_PER_NM);
-    }
-
-    mutex_unlock(&jointCommands->mutex);
-*/
-
-    ec_send_processdata();
-}
-
-int rdda_gettime(RDDA_slave *rddaSlave)
+int rdda_gettime(ecat_slave *rddaSlave)
 {
     int64 nsec_per_sec = 1000000000;
     clock_gettime(CLOCK_MONOTONIC, &rddaSlave->ts);
-    return (int)(rddaSlave->ts.tv_sec * nsec_per_sec + rddaSlave->ts.tv_nsec) / 1000;
+    return (int)(rddaSlave->ts.tv_sec * nsec_per_sec + rddaSlave->ts.tv_nsec) / 1000 + 1;
 }
 
-void rdda_sleep(RDDA_slave *rddaSlave, int cycletime)
+/** Sleep and calibrate DC time.
+ *
+ * @param rddaSlave     =   rdda structure.
+ * @param cycletime     =   sleep time.
+ */
+void rdda_sleep(ecat_slave *rddaSlave, int cycletime)
 {
     int64 cycletime_ns = cycletime * 1000;
     int toff = 0;
@@ -330,6 +261,30 @@ void rdda_sleep(RDDA_slave *rddaSlave, int cycletime)
     }
     add_timespec(&rddaSlave->ts, cycletime_ns + toff);
     clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &rddaSlave->ts, NULL);
+}
+
+/** Sync PDO data by layers
+ *
+ * @param rddaSlave
+ * @param jointStates
+ */
+void rdda_update(ecat_slave *ecatSlave, RDDA_slave *rddaSlave)
+{
+    ec_receive_processdata(EC_TIMEOUTRET);
+
+    /* Update joint states */
+    mutex_lock(&rddaSlave->mutex);
+
+    for (int i = 0; i < 2; i++) {
+        rddaSlave->motor[i].motorIn.act_pos = (double)(ecatSlave->motor[i].in_motor->act_pos/COUNTS_PER_RADIAN);
+        rddaSlave->motor[i].motorIn.act_vel = (double)(ecatSlave->motor[i].in_motor->act_vel/COUNTS_PER_RADIAN/10.0);
+    }
+    rddaSlave->psensor.analogIn.val1 = (double)(ecatSlave->slave.in_analog->val1 * PASCAL_PER_COUNT * NM_PER_PASCAL);
+    rddaSlave->psensor.analogIn.val2 = (double)(ecatSlave->slave.in_analog->val2 * PASCAL_PER_COUNT * NM_PER_PASCAL);
+
+    mutex_unlock(&rddaSlave->mutex);
+
+    ec_send_processdata();
 }
 
 //#define EC_TIMEOUTMON 500

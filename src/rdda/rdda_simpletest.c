@@ -21,31 +21,25 @@ void rdda_run (void *ifnameptr)
 {
     char *ifname = ifnameptr;
     /* EtherCAT struct */
-    RDDA_slave *rddaSlave;
+    ecat_slave *ecatSlave;
     /* User friendly struct */
-    JointCommands   *jointCommands;
-    JointStates     *jointStates;
+    RDDA_slave *rddaSlave;
     int cycletime;
     int start_time, end_time;
     int delta_time;
     int loopnum;
 
     /* Configure ethercat network and slaves. */
-    rddaSlave = rddaEcatConfig(ifname);
-    if (rddaSlave == NULL) {
+    ecatSlave = rddaEcatConfig(ifname);
+    if (ecatSlave == NULL) {
         fprintf(stderr, "Init rddaSlave failed.\n");
         exit(1);
     }
     printf("Network configuration succeed.\n");
 
     /* Initialize user-friendly struct */
-    jointCommands = initJointCommands();
-    if (jointCommands == NULL) {
-        fprintf(stderr, "Init jointCommands failed.\n");
-        exit(1);
-    }
-    jointStates = initJointStates();
-    if (jointStates == NULL) {
+    rddaSlave = initRddaSlave();
+    if (rddaSlave == NULL) {
         fprintf(stderr, "Init jointStates failed.\n");
         exit(1);
     }
@@ -56,19 +50,21 @@ void rdda_run (void *ifnameptr)
 
     for (loopnum = 0; loopnum < 20000; loopnum ++) {
 
-        start_time = rdda_gettime(rddaSlave);
-        rdda_update(rddaSlave, jointStates);
-        end_time = rdda_gettime(rddaSlave);
+        start_time = rdda_gettime(ecatSlave);
+        rdda_update(ecatSlave, rddaSlave);
+        end_time = rdda_gettime(ecatSlave);
         delta_time = cycletime - (end_time - start_time);
-        rdda_sleep(rddaSlave, delta_time);
+        rdda_sleep(ecatSlave, delta_time);
+
         printf("pos[0]: +%lf, vel[0]: +%lf, tau[0]: +%lf, pos[1]: +%lf, vel[1]: +%lf, tau[1]: +%lf, ctime: %d\r",
-               jointStates->act_pos[0], jointStates->act_vel[0], jointStates->act_tau[0],
-               jointStates->act_pos[1], jointStates->act_vel[1], jointStates->act_tau[1],
+               rddaSlave->motor[0].motorIn.act_pos, rddaSlave->motor[0].motorIn.act_vel, rddaSlave->psensor.analogIn.val1,
+               rddaSlave->motor[1].motorIn.act_pos, rddaSlave->motor[1].motorIn.act_vel, rddaSlave->psensor.analogIn.val2,
                delta_time
         );
+
     }
 
-    rddaStop(rddaSlave);
+    rddaStop(ecatSlave);
 }
 
 int main(int argc, char **argv)

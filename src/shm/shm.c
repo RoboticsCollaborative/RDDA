@@ -1,7 +1,11 @@
 #include "shm.h"
 
+/*
 char* JOINT_COMMANDS    = (char*)"/joint_commands";
 char* JOINT_STATES      = (char*)"/joint_states";
+ */
+
+char* RDDA_DATA     =   (char *)"/rdda_data";
 
 /** Acuqire robust mutex
   *
@@ -96,49 +100,20 @@ openSharedMemory(char *shm_name, void **p) {
  *
  * @return jointCommands pointer.
  */
-JointCommands *initJointCommands() {
+RDDA_slave *initRddaSlave() {
 
-    JointCommands *jointCommands;
+    RDDA_slave *rddaSlave;
     void *p;
 
-    if (!openSharedMemory(JOINT_COMMANDS, &p)) {
-        jointCommands = (JointCommands *) p;
+    if (!openSharedMemory(RDDA_DATA, &p)) {
+        rddaSlave = (RDDA_slave *) p;
     } else {
         fprintf(stderr, "open(joint_commands)\n");
         return NULL;
     }
 
     /* initialise mutex lock */
-    mutex_init(&jointCommands->mutex);
+    mutex_init(&rddaSlave->mutex);
 
-    return jointCommands;
-}
-
-/** Initialize jointStates to shared memory and robust mutex.
- *
- * @return jointStates pointer.
- */
-JointStates *initJointStates() {
-
-    JointStates *jointStates;
-    void *p;
-
-    if (!openSharedMemory(JOINT_STATES, &p)) {
-        jointStates = (JointStates *) p;
-    } else {
-        fprintf(stderr, "open(joint_states)\n");
-        return NULL;
-    }
-
-    for (int i = 0; i < 2; i++) {
-        jointStates->stat_wd[i] = 0;
-        jointStates->act_pos[i] = 0.0;
-        jointStates->act_vel[i] = 0.0;
-        jointStates->act_tau[i] = 0.0;
-    }
-
-    /* initialise mutex lock */
-    mutex_init(&jointStates->mutex);
-
-    return jointStates;
+    return rddaSlave;
 }
