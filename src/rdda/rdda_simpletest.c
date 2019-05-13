@@ -1,88 +1,105 @@
 /* rdda_simpletest.c */
 
-//#define _GNU_SOURCE
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <sched.h>
 #include <pthread.h>
+#include <sched.h>
 #include <signal.h>
+#include <time.h>
 
 #include "ethercat.h"
 #include "rdda_ecat.h"
 #include "rdda_base.h"
+#include "shm_data.h"
+#include "shm.h"
 
-
-void rdda_simpletest(void *ifnameptr)
+void rdda_run (void *ifnameptr)
 {
-    /**
-     *  EtherCAT network configuration and slave identification
-     */
     char *ifname = ifnameptr;
-    SlaveIndex *slaveIndex;
-    int motor[2], psensor;
-    double theta_rad[2];
-    double comp_Nm[2];
-
-//    int64 NSEC_PER_SEC = 1000000000;
-    double COUNTS_PER_RADIAN = 52151.8917;
-    double PASCAL_PER_COUNT = 21.04178;
-    double NM_PER_PASCAL = 2.822e-6;
+    /* EtherCAT struct */
+    RDDA_slave *rddaSlave;
+    /* User friendly struct */
+    JointCommands   *jointCommands;
+    JointStates     *jointStates;
+    int cycletime;
+    int start_time, end_time;
+    int delta_time;
+    int loopnum;
 
     /* Configure ethercat network and slaves. */
-    slaveIndex= rddaEcatConfig(ifname);
-    motor[0] = slaveIndex->motor[0];
-    motor[1] = slaveIndex->motor[1];
-    psensor = slaveIndex->psensor;
-
-    printf("motor0: %d, motor1: %d, psensor: %d\n", motor[0], motor[1], psensor);
-
-    free(slaveIndex);
-
-    /**
-     *  Initialize input/ouput interface
-     */
-    MotorIn *motorIn[2];
-    for (int mot_id = 0; mot_id < 2; mot_id ++)
-    {
-        motorIn[mot_id] = (MotorIn *) ec_slave[motor[mot_id]].inputs;
+    rddaSlave = rddaEcatConfig(ifname);
+    if (rddaSlave == NULL) {
+        fprintf(stderr, "Init rddaSlave failed.\n");
+        exit(1);
     }
-    PressureIn *pressureIn = (PressureIn *) ec_slave[psensor].inputs;
-//    printf("motor: %lf. pressure: %lf\n", (double)motorIn[0]->act_pos, (double)pressureIn->val1);
+    printf("Network configuration succeed.\n");
 
-    /**
-     *  PDO transfer
-     */
-    for (int i=1; i<20000; i++)
-    {
-        ec_receive_processdata(EC_TIMEOUTRET);
+    /* Initialize user-friendly struct */
+    jointCommands = initJointCommands();
+    if (jointCommands == NULL) {
+        fprintf(stderr, "Init jointCommands failed.\n");
+        exit(1);
+    }
+    jointStates = initJointStates();
+    if (jointStates == NULL) {
+        fprintf(stderr, "Init jointStates failed.\n");
+        exit(1);
+    }
+    printf("Input/output interface succeed.\n");
 
-        theta_rad[0] = (double)(motorIn[0]->act_pos)/COUNTS_PER_RADIAN;
-        theta_rad[1] = (double)(motorIn[1]->act_pos)/COUNTS_PER_RADIAN;
-        comp_Nm[0] = (double)(pressureIn->val1) * PASCAL_PER_COUNT * NM_PER_PASCAL;
-        comp_Nm[1] = (double)(pressureIn->val2) * PASCAL_PER_COUNT * NM_PER_PASCAL;
-        
-        printf("theta1: %+2.4lf, theta2: %+2.4lf, pressure1: %+2.4f, pressure2: %+2.4lf\r", theta_rad[0], theta_rad[1], comp_Nm[0], comp_Nm[1]);
-        fflush(stdout);
+    /* timer */
+    cycletime = 500; /* 500us */
 
-        ec_send_processdata();
+    for (loopnum = 0; loopnum < 20000; loopnum ++) {
+
+        start_time = rdda_gettime(rddaSlave);
+        rdda_update(rddaSlave, jointStates);
+        end_time = rdda_gettime(rddaSlave);
+        delta_time = cycletime - (end_time - start_time);
+        rdda_sleep(rddaSlave, delta_time);
+        printf("pos[0]: +%lf, vel[0]: +%lf, tau[0]: +%lf, pos[1]: +%lf, vel[1]: +%lf, tau[1]: +%lf, ctime: %d\r",
+               jointStates->act_pos[0], jointStates->act_vel[0], jointStates->act_tau[0],
+               jointStates->act_pos[1], jointStates->act_vel[1], jointStates->act_tau[1],
+               delta_time
+        );
     }
 
-    printf("\nRequest init state for all slaves\n");
-    ec_slave[0].state = EC_STATE_INIT;
-    ec_writestate(0);
-    printf("End RDDA, close socket.\n");
-    ec_close();
+    rddaStop(rddaSlave);
 }
 
 int main(int argc, char **argv)
 {
+    pthread_t rt_thread;
+    struct sched_param param;
+    int policy = SCHED_FIFO;
+
     printf("SOEM (Simple Open EtherCAT Master)\nRDDA-HAND Run\n");
 
     if (argc > 1)
     {
-        rdda_simpletest(argv[1]);
+
+
+        /* Create realtime thread */
+        pthread_create(&rt_thread, NULL, (void *)&rdda_run, (void *)argv[1]);
+        // rdda_run(argv[1]);
+
+        /* Scheduler */
+        memset(&param, 0, sizeof(param));
+        param.sched_priority = 40;
+        pthread_setschedparam(rt_thread, policy, &param);
+
+        /* Core-Iso */
+        cpu_set_t CPU3;
+        CPU_ZERO(&CPU3);
+        CPU_SET(3, &CPU3);
+        pthread_setaffinity_np(rt_thread, sizeof(CPU3), &CPU3);
+
+        /* Wait until sub-thread is finished */
+        pthread_join(rt_thread, NULL);
     }
     else
     {

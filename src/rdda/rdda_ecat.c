@@ -1,23 +1,32 @@
 /** rdda_ecat.c */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
-
-#include "ethercat.h"
-#include "init_BEL.h"
 #include "rdda_ecat.h"
 
 /* SOEM global vars */
 char IOmap[4096];
-boolean inOP;
-boolean needlf;
-uint8 currentgroup = 0;
+//boolean inOP;
+//boolean needlf;
+//uint8 currentgroup = 0;
+
+void delete_RDDA_slave(RDDA_slave *slave)
+{
+    /*
+    for (int mot_id = 0; mot_id < 2; mot_id ++)
+    {
+        free(slave->motor[mot_id]);
+    }
+    free(slave->psensor);
+    */
+    free(slave);
+}
 
 /** Close socket */
-void rddaStop()
+void rddaStop(RDDA_slave *slave)
 {
+    printf("\nRequest init state for all slaves\n");
+    ec_slave[0].state = EC_STATE_INIT;
+    ec_writestate(0);
+    delete_RDDA_slave(slave);
     printf("Close socket\n");
     ec_close(); /* stop SOEM, close socket */
 }
@@ -27,7 +36,7 @@ void rddaStop()
  * @param rdda_slave    = Slave index group.
  * @return 0 on success.
  */
-static int slaveIdentify(SlaveIndex *network)
+static int slaveIdentify(RDDA_slave *slave)
 {
     uint16 idx = 0;
     int buf = 0;
@@ -43,7 +52,8 @@ static int slaveIdentify(SlaveIndex *network)
             /* motor1 */
             if (serial_num == 0x2098302)
             {
-                network->motor[0] = idx;
+                //network->motor[0] = idx;
+                slave->motor[0].slave_id = idx;
                 /* CompleteAccess disabled for BEL drive */
                 //ec_slave[slaveIdx].CoEdetails ^= ECT_COEDET_SDOCA;
                 /* Set PDO mapping */
@@ -57,7 +67,7 @@ static int slaveIdentify(SlaveIndex *network)
             /* motor2 */
             if (serial_num == 0x2098303)
             {
-                network->motor[1] = idx;
+                slave->motor[1].slave_id = idx;
                 /* CompleteAccess disabled for BEL drive */
                 //ec_slave[slaveIdx].CoEdetails ^= ECT_COEDET_SDOCA;
                 /* Set PDO mapping */
@@ -72,7 +82,7 @@ static int slaveIdentify(SlaveIndex *network)
         /* pressure sensor */
         if ((ec_slave[idx].eep_man == 0x00000002) && (ec_slave[idx].eep_id == 0x0c1e3052))
         {
-            network->psensor = idx;
+            slave->psensor.slave_id = idx;
         }
     }
 
@@ -84,7 +94,7 @@ static int slaveIdentify(SlaveIndex *network)
  * @param ifnameptr = NIC interface pointer
  * @return 0.
  */
-SlaveIndex *rddaEcatConfig(void *ifnameptr)
+RDDA_slave *rddaEcatConfig(void *ifnameptr)
 {
     char *ifname  = (char *)ifnameptr;
 
@@ -93,6 +103,7 @@ SlaveIndex *rddaEcatConfig(void *ifnameptr)
     int expectedWKC;
     int wkc;
 
+/*
     SlaveIndex *slaveIndex;
     slaveIndex = (SlaveIndex *)malloc(sizeof(SlaveIndex));
     if ( slaveIndex == NULL)
@@ -100,9 +111,33 @@ SlaveIndex *rddaEcatConfig(void *ifnameptr)
         return NULL;
     }
     memset(slaveIndex, 0, sizeof(SlaveIndex));
-    
-    printf("Begin network configuration\n");
+*/
 
+    /* Initialize data structure */
+    printf("Init data structure.\n");
+    RDDA_slave *rddaSlave;
+    rddaSlave = (RDDA_slave *)malloc(sizeof(RDDA_slave));
+    if (rddaSlave == NULL)
+    {
+        return NULL;
+    }
+
+    /*
+    rddaSlave->motor = (BEL_slave **)malloc(2 * sizeof(BEL_slave *));
+    if (rddaSlave->motor == NULL)
+    {
+        free(rddaSlave);
+        return NULL;
+    }
+    rddaSlave->psensor = (EL3102_slave *)malloc(sizeof(EL3102_slave));
+    if (rddaSlave->psensor == NULL)
+    {
+        free(rddaSlave);
+        return NULL;
+    }
+    */
+
+    printf("Begin network configuration\n");
     /* Initialize SOEM, bind socket to ifname */
     if (ec_init(ifname))
     {
@@ -122,7 +157,7 @@ SlaveIndex *rddaEcatConfig(void *ifnameptr)
     else
     {
 	    fprintf(stderr, "No slaves found!\n");
-	    rddaStop();
+	    ec_close();
 	    exit(1);
     }
 
@@ -130,8 +165,9 @@ SlaveIndex *rddaEcatConfig(void *ifnameptr)
     ec_statecheck(0, EC_STATE_PRE_OP, EC_TIMEOUTSTATE);
 
     /* Locate slaves */
-    slaveIdentify(slaveIndex);
-    if (slaveIndex->motor[0] == 0 || slaveIndex->motor[1] == 0 || slaveIndex->psensor == 0)
+    slaveIdentify(rddaSlave);
+    printf("psensor_id: %d\n", rddaSlave->psensor.slave_id);
+    if (rddaSlave->motor[0].slave_id == 0 || rddaSlave->motor[1].slave_id == 0 || rddaSlave->psensor.slave_id == 0)
     {
         fprintf(stderr, "Slaves identification failure!");
         exit(1);
@@ -141,7 +177,7 @@ SlaveIndex *rddaEcatConfig(void *ifnameptr)
     ec_config_map(&IOmap);
 
     /* Let DC off for the time being */
-    //ec_configdc(); // DC should be launched for each identified slave
+    ec_configdc(); // DC should be launched for each identified slave
 
     printf("Slaves mapped, state to SAFE_OP\n");
     /* Wait for all salves to reach SAFE_OP state */
@@ -151,12 +187,12 @@ SlaveIndex *rddaEcatConfig(void *ifnameptr)
     /*
     if (initMotor(rdda_slave->motor1) || initMotor(rdda_slave->motor2))
     {
-        rddaStop();
+        ec_close();
         fprintf(stderr, "Motor initialization failure!");
     }
      */
-    initMotor(slaveIndex->motor[0]);
-    initMotor(slaveIndex->motor[1]);
+    initMotor(rddaSlave->motor[0].slave_id);
+    initMotor(rddaSlave->motor[1].slave_id);
     printf("Slaves initialized, state to OP\n");
 
     /* Check if all slaves are working properly */
@@ -178,15 +214,22 @@ SlaveIndex *rddaEcatConfig(void *ifnameptr)
     ec_writestate(0);
     /* Wait for all slaves to reach OP state */
     ec_statecheck(0, EC_STATE_OPERATIONAL, EC_TIMEOUTSTATE);
+
+    for (int mot_id = 0; mot_id < 2; mot_id ++)
+    {
+        rddaSlave->motor[mot_id].in_motor = (MotorIn *)ec_slave[rddaSlave->motor[mot_id].slave_id].inputs;
+    }
+    rddaSlave->psensor.in_pressure = (PressureIn *)ec_slave[rddaSlave->psensor.slave_id].inputs;
+
     /* Recheck */
     if (ec_slave[0].state == EC_STATE_OPERATIONAL)
     {
         printf("Operational state reached for all slaves\n");
-        return slaveIndex;
+        return rddaSlave;
     }
     else
     {
-        rddaStop();
+        ec_close();
         fprintf(stderr, "Operational state failed\n");
         exit(1);
     }
@@ -206,8 +249,8 @@ void add_timespec(struct timespec *ts, int64 addtime)
     sec = (addtime - nsec) / NSEC_PER_SEC;
     ts->tv_sec += sec;
     ts->tv_nsec += nsec;
-    if (ts->tv_nsec > NSEC_PER_SEC)
-    {
+
+    if (ts->tv_nsec > NSEC_PER_SEC) {
         nsec = ts->tv_nsec % NSEC_PER_SEC;
         ts->tv_sec += (ts->tv_nsec - nsec) / NSEC_PER_SEC;
         ts->tv_nsec = nsec;
@@ -220,7 +263,7 @@ void add_timespec(struct timespec *ts, int64 addtime)
  * @param cycletime    =   Cycle time of PDO transfer.
  * @param offsettime    =   Offset time.
  */
-void ec_sync(int64 reftime, int64 cycletime, int64 *offsettime)
+int64 ec_sync(int64 reftime, int64 cycletime)
 {
     static int64 integral = 0;
     int64 delta;
@@ -229,53 +272,67 @@ void ec_sync(int64 reftime, int64 cycletime, int64 *offsettime)
     if (delta > (cycletime/2)) { delta=delta-cycletime; }
     if (delta > 0) { integral++; }
     if (delta < 0) { integral--; }
-    *offsettime = -(delta/100)-(integral/20);
+    return -(delta/100)-(integral/20);
 }
 
-/** Thread for PDO cyclic transmission.
+/** Sync PDO data by layers
  *
- * @param[in] rdda_slave     =   Slave indices.
+ * @param rddaSlave
+ * @param jointStates
  */
-void pdoUpdate()
+void rdda_update(RDDA_slave *rddaSlave, JointStates *jointStates)
 {
-    struct timespec ts, tleft;
-    int ht;
-    int64 cycletime, toff;
-    int ctime;
+    ec_receive_processdata(EC_TIMEOUTRET);
 
-    clock_gettime(CLOCK_MONOTONIC, &ts);
-    ht = (ts.tv_nsec / 1000000) + 1; /* round to nearest ms */
-    ts.tv_nsec = ht * 1000000;
-    ctime = 500; /* cycletime in us */
-    cycletime = ctime * 1000; /* cycletime in ns */
-    toff = 0;
-    inOP = TRUE;
-    ec_send_processdata();
+    /* Update joint states */
+    mutex_lock(&jointStates->mutex);
 
-    while(1)
-    {
-        /* calculate next cycle start */
-        add_timespec(&ts, cycletime + toff);
-        /* wait to cycle start */
-        clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &ts, &tleft);
-
-//        wkc = ec_receive_processdata(EC_TIMEOUTRET);
-
-        /**
-         *  Cylic part
-         */
-//        theta1_rad = readMotor1Pos()/COUNTS_PER_RADIAN;
-//        printf("Motor1 Position: %lf\n", (double)theta1_rad);
-        needlf = TRUE;
-
-        /* Calulate toff to get linux time and DC synced */
-        ec_sync(ec_DCtime, cycletime, &toff);
-        ec_send_processdata();
-
+    for (int i = 0; i < 2; i++) {
+        jointStates->stat_wd[i] = (int)(rddaSlave->motor[i].in_motor->stat_wd);
+        jointStates->act_pos[i] = (double)(rddaSlave->motor[i].in_motor->act_pos/COUNTS_PER_RADIAN);
+        jointStates->act_vel[i] = (double)(rddaSlave->motor[i].in_motor->act_vel/COUNTS_PER_RADIAN/10.0);
     }
+    jointStates->act_tau[0] = (double)(rddaSlave->psensor.in_pressure->val1 * PASCAL_PER_COUNT * NM_PER_PASCAL);
+    jointStates->act_tau[1] = (double)(rddaSlave->psensor.in_pressure->val2 * PASCAL_PER_COUNT * NM_PER_PASCAL);
+
+    mutex_unlock(&jointStates->mutex);
+
+    /* Update joint commands */
+/*
+    mutex_lock(&jointCommands->mutex);
+
+    for (int j = 0; j < 2; j++) {
+        rddaSlave->motor[j].out_motor->ctrl_wd = (uint16)(jointCommands->ctrl_wd[j]);
+        rddaSlave->motor[j].out_motor->tg_pos = (int32)(jointCommands->tg_pos[j] * (double)COUNTS_PER_RADIAN);
+        rddaSlave->motor[j].out_motor->vel_off = (int32)(jointCommands->vel_off[j] * (double)COUNTS_PER_RADIAN * 10.0);
+        rddaSlave->motor[j].out_motor->tau_off = (int16)(jointCommands->tau_off[j] * (double)UNITS_PER_NM);
+    }
+
+    mutex_unlock(&jointCommands->mutex);
+*/
+
+    ec_send_processdata();
 }
 
-#define EC_TIMEOUTMON 500
+int rdda_gettime(RDDA_slave *rddaSlave)
+{
+    int64 nsec_per_sec = 1000000000;
+    clock_gettime(CLOCK_MONOTONIC, &rddaSlave->ts);
+    return (int)(rddaSlave->ts.tv_sec * nsec_per_sec + rddaSlave->ts.tv_nsec) / 1000;
+}
+
+void rdda_sleep(RDDA_slave *rddaSlave, int cycletime)
+{
+    int64 cycletime_ns = cycletime * 1000;
+    int toff = 0;
+    if (ec_slave[0].hasdc) {
+        toff = ec_sync(ec_DCtime, cycletime);
+    }
+    add_timespec(&rddaSlave->ts, cycletime_ns + toff);
+    clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &rddaSlave->ts, NULL);
+}
+
+//#define EC_TIMEOUTMON 500
 
 /** Error handling in OP mode.
  *
