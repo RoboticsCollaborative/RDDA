@@ -17,8 +17,7 @@
 #include "shm_data.h"
 #include "shm.h"
 
-void rdda_run (void *ifnameptr)
-{
+void rdda_run (void *ifnameptr) {
     char *ifname = ifnameptr;
     /* EtherCAT struct */
     ecat_slave *ecatSlave;
@@ -30,7 +29,7 @@ void rdda_run (void *ifnameptr)
     int loopnum;
 
     /* Configure ethercat network and slaves. */
-    ecatSlave = rddaEcatConfig(ifname);
+    ecatSlave = initEcatConfig(ifname);
     if (ecatSlave == NULL) {
         fprintf(stderr, "Init rddaSlave failed.\n");
         exit(1);
@@ -67,16 +66,14 @@ void rdda_run (void *ifnameptr)
     rddaStop(ecatSlave);
 }
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
     pthread_t rt_thread;
     struct sched_param param;
     int policy = SCHED_FIFO;
 
     printf("SOEM (Simple Open EtherCAT Master)\nRDDA-HAND Run\n");
 
-    if (argc > 1)
-    {
+    if (argc > 1) {
 
 
         /* Create realtime thread */
@@ -97,8 +94,7 @@ int main(int argc, char **argv)
         /* Wait until sub-thread is finished */
         pthread_join(rt_thread, NULL);
     }
-    else
-    {
+    else {
         printf("Usage: haptic_run ifname1\nifname = enp1s0 for example\n");
     }
 

@@ -62,7 +62,11 @@ typedef struct
     motor_input *in_motor;
     motor_output *out_motor;
     /* Motor attributes */
-    int64 countsPerRad;
+    int counts_per_rad;
+    int counts_per_rad_sec;
+    int pascal_per_count;
+    int nm_per_pascal;
+    int units_per_nm;
 } bel_slave;
 
 /** EL3102 slave class */
@@ -72,27 +76,15 @@ typedef struct
     analog_input *in_analog;
 } el3102_slave;
 
-/*
-typedef struct
-{
-    struct timespec ts;
-    int64 delta_time;
-} Run_time;
-*/
-
 /** EtherCAT slave class */
 typedef struct
 {
-    bel_slave motor[2];
-    el3102_slave slave;
+    bel_slave bel[2];
+    el3102_slave el3102;
     struct timespec ts;
 } ecat_slave;
 
-ecat_slave *rddaEcatConfig(void *ifnameptr);
-void rdda_update(ecat_slave *ecatSlave, RDDA_slave *rddaSlave);
-void rddaStop(ecat_slave *rddaSlave);
-int rdda_gettime(ecat_slave *rddaSlave);
-void rdda_sleep(ecat_slave *rddaSlave, int cycletime);
+ecat_slave *initEcatConfig(void *ifnameptr);
 void ecatcheck(void *ptr);
 
 #endif //RDDA_ECAT_H
