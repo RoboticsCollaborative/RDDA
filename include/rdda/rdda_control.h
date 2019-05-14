@@ -1,0 +1,4 @@
+#ifndef RDDA_CONTROL_H
+#define RDDA_CONTROL_H
+
+#endif //RDDA_CONTROL_H

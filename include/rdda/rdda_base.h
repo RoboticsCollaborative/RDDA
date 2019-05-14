@@ -1,5 +1,5 @@
-#ifndef RDDA_RDDA_BASE_H
-#define RDDA_RDDA_BASE_H
+#ifndef RDDA_BASE_H
+#define RDDA_BASE_H
 
 #include <stdio.h>
 #include <string.h>
@@ -15,4 +15,4 @@ int rdda_gettime(ecat_slave *rddaSlave);
 void rdda_sleep(ecat_slave *rddaSlave, int cycletime);
 double torque_saturation(double max_torque, double raw_torque);
 
-#endif //RDDA_RDDA_BASE_H
+#endif //RDDA_BASE_H

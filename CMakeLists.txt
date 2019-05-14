@@ -34,6 +34,7 @@ add_library(${PROJECT_NAME}_src
         src/${PROJECT_NAME}/rdda_ecat.c
         src/${PROJECT_NAME}/init_BEL.c
         src/${PROJECT_NAME}/rdda_base.c
+        src/${PROJECT_NAME}/rdda_control.c
         src/shm/shm.c
         )
 
