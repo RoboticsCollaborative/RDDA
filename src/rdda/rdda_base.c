@@ -2,7 +2,12 @@
 
 #include "rdda_base.h"
 
-void delete_rdda_slave(ecat_slave *slave) {
+/** Free EtherCAT slave memory.
+ *
+ * @param slave
+ */
+static void
+delete_ecat_slave(ecat_slave *slave) {
     free(slave);
 }
 
@@ -11,7 +16,7 @@ void rddaStop(ecat_slave *slave) {
     printf("\nRequest init state for all slaves\n");
     ec_slave[0].state = EC_STATE_INIT;
     ec_writestate(0);
-    delete_rdda_slave(slave);
+    delete_ecat_slave(slave);
     printf("Close socket\n");
     ec_close(); /* stop SOEM, close socket */
 }
@@ -88,18 +93,38 @@ void rdda_sleep(ecat_slave *rddaSlave, int cycletime) {
  */
 void rdda_update(ecat_slave *ecatSlave, RDDA_slave *rddaSlave) {
     ec_receive_processdata(EC_TIMEOUTRET);
-
-    /* Update joint states */
     mutex_lock(&rddaSlave->mutex);
 
+    /* Inputs */
     for (int i = 0; i < 2; i++) {
-        rddaSlave->motor[i].motorIn.act_pos = (double)(ecatSlave->bel[i].in_motor->act_pos/COUNTS_PER_RADIAN);
-        rddaSlave->motor[i].motorIn.act_vel = (double)(ecatSlave->bel[i].in_motor->act_vel/COUNTS_PER_RADIAN/10.0);
+        rddaSlave->motor[i].motorIn.act_pos = (double)(ecatSlave->bel[i].in_motor->act_pos / ecatSlave->bel[i].counts_per_rad);
+        rddaSlave->motor[i].motorIn.act_vel = (double)(ecatSlave->bel[i].in_motor->act_vel / ecatSlave->bel[i].counts_per_rad_sec);
     }
-    rddaSlave->psensor.analogIn.val1 = (double)(ecatSlave->el3102.in_analog->val1 * PASCAL_PER_COUNT * NM_PER_PASCAL);
-    rddaSlave->psensor.analogIn.val2 = (double)(ecatSlave->el3102.in_analog->val2 * PASCAL_PER_COUNT * NM_PER_PASCAL);
+    rddaSlave->psensor.analogIn.val1 = (double)(ecatSlave->el3102.in_analog->val1 * ecatSlave->bel[0].pascal_per_count * ecatSlave->bel[0].nm_per_pascal);
+    rddaSlave->psensor.analogIn.val2 = (double)(ecatSlave->el3102.in_analog->val2 * ecatSlave->bel[1].pascal_per_count * ecatSlave->bel[1].nm_per_pascal);
+
+    /* Outputs */
+    for (int j = 0; j < 2; j++) {
+        ecatSlave->bel[j].out_motor->tg_pos = (int32)(rddaSlave->motor->motorOut.tg_pos * ecatSlave->bel[j].counts_per_rad);
+        ecatSlave->bel[j].out_motor->vel_off = (int32)(rddaSlave->motor->motorOut.vel_off * ecatSlave->bel[j].counts_per_rad_sec);
+        ecatSlave->bel[j].out_motor->tau_off = (int16)(rddaSlave->motor->motorOut.tau_off * ecatSlave->bel[j].units_per_nm);
+    }
 
     mutex_unlock(&rddaSlave->mutex);
-
     ec_send_processdata();
+}
+
+/** Torque saturation
+ *
+ * @param max_torque    =   Torque limit.
+ * @param raw_torque    =   Raw value.
+ * @return torque value no more than max torque.
+ */
+double torque_saturation(double max_torque, double raw_torque) {
+    if (raw_torque > max_torque)
+        return max_torque;
+    else if (raw_torque < (-1.0 * max_torque))
+        return (-1.0 * max_torque);
+    else
+        return raw_torque;
 }

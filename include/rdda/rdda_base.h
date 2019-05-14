@@ -13,5 +13,6 @@ void rdda_update(ecat_slave *ecatSlave, RDDA_slave *rddaSlave);
 void rddaStop(ecat_slave *rddaSlave);
 int rdda_gettime(ecat_slave *rddaSlave);
 void rdda_sleep(ecat_slave *rddaSlave, int cycletime);
+double torque_saturation(double max_torque, double raw_torque);
 
 #endif //RDDA_RDDA_BASE_H

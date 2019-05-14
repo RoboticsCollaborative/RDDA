@@ -13,7 +13,8 @@ char IOmap[4096];
  * @param rdda_slave    = Slave index group.
  * @return 0 on success.
  */
-static int slaveIdentify(ecat_slave *slave) {
+static int
+slaveIdentify(ecat_slave *slave) {
     uint16 idx = 0;
     int buf = 0;
     for (idx = 1; idx <= ec_slavecount; idx++) {
@@ -56,6 +57,26 @@ static int slaveIdentify(ecat_slave *slave) {
     }
 
     return 0;
+}
+
+/** Initialize ETherCAT slavs memory and internal constant parameters.
+ *
+ * @param ecatSlave     =   EtherCAT slave structure.
+ */
+static void
+initEcatSlaves(ecat_slave *ecatSlave) {
+    for (int mot_id = 0; mot_id < 2; mot_id ++) {
+        /* Input/output memory allocation */
+        ecatSlave->bel[mot_id].in_motor = (motor_input *)ec_slave[ecatSlave->bel[mot_id].slave_id].inputs;
+        ecatSlave->bel[mot_id].out_motor = (motor_output *)ec_slave[ecatSlave->bel[mot_id].slave_id].outputs;
+        /* Constant parameters assignment */
+        ecatSlave->bel[mot_id].counts_per_rad = 52151.8917;
+        ecatSlave->bel[mot_id].counts_per_rad_sec = 52151.8917/10.0;
+        ecatSlave->bel[mot_id].pascal_per_count = 21.04178;
+        ecatSlave->bel[mot_id].nm_per_pascal = 2.822e-6;
+        ecatSlave->bel[mot_id].units_per_nm = 5000.0;
+    }
+    ecatSlave->el3102.in_analog = (analog_input *)ec_slave[ecatSlave->el3102.slave_id].inputs;
 }
 
 /** Set up EtherCAT NIC and state machine to request all slaves to work properly.
@@ -143,10 +164,8 @@ ecat_slave *initEcatConfig(void *ifnameptr) {
     /* Wait for all slaves to reach OP state */
     ec_statecheck(0, EC_STATE_OPERATIONAL, EC_TIMEOUTSTATE);
 
-    for (int mot_id = 0; mot_id < 2; mot_id ++) {
-        ecatSlave->bel[mot_id].in_motor = (motor_input *)ec_slave[ecatSlave->bel[mot_id].slave_id].inputs;
-    }
-    ecatSlave->el3102.in_analog = (analog_input *)ec_slave[ecatSlave->el3102.slave_id].inputs;
+    /* Initialize slaves before use */
+    initEcatSlaves(ecatSlave);
 
     /* Recheck */
     if (ec_slave[0].state == EC_STATE_OPERATIONAL) {

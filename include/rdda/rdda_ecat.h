@@ -62,11 +62,11 @@ typedef struct
     motor_input *in_motor;
     motor_output *out_motor;
     /* Motor attributes */
-    int counts_per_rad;
-    int counts_per_rad_sec;
-    int pascal_per_count;
-    int nm_per_pascal;
-    int units_per_nm;
+    double counts_per_rad;
+    double counts_per_rad_sec;
+    double pascal_per_count;
+    double nm_per_pascal;
+    double units_per_nm;
 } bel_slave;
 
 /** EL3102 slave class */
