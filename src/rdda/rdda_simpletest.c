@@ -11,9 +11,9 @@
 #include <signal.h>
 #include <time.h>
 
-#include "ethercat.h"
 #include "rdda_ecat.h"
 #include "rdda_base.h"
+#include "rdda_control.h"
 #include "shm_data.h"
 #include "shm.h"
 
@@ -47,10 +47,18 @@ void rdda_run (void *ifnameptr) {
     /* timer */
     cycletime = 500; /* 500us */
 
+    /* Initialize controller */
+    initDobController(rddaSlave);
+    rdda_update(ecatSlave, rddaSlave);
+
     for (loopnum = 0; loopnum < 20000; loopnum ++) {
 
         start_time = rdda_gettime(ecatSlave);
+
+        /* Implement controller */
+        dobController(rddaSlave);
         rdda_update(ecatSlave, rddaSlave);
+
         end_time = rdda_gettime(ecatSlave);
         delta_time = cycletime - (end_time - start_time);
         rdda_sleep(ecatSlave, delta_time);
