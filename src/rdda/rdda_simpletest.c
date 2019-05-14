@@ -48,15 +48,15 @@ void rdda_run (void *ifnameptr) {
     cycletime = 500; /* 500us */
 
     /* Initialize controller */
-    initDobController(rddaSlave);
-    rdda_update(ecatSlave, rddaSlave);
+    //initDobController(rddaSlave);
+    //rdda_update(ecatSlave, rddaSlave);
 
     for (loopnum = 0; loopnum < 20000; loopnum ++) {
 
         start_time = rdda_gettime(ecatSlave);
 
         /* Implement controller */
-        dobController(rddaSlave);
+        //dobController(rddaSlave);
         rdda_update(ecatSlave, rddaSlave);
 
         end_time = rdda_gettime(ecatSlave);
