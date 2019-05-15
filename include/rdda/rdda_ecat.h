@@ -57,7 +57,7 @@ typedef struct PACKED
 /** BEL slave class */
 typedef struct
 {
-    int slave_id;
+    uint16 slave_id;
     /* Input/output interface */
     motor_input *in_motor;
     motor_output *out_motor;
@@ -72,7 +72,7 @@ typedef struct
 /** EL3102 slave class */
 typedef struct
 {
-    int slave_id;
+    uint16 slave_id;
     analog_input *in_analog;
 } el3102_slave;
 
@@ -85,6 +85,8 @@ typedef struct
 } ecat_slave;
 
 ecat_slave *initEcatConfig(void *ifnameptr);
+int32 positionSDOread(uint16 slave_id);
+void pivGainSDOwrite(uint16 slave_id, uint16 Pp, uint16 Vp);
 void ecatcheck(void *ptr);
 
 #endif //RDDA_ECAT_H

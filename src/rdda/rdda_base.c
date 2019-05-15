@@ -105,6 +105,7 @@ void rdda_update(ecat_slave *ecatSlave, RDDA_slave *rddaSlave) {
 
     /* Outputs */
     for (int j = 0; j < 2; j++) {
+        ecatSlave->bel[j].out_motor->ctrl_wd = 1;
         ecatSlave->bel[j].out_motor->tg_pos = (int32)(rddaSlave->motor->motorOut.tg_pos * ecatSlave->bel[j].counts_per_rad);
         ecatSlave->bel[j].out_motor->vel_off = (int32)(rddaSlave->motor->motorOut.vel_off * ecatSlave->bel[j].counts_per_rad_sec);
         ecatSlave->bel[j].out_motor->tau_off = (int16)(rddaSlave->motor->motorOut.tau_off * ecatSlave->bel[j].units_per_nm);
@@ -116,15 +117,35 @@ void rdda_update(ecat_slave *ecatSlave, RDDA_slave *rddaSlave) {
 
 /** Torque saturation
  *
- * @param max_torque    =   Torque limit.
- * @param raw_torque    =   Raw value.
- * @return torque value no more than max torque.
+ * @param max_value    =   Maximum value.
+ * @param raw_value    =   Raw value.
+ * @return filtered value with max value.
  */
-double torque_saturation(double max_torque, double raw_torque) {
-    if (raw_torque > max_torque)
-        return max_torque;
-    else if (raw_torque < (-1.0 * max_torque))
-        return (-1.0 * max_torque);
+double saturation(double max_value, double raw_value) {
+    if (raw_value > max_value)
+        return max_value;
+    else if (raw_value < (-1.0 * max_value))
+        return (-1.0 * max_value);
     else
-        return raw_torque;
+        return raw_value;
+}
+
+/** Let motor be static at launch time.
+ *
+ * @param ecatSlave     =   EtherCAT structure.
+ * @param rddaSlave     =   RDDA structure (user-friendly).
+ */
+void initRddaStates(ecat_slave *ecatSlave, RDDA_slave *rddaSlave) {
+    int32 initial_theta1_cnts[2];
+    uint16  mot_id[2];
+
+    /* Request initial data via SDO */
+    for (int i = 0; i < 2; i++) {
+        mot_id[i] = ecatSlave->bel[i].slave_id;
+        initial_theta1_cnts[i] = positionSDOread(mot_id[i]);
+        /* Init motor position */
+        rddaSlave->motor[i].motorIn.act_pos = (double)(initial_theta1_cnts[i] / ecatSlave->bel[i].counts_per_rad);
+        /* Init motor velocity */
+        rddaSlave->motor[i].motorIn.act_vel = 0.0;
+    }
 }

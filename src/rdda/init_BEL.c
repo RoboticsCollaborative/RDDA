@@ -10,24 +10,23 @@
  * @param value     = Output value.
  * @return working counter.
  */
-static int SDO_write8(uint16 slave, uint16 index, uint8 subindex, uint8 value) {
+int SDO_write8(uint16 slave, uint16 index, uint8 subindex, uint8 value) {
     int wkc;
     wkc = ec_SDOwrite (slave, index, subindex, FALSE, sizeof(value), &value, EC_TIMEOUTRXM);
     return wkc;
 }
 
-static int SDO_write16(uint16 slave, uint16 index, uint8 subindex, uint16 value) {
+int SDO_write16(uint16 slave, uint16 index, uint8 subindex, uint16 value) {
     int wkc;
     wkc = ec_SDOwrite (slave, index, subindex, FALSE, sizeof(value), &value, EC_TIMEOUTRXM);
     return wkc;
 }
 
-static int SDO_write32 (uint16 slave, uint16 index, uint8 subindex, uint32 value) {
+int SDO_write32 (uint16 slave, uint16 index, uint8 subindex, uint32 value) {
     int wkc;
     wkc = ec_SDOwrite (slave, index, subindex, FALSE, sizeof(value), &value, EC_TIMEOUTRXM);
     return wkc;
 }
-
 
 /** Map BEL motor drive PDOs in CSP mode.
  *

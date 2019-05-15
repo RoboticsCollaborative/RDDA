@@ -179,6 +179,29 @@ ecat_slave *initEcatConfig(void *ifnameptr) {
     }
 }
 
+/** Read actual position value via SDO
+ *
+ * @param slave_id  =   Slave index.
+ * @return position value in counts.
+ */
+int32 positionSDOread(uint16 slave_id) {
+    int32 initial_theta1_cnts = 0;
+    int size = sizeof(initial_theta1_cnts);
+    ec_SDOread(slave_id, 0x6064, 0, FALSE, &size, &initial_theta1_cnts, EC_TIMEOUTRXM);
+    return initial_theta1_cnts;
+}
+
+/** Write PIV gain values via SDO
+ *
+ * @param slave_id  =   Slave index.
+ * @param Pp        =   Pp gain.
+ * @param Vp        =   Vp gain.
+ */
+void pivGainSDOwrite(uint16 slave_id, uint16 Pp, uint16 Vp) {
+    SDO_write16(slave_id, 0x2382, 1, Pp);        /* position loop gain (Pp) */
+    SDO_write16(slave_id, 0x2381, 1, Vp);        /* velocity loop gain (Vp) */
+}
+
 //#define EC_TIMEOUTMON 500
 
 /** Error handling in OP mode.

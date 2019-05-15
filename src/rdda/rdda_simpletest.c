@@ -48,8 +48,9 @@ void rdda_run (void *ifnameptr) {
     cycletime = 500; /* 500us */
 
     /* Initialize controller */
-    //initDobController(rddaSlave);
-    //rdda_update(ecatSlave, rddaSlave);
+    pivGainSDOwrite(ecatSlave->bel[0].slave_id, 0, 0);
+    pivGainSDOwrite(ecatSlave->bel[1].slave_id, 0, 0);
+    initRddaStates(ecatSlave, rddaSlave);
 
     for (loopnum = 0; loopnum < 20000; loopnum ++) {
 
