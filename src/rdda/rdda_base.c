@@ -93,6 +93,7 @@ void rdda_sleep(ecat_slave *rddaSlave, int cycletime) {
  */
 void rdda_update(ecat_slave *ecatSlave, RDDA_slave *rddaSlave) {
     ec_receive_processdata(EC_TIMEOUTRET);
+    //ec_send_processdata();
     mutex_lock(&rddaSlave->mutex);
 
     /* Inputs */
@@ -106,12 +107,13 @@ void rdda_update(ecat_slave *ecatSlave, RDDA_slave *rddaSlave) {
     /* Outputs */
     for (int j = 0; j < 2; j++) {
         ecatSlave->bel[j].out_motor->ctrl_wd = 1;
-        ecatSlave->bel[j].out_motor->tg_pos = (int32)(rddaSlave->motor->motorOut.tg_pos * ecatSlave->bel[j].counts_per_rad);
-        ecatSlave->bel[j].out_motor->vel_off = (int32)(rddaSlave->motor->motorOut.vel_off * ecatSlave->bel[j].counts_per_rad_sec);
-        ecatSlave->bel[j].out_motor->tau_off = (int16)(rddaSlave->motor->motorOut.tau_off * ecatSlave->bel[j].units_per_nm);
+        ecatSlave->bel[j].out_motor->tg_pos = (int32)(rddaSlave->motor[j].motorOut.tg_pos * ecatSlave->bel[j].counts_per_rad);
+        ecatSlave->bel[j].out_motor->vel_off = (int32)(rddaSlave->motor[j].motorOut.vel_off * ecatSlave->bel[j].counts_per_rad_sec);
+        ecatSlave->bel[j].out_motor->tau_off = (int16)(rddaSlave->motor[j].motorOut.tau_off * ecatSlave->bel[j].units_per_nm);
     }
 
     mutex_unlock(&rddaSlave->mutex);
+    //ec_receive_processdata(EC_TIMEOUTRET);
     ec_send_processdata();
 }
 
@@ -144,8 +146,9 @@ void initRddaStates(ecat_slave *ecatSlave, RDDA_slave *rddaSlave) {
         mot_id[i] = ecatSlave->bel[i].slave_id;
         initial_theta1_cnts[i] = positionSDOread(mot_id[i]);
         /* Init motor position */
-        rddaSlave->motor[i].motorIn.act_pos = (double)(initial_theta1_cnts[i] / ecatSlave->bel[i].counts_per_rad);
+        //rddaSlave->motor[i].motorIn.act_pos = (double)(initial_theta1_cnts[i] / ecatSlave->bel[i].counts_per_rad);
+        rddaSlave->motor[0].motorOut.tg_pos = initial_theta1_cnts[i] / ecatSlave->bel[i].counts_per_rad;
         /* Init motor velocity */
-        rddaSlave->motor[i].motorIn.act_vel = 0.0;
+        //rddaSlave->motor[i].motorIn.act_vel = 0.0;
     }
 }

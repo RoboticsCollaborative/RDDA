@@ -48,28 +48,34 @@ void rdda_run (void *ifnameptr) {
     cycletime = 500; /* 500us */
 
     /* Initialize controller */
-    pivGainSDOwrite(ecatSlave->bel[0].slave_id, 0, 0);
-    pivGainSDOwrite(ecatSlave->bel[1].slave_id, 0, 0);
+    //pivGainSDOwrite(ecatSlave->bel[0].slave_id, 100, 10);
+    //pivGainSDOwrite(ecatSlave->bel[1].slave_id, 0, 0);
     initRddaStates(ecatSlave, rddaSlave);
+    int32 initial_theta1_cnts = positionSDOread(ecatSlave->bel[0].slave_id);
+    double initial_theta1 = (double)(initial_theta1_cnts / ecatSlave->bel[0].counts_per_rad);
+    printf("Init pos0: %lf\n", initial_theta1);
 
     for (loopnum = 0; loopnum < 20000; loopnum ++) {
 
         start_time = rdda_gettime(ecatSlave);
 
         /* Implement controller */
-        //dobController(rddaSlave);
+        ecatSlave->bel[0].out_motor->ctrl_wd = 1;
+        rddaSlave->motor[0].motorOut.tau_off = 0.0;
+        rddaSlave->motor[1].motorOut.tau_off = 0.0;
+        rddaSlave->motor[0].motorOut.tg_pos = initial_theta1;
+        //ecatSlave->bel[1].out_motor->ctrl_wd = 1;
         rdda_update(ecatSlave, rddaSlave);
 
         end_time = rdda_gettime(ecatSlave);
         delta_time = cycletime - (end_time - start_time);
         rdda_sleep(ecatSlave, delta_time);
 
-        printf("pos[0]: +%lf, vel[0]: +%lf, tau[0]: +%lf, pos[1]: +%lf, vel[1]: +%lf, tau[1]: +%lf, ctime: %d\r",
-               rddaSlave->motor[0].motorIn.act_pos, rddaSlave->motor[0].motorIn.act_vel, rddaSlave->psensor.analogIn.val1,
-               rddaSlave->motor[1].motorIn.act_pos, rddaSlave->motor[1].motorIn.act_vel, rddaSlave->psensor.analogIn.val2,
-               delta_time
+        printf("ctime: %d, tg_pos[0]: +%d, pos[0]: +%lf, vel[0]: +%lf, tau[0]: +%lf, tg_pos[1]: +%d, pos[1]: +%lf, vel[1]: +%lf, tau[1]: +%lf\r",
+               delta_time,
+               ecatSlave->bel[0].out_motor->tg_pos, rddaSlave->motor[0].motorIn.act_pos, rddaSlave->motor[0].motorIn.act_vel, rddaSlave->psensor.analogIn.val1,
+               ecatSlave->bel[1].out_motor->tg_pos, rddaSlave->motor[1].motorIn.act_pos, rddaSlave->motor[1].motorIn.act_vel, rddaSlave->psensor.analogIn.val2
         );
-
     }
 
     rddaStop(ecatSlave);
