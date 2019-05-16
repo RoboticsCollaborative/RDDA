@@ -4,7 +4,7 @@
 
 #include "rdda_control.h"
 
-void dobController(RDDA_slave *rddaSlave) {
+void dobController(Rdda *rdda) {
     /* Assign analog input from pressure sensor to motor torque */
-    rddaSlave->motor[0].motorOut.tau_off = rddaSlave->psensor.analogIn.val1;
+    rdda->motor[0].motorOut.tau_off = rdda->psensor.analogIn.val1;
 }

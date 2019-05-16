@@ -51,6 +51,6 @@ typedef struct
     EL3102_slave psensor;
     struct timespec ts;
     pthread_mutex_t mutex;
-} RDDA_slave;
+} Rdda;
 
 #endif //RDDA_SHM_DATA_H

@@ -82,9 +82,11 @@ typedef struct
     bel_slave bel[2];
     el3102_slave el3102;
     struct timespec ts;
-} ecat_slave;
+} ecat_slaves;
 
-ecat_slave *initEcatConfig(void *ifnameptr);
+ecat_slaves *initEcatConfig(void *ifnameptr);
+void add_timespec(struct timespec *ts, int64 addtime);
+int64 ec_sync(int64 reftime, int64 cycletime);
 int32 positionSDOread(uint16 slave_id);
 void pivGainSDOwrite(uint16 slave_id, uint16 Pp, uint16 Vp);
 void ecatcheck(void *ptr);

@@ -20,9 +20,9 @@
 void rdda_run (void *ifnameptr) {
     char *ifname = ifnameptr;
     /* EtherCAT struct */
-    ecat_slave *ecatSlave;
+    ecat_slaves *ecatSlave;
     /* User friendly struct */
-    RDDA_slave *rddaSlave;
+    Rdda *rdda;
     int cycletime;
     int start_time, end_time;
     int delta_time;
@@ -37,8 +37,8 @@ void rdda_run (void *ifnameptr) {
     printf("Network configuration succeed.\n");
 
     /* Initialize user-friendly struct */
-    rddaSlave = initRdda();
-    if (rddaSlave == NULL) {
+    rdda = initRdda();
+    if (rdda == NULL) {
         fprintf(stderr, "Init jointStates failed.\n");
         exit(1);
     }
@@ -50,14 +50,14 @@ void rdda_run (void *ifnameptr) {
     /* Initialize controller */
     //pivGainSDOwrite(ecatSlave->bel[0].slave_id, 100, 10);
     //pivGainSDOwrite(ecatSlave->bel[1].slave_id, 0, 0);
-    initRddaStates(ecatSlave, rddaSlave);
+    initRddaStates(ecatSlave, rdda);
 
     for (loopnum = 0; loopnum < 20000; loopnum ++) {
 
         start_time = rdda_gettime(ecatSlave);
 
         /* Implement controller */
-        rdda_update(ecatSlave, rddaSlave);
+        rdda_update(ecatSlave, rdda);
 
         end_time = rdda_gettime(ecatSlave);
         delta_time = cycletime - (end_time - start_time);
@@ -65,8 +65,8 @@ void rdda_run (void *ifnameptr) {
 
         printf("ctime: %d, tg_pos[0]: +%d, pos[0]: +%lf, vel[0]: +%lf, tau[0]: +%lf, tg_pos[1]: +%d, pos[1]: +%lf, vel[1]: +%lf, tau[1]: +%lf\r",
                delta_time,
-               ecatSlave->bel[0].out_motor->tg_pos, rddaSlave->motor[0].motorIn.act_pos, rddaSlave->motor[0].motorIn.act_vel, rddaSlave->psensor.analogIn.val1,
-               ecatSlave->bel[1].out_motor->tg_pos, rddaSlave->motor[1].motorIn.act_pos, rddaSlave->motor[1].motorIn.act_vel, rddaSlave->psensor.analogIn.val2
+               ecatSlave->bel[0].out_motor->tg_pos, rdda->motor[0].motorIn.act_pos, rdda->motor[0].motorIn.act_vel, rdda->psensor.analogIn.val1,
+               ecatSlave->bel[1].out_motor->tg_pos, rdda->motor[1].motorIn.act_pos, rdda->motor[1].motorIn.act_vel, rdda->psensor.analogIn.val2
         );
     }
 

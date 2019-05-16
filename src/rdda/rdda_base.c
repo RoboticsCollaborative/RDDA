@@ -7,12 +7,12 @@
  * @param slave
  */
 static void
-delete_ecat_slave(ecat_slave *slave) {
+delete_ecat_slave(ecat_slaves *slave) {
     free(slave);
 }
 
 /** Close socket */
-void rddaStop(ecat_slave *slave) {
+void rddaStop(ecat_slaves *slave) {
     printf("\nRequest init state for all slaves\n");
     ec_slave[0].state = EC_STATE_INIT;
     ec_writestate(0);
@@ -21,42 +21,50 @@ void rddaStop(ecat_slave *slave) {
     ec_close(); /* stop SOEM, close socket */
 }
 
-/** Add ns to timespec.
+/** Sleep and calibrate DC time.
  *
- * @param ts  =   Structure holding an interval broken down into seconds and nanoseconds
- * @param addtime   =   Elapsed time interval added to previous time.
+ * @param rddaSlave     =   rdda structure.
+ * @param cycletime     =   sleep time.
  */
-void add_timespec(struct timespec *ts, int64 addtime) {
-    int64 sec, nsec;
-    int64 NSEC_PER_SEC = 1000000000;
-
-    nsec = addtime % NSEC_PER_SEC;
-    sec = (addtime - nsec) / NSEC_PER_SEC;
-    ts->tv_sec += sec;
-    ts->tv_nsec += nsec;
-
-    if (ts->tv_nsec > NSEC_PER_SEC) {
-        nsec = ts->tv_nsec % NSEC_PER_SEC;
-        ts->tv_sec += (ts->tv_nsec - nsec) / NSEC_PER_SEC;
-        ts->tv_nsec = nsec;
+void rdda_sleep(ecat_slaves *rdda, int cycletime) {
+    int64 cycletime_ns = cycletime * 1000;
+    int64 toff = 0;
+    if (ec_slave[0].hasdc) {
+        toff = ec_sync(ec_DCtime, cycletime);
     }
+    add_timespec(&rdda->ts, cycletime_ns + toff);
+    clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &rdda->ts, NULL);
 }
 
-/** PI calculation to get linux time synced to DC time
+/** Sync PDO data by layers
  *
- * @param reftime   =   Reference DCtime.
- * @param cycletime    =   Cycle time of PDO transfer.
- * @param offsettime    =   Offset time.
+ * @param rddaSlave
+ * @param jointStates
  */
-int64 ec_sync(int64 reftime, int64 cycletime) {
-    static int64 integral = 0;
-    int64 delta;
-    /* Set linux sync point 50us later than DC sync */
-    delta = (reftime - 50000) % cycletime;
-    if (delta > (cycletime/2)) { delta=delta-cycletime; }
-    if (delta > 0) { integral++; }
-    if (delta < 0) { integral--; }
-    return -(delta/100)-(integral/20);
+void rdda_update(ecat_slaves *ecatSlaves, Rdda *rdda) {
+    ec_receive_processdata(EC_TIMEOUTRET);
+    //ec_send_processdata();
+    mutex_lock(&rdda->mutex);
+
+    /* Inputs */
+    for (int i = 0; i < 2; i++) {
+        rdda->motor[i].motorIn.act_pos = (double)(ecatSlaves->bel[i].in_motor->act_pos) / ecatSlaves->bel[i].counts_per_rad;
+        rdda->motor[i].motorIn.act_vel = (double)(ecatSlaves->bel[i].in_motor->act_vel) / ecatSlaves->bel[i].counts_per_rad_sec;
+    }
+    rdda->psensor.analogIn.val1 = (double)(ecatSlaves->el3102.in_analog->val1) * ecatSlaves->bel[0].pascal_per_count * ecatSlaves->bel[0].nm_per_pascal;
+    rdda->psensor.analogIn.val2 = (double)(ecatSlaves->el3102.in_analog->val2) * ecatSlaves->bel[1].pascal_per_count * ecatSlaves->bel[1].nm_per_pascal;
+
+    /* Outputs */
+    for (int j = 0; j < 2; j++) {
+        ecatSlaves->bel[0].out_motor->ctrl_wd = 15;
+        ecatSlaves->bel[j].out_motor->tg_pos = (int32)(rdda->motor[j].motorOut.tg_pos * ecatSlaves->bel[j].counts_per_rad);
+        ecatSlaves->bel[j].out_motor->vel_off = (int32)(rdda->motor[j].motorOut.vel_off * ecatSlaves->bel[j].counts_per_rad_sec);
+        ecatSlaves->bel[j].out_motor->tau_off = (int16)(rdda->motor[j].motorOut.tau_off * ecatSlaves->bel[j].units_per_nm);
+    }
+
+    mutex_unlock(&rdda->mutex);
+    //ec_receive_processdata(EC_TIMEOUTRET);
+    ec_send_processdata();
 }
 
 /** Get system time in microseconds (us)
@@ -64,57 +72,10 @@ int64 ec_sync(int64 reftime, int64 cycletime) {
  * @param rddaSlave     =   rdda structure.
  * @return system time at nearest us.
  */
-int rdda_gettime(ecat_slave *rddaSlave) {
+int rdda_gettime(ecat_slaves *ecatSlaves) {
     int64 nsec_per_sec = 1000000000;
-    clock_gettime(CLOCK_MONOTONIC, &rddaSlave->ts);
-    return (int)(rddaSlave->ts.tv_sec * nsec_per_sec + rddaSlave->ts.tv_nsec) / 1000 + 1;
-}
-
-/** Sleep and calibrate DC time.
- *
- * @param rddaSlave     =   rdda structure.
- * @param cycletime     =   sleep time.
- */
-void rdda_sleep(ecat_slave *rddaSlave, int cycletime) {
-    int64 cycletime_ns = cycletime * 1000;
-    int toff = 0;
-    if (ec_slave[0].hasdc) {
-        toff = ec_sync(ec_DCtime, cycletime);
-    }
-    add_timespec(&rddaSlave->ts, cycletime_ns + toff);
-    clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &rddaSlave->ts, NULL);
-}
-
-
-/** Sync PDO data by layers
- *
- * @param rddaSlave
- * @param jointStates
- */
-void rdda_update(ecat_slave *ecatSlave, RDDA_slave *rddaSlave) {
-    ec_receive_processdata(EC_TIMEOUTRET);
-    //ec_send_processdata();
-    mutex_lock(&rddaSlave->mutex);
-
-    /* Inputs */
-    for (int i = 0; i < 2; i++) {
-        rddaSlave->motor[i].motorIn.act_pos = (double)(ecatSlave->bel[i].in_motor->act_pos) / ecatSlave->bel[i].counts_per_rad;
-        rddaSlave->motor[i].motorIn.act_vel = (double)(ecatSlave->bel[i].in_motor->act_vel) / ecatSlave->bel[i].counts_per_rad_sec;
-    }
-    rddaSlave->psensor.analogIn.val1 = (double)(ecatSlave->el3102.in_analog->val1) * ecatSlave->bel[0].pascal_per_count * ecatSlave->bel[0].nm_per_pascal;
-    rddaSlave->psensor.analogIn.val2 = (double)(ecatSlave->el3102.in_analog->val2) * ecatSlave->bel[1].pascal_per_count * ecatSlave->bel[1].nm_per_pascal;
-
-    /* Outputs */
-    for (int j = 0; j < 2; j++) {
-        ecatSlave->bel[j].out_motor->ctrl_wd = 15;
-        ecatSlave->bel[j].out_motor->tg_pos = (int32)(rddaSlave->motor[j].motorOut.tg_pos * ecatSlave->bel[j].counts_per_rad);
-        ecatSlave->bel[j].out_motor->vel_off = (int32)(rddaSlave->motor[j].motorOut.vel_off * ecatSlave->bel[j].counts_per_rad_sec);
-        ecatSlave->bel[j].out_motor->tau_off = (int16)(rddaSlave->motor[j].motorOut.tau_off * ecatSlave->bel[j].units_per_nm);
-    }
-
-    mutex_unlock(&rddaSlave->mutex);
-    //ec_receive_processdata(EC_TIMEOUTRET);
-    ec_send_processdata();
+    clock_gettime(CLOCK_MONOTONIC, &ecatSlaves->ts);
+    return (int)(ecatSlaves->ts.tv_sec * nsec_per_sec + ecatSlaves->ts.tv_nsec) / 1000 + 1;
 }
 
 /** Torque saturation
@@ -137,19 +98,16 @@ double saturation(double max_value, double raw_value) {
  * @param ecatSlave     =   EtherCAT structure.
  * @param rddaSlave     =   RDDA structure (user-friendly).
  */
-void initRddaStates(ecat_slave *ecatSlave, RDDA_slave *rddaSlave) {
+void initRddaStates(ecat_slaves *ecatSlaves, Rdda *rdda) {
     int32 initial_theta1_cnts[2];
     uint16  mot_id[2];
 
     /* Request initial data via SDO */
     for (int i = 0; i < 2; i++) {
-        mot_id[i] = ecatSlave->bel[i].slave_id;
+        mot_id[i] = ecatSlaves->bel[i].slave_id;
         initial_theta1_cnts[i] = positionSDOread(mot_id[i]);
         /* Init motor position */
-        //rddaSlave->motor[i].motorIn.act_pos = (double)(initial_theta1_cnts[i] / ecatSlave->bel[i].counts_per_rad);
-        rddaSlave->motor[i].motorOut.tg_pos = (double)(initial_theta1_cnts[i]) / ecatSlave->bel[i].counts_per_rad;
-        /* Init motor velocity */
-        //rddaSlave->motor[i].motorIn.act_vel = 0.0;
-        rddaSlave->motor[i].motorOut.tau_off = 0.0;
+        rdda->motor[i].motorOut.tg_pos = (double)(initial_theta1_cnts[i]) / ecatSlaves->bel[i].counts_per_rad;
+        rdda->motor[i].motorOut.tau_off = 0.0;
     }
 }

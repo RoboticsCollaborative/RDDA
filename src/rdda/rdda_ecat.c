@@ -14,7 +14,7 @@ char IOmap[4096];
  * @return 0 on success.
  */
 static int
-slaveIdentify(ecat_slave *slave) {
+slaveIdentify(ecat_slaves *slave) {
     uint16 idx = 0;
     int buf = 0;
     for (idx = 1; idx <= ec_slavecount; idx++) {
@@ -64,7 +64,7 @@ slaveIdentify(ecat_slave *slave) {
  * @param ecatSlave     =   EtherCAT slave structure.
  */
 static void
-initEcatSlaves(ecat_slave *ecatSlave) {
+initEcatSlaves(ecat_slaves *ecatSlave) {
     for (int mot_id = 0; mot_id < 2; mot_id ++) {
         /* Input/output memory allocation */
         ecatSlave->bel[mot_id].in_motor = (motor_input *)ec_slave[ecatSlave->bel[mot_id].slave_id].inputs;
@@ -84,7 +84,7 @@ initEcatSlaves(ecat_slave *ecatSlave) {
  * @param ifnameptr = NIC interface pointer
  * @return 0.
  */
-ecat_slave *initEcatConfig(void *ifnameptr) {
+ecat_slaves *initEcatConfig(void *ifnameptr) {
     char *ifname  = (char *)ifnameptr;
 
 //    inOP = FALSE;
@@ -94,9 +94,9 @@ ecat_slave *initEcatConfig(void *ifnameptr) {
 
     /* Initialize data structure */
     printf("Init data structure.\n");
-    ecat_slave *ecatSlave;
-    ecatSlave = (ecat_slave *)malloc(sizeof(ecat_slave));
-    if (ecatSlave == NULL) {
+    ecat_slaves *ecatSlaves;
+    ecatSlaves = (ecat_slaves *)malloc(sizeof(ecat_slaves));
+    if (ecatSlaves == NULL) {
         return NULL;
     }
 
@@ -124,9 +124,9 @@ ecat_slave *initEcatConfig(void *ifnameptr) {
     ec_statecheck(0, EC_STATE_PRE_OP, EC_TIMEOUTSTATE);
 
     /* Locate slaves */
-    slaveIdentify(ecatSlave);
-    printf("psensor_id: %d\n", ecatSlave->el3102.slave_id);
-    if (ecatSlave->bel[0].slave_id == 0 || ecatSlave->bel[1].slave_id == 0 || ecatSlave->el3102.slave_id == 0) {
+    slaveIdentify(ecatSlaves);
+    printf("psensor_id: %d\n", ecatSlaves->el3102.slave_id);
+    if (ecatSlaves->bel[0].slave_id == 0 || ecatSlaves->bel[1].slave_id == 0 || ecatSlaves->el3102.slave_id == 0) {
         fprintf(stderr, "Slaves identification failure!");
         exit(1);
     }
@@ -141,8 +141,8 @@ ecat_slave *initEcatConfig(void *ifnameptr) {
     /* Wait for all salves to reach SAFE_OP state */
     ec_statecheck(0, EC_STATE_SAFE_OP, EC_TIMEOUTSTATE);
 
-    initMotor(ecatSlave->bel[0].slave_id);
-    initMotor(ecatSlave->bel[1].slave_id);
+    initMotor(ecatSlaves->bel[0].slave_id);
+    initMotor(ecatSlaves->bel[1].slave_id);
     printf("Slaves initialized, state to OP\n");
 
     /* Check if all slaves are working properly */
@@ -165,18 +165,56 @@ ecat_slave *initEcatConfig(void *ifnameptr) {
     ec_statecheck(0, EC_STATE_OPERATIONAL, EC_TIMEOUTSTATE);
 
     /* Initialize slaves before use */
-    initEcatSlaves(ecatSlave);
+    initEcatSlaves(ecatSlaves);
 
     /* Recheck */
     if (ec_slave[0].state == EC_STATE_OPERATIONAL) {
         printf("Operational state reached for all slaves\n");
-        return ecatSlave;
+        return ecatSlaves;
     }
     else {
         ec_close();
         fprintf(stderr, "Operational state failed\n");
         exit(1);
     }
+}
+
+/** Add ns to timespec.
+ *
+ * @param ts  =   Structure holding an interval broken down into seconds and nanoseconds
+ * @param addtime   =   Elapsed time interval added to previous time.
+ */
+void add_timespec(struct timespec *ts, int64 addtime) {
+    int64 sec, nsec;
+    int64 NSEC_PER_SEC = 1000000000;
+
+    nsec = addtime % NSEC_PER_SEC;
+    sec = (addtime - nsec) / NSEC_PER_SEC;
+    ts->tv_sec += sec;
+    ts->tv_nsec += nsec;
+
+    if (ts->tv_nsec > NSEC_PER_SEC) {
+        nsec = ts->tv_nsec % NSEC_PER_SEC;
+        ts->tv_sec += (ts->tv_nsec - nsec) / NSEC_PER_SEC;
+        ts->tv_nsec = nsec;
+    }
+}
+
+/** PI calculation to get linux time synced to DC time
+ *
+ * @param reftime   =   Reference DCtime.
+ * @param cycletime    =   Cycle time of PDO transfer.
+ * @param offsettime    =   Offset time.
+ */
+int64 ec_sync(int64 reftime, int64 cycletime) {
+    static int64 integral = 0;
+    int64 delta;
+    /* Set linux sync point 50us later than DC sync */
+    delta = (reftime - 50000) % cycletime;
+    if (delta > (cycletime/2)) { delta=delta-cycletime; }
+    if (delta > 0) { integral++; }
+    if (delta < 0) { integral--; }
+    return -(delta/100)-(integral/20);
 }
 
 /** Read actual position value via SDO

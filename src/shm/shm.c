@@ -100,20 +100,20 @@ openSharedMemory(char *shm_name, void **p) {
  *
  * @return jointCommands pointer.
  */
-RDDA_slave *initRdda() {
+Rdda *initRdda() {
 
-    RDDA_slave *rddaSlave;
+    Rdda *rdda;
     void *p;
 
     if (!openSharedMemory(RDDA_DATA, &p)) {
-        rddaSlave = (RDDA_slave *) p;
+        rdda = (Rdda *) p;
     } else {
         fprintf(stderr, "open(joint_commands)\n");
         return NULL;
     }
 
     /* initialise mutex lock */
-    mutex_init(&rddaSlave->mutex);
+    mutex_init(&rdda->mutex);
 
-    return rddaSlave;
+    return rdda;
 }

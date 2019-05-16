@@ -8,7 +8,6 @@
 
 #include "shm_data.h"
 
-void initDobController(RDDA_slave *rddaSlave);
-void dobController(RDDA_slave *rddaSlave);
+void dobController(Rdda *rdda);
 
 #endif //RDDA_CONTROL_H
