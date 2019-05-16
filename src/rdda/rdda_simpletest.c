@@ -23,6 +23,9 @@ void rdda_run (void *ifnameptr) {
     ecat_slaves *ecatSlave;
     /* User friendly struct */
     Rdda *rdda;
+    ControlParams controlParams;
+    FilterParams filterParams;
+    PreviousVariables previousVariables;
     int cycletime;
     int start_time, end_time;
     int delta_time;
@@ -51,23 +54,27 @@ void rdda_run (void *ifnameptr) {
     //pivGainSDOwrite(ecatSlave->bel[0].slave_id, 100, 10);
     //pivGainSDOwrite(ecatSlave->bel[1].slave_id, 0, 0);
     initRddaStates(ecatSlave, rdda);
+    dobInit(&controlParams, &filterParams, &previousVariables, rdda);
 
-    for (loopnum = 0; loopnum < 20000; loopnum ++) {
+    for (loopnum = 0; loopnum < 2000; loopnum ++) {
 
         start_time = rdda_gettime(ecatSlave);
 
         /* Implement controller */
+        dobController(rdda, &controlParams, &filterParams, &previousVariables);
         rdda_update(ecatSlave, rdda);
 
         end_time = rdda_gettime(ecatSlave);
         delta_time = cycletime - (end_time - start_time);
         rdda_sleep(ecatSlave, delta_time);
 
-        printf("ctime: %d, tg_pos[0]: +%d, pos[0]: +%lf, vel[0]: +%lf, tau[0]: +%lf, tg_pos[1]: +%d, pos[1]: +%lf, vel[1]: +%lf, tau[1]: +%lf\r",
+        printf("ctime: %d, tg_pos[0]: %+d, pos[0]: %+2.4lf, vel[0]: %+2.4lf, pre[0]: %+2.4lf, tau_off[0]: %+2.4lf, tg_pos[1]: %+d, pos[1]: %+2.4lf, vel[1]: %+2.4lf, pre[1]: %+2.4lf, tau_off[1]: %+2.4lf\r",
                delta_time,
-               ecatSlave->bel[0].out_motor->tg_pos, rdda->motor[0].motorIn.act_pos, rdda->motor[0].motorIn.act_vel, rdda->psensor.analogIn.val1,
-               ecatSlave->bel[1].out_motor->tg_pos, rdda->motor[1].motorIn.act_pos, rdda->motor[1].motorIn.act_vel, rdda->psensor.analogIn.val2
+               ecatSlave->bel[0].out_motor->tg_pos, rdda->motor[0].motorIn.act_pos, rdda->motor[0].motorIn.act_vel, rdda->psensor.analogIn.val1, rdda->motor[0].motorOut.tau_off,
+               ecatSlave->bel[1].out_motor->tg_pos, rdda->motor[1].motorIn.act_pos, rdda->motor[1].motorIn.act_vel, rdda->psensor.analogIn.val2, rdda->motor[1].motorOut.tau_off
         );
+
+        //printf("ctime: %d, tau_off[0]: %lf, tau_off[1]: %lf\r", delta_time, rdda->motor[0].motorOut.tau_off, rdda->motor[1].motorOut.tau_off);
     }
 
     rddaStop(ecatSlave);
