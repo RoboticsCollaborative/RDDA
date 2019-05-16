@@ -100,7 +100,7 @@ openSharedMemory(char *shm_name, void **p) {
  *
  * @return jointCommands pointer.
  */
-RDDA_slave *initRddaSlave() {
+RDDA_slave *initRdda() {
 
     RDDA_slave *rddaSlave;
     void *p;

@@ -98,15 +98,15 @@ void rdda_update(ecat_slave *ecatSlave, RDDA_slave *rddaSlave) {
 
     /* Inputs */
     for (int i = 0; i < 2; i++) {
-        rddaSlave->motor[i].motorIn.act_pos = (double)(ecatSlave->bel[i].in_motor->act_pos / ecatSlave->bel[i].counts_per_rad);
-        rddaSlave->motor[i].motorIn.act_vel = (double)(ecatSlave->bel[i].in_motor->act_vel / ecatSlave->bel[i].counts_per_rad_sec);
+        rddaSlave->motor[i].motorIn.act_pos = (double)(ecatSlave->bel[i].in_motor->act_pos) / ecatSlave->bel[i].counts_per_rad;
+        rddaSlave->motor[i].motorIn.act_vel = (double)(ecatSlave->bel[i].in_motor->act_vel) / ecatSlave->bel[i].counts_per_rad_sec;
     }
-    rddaSlave->psensor.analogIn.val1 = (double)(ecatSlave->el3102.in_analog->val1 * ecatSlave->bel[0].pascal_per_count * ecatSlave->bel[0].nm_per_pascal);
-    rddaSlave->psensor.analogIn.val2 = (double)(ecatSlave->el3102.in_analog->val2 * ecatSlave->bel[1].pascal_per_count * ecatSlave->bel[1].nm_per_pascal);
+    rddaSlave->psensor.analogIn.val1 = (double)(ecatSlave->el3102.in_analog->val1) * ecatSlave->bel[0].pascal_per_count * ecatSlave->bel[0].nm_per_pascal;
+    rddaSlave->psensor.analogIn.val2 = (double)(ecatSlave->el3102.in_analog->val2) * ecatSlave->bel[1].pascal_per_count * ecatSlave->bel[1].nm_per_pascal;
 
     /* Outputs */
     for (int j = 0; j < 2; j++) {
-        ecatSlave->bel[j].out_motor->ctrl_wd = 1;
+        ecatSlave->bel[j].out_motor->ctrl_wd = 15;
         ecatSlave->bel[j].out_motor->tg_pos = (int32)(rddaSlave->motor[j].motorOut.tg_pos * ecatSlave->bel[j].counts_per_rad);
         ecatSlave->bel[j].out_motor->vel_off = (int32)(rddaSlave->motor[j].motorOut.vel_off * ecatSlave->bel[j].counts_per_rad_sec);
         ecatSlave->bel[j].out_motor->tau_off = (int16)(rddaSlave->motor[j].motorOut.tau_off * ecatSlave->bel[j].units_per_nm);
@@ -147,8 +147,9 @@ void initRddaStates(ecat_slave *ecatSlave, RDDA_slave *rddaSlave) {
         initial_theta1_cnts[i] = positionSDOread(mot_id[i]);
         /* Init motor position */
         //rddaSlave->motor[i].motorIn.act_pos = (double)(initial_theta1_cnts[i] / ecatSlave->bel[i].counts_per_rad);
-        rddaSlave->motor[0].motorOut.tg_pos = initial_theta1_cnts[i] / ecatSlave->bel[i].counts_per_rad;
+        rddaSlave->motor[i].motorOut.tg_pos = (double)(initial_theta1_cnts[i]) / ecatSlave->bel[i].counts_per_rad;
         /* Init motor velocity */
         //rddaSlave->motor[i].motorIn.act_vel = 0.0;
+        rddaSlave->motor[i].motorOut.tau_off = 0.0;
     }
 }

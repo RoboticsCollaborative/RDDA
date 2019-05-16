@@ -104,8 +104,8 @@ int initMotor(uint16 slaveIdx)
     SDO_write32(slaveIdx, 0x6076, 0, 200);      /* motor rated torque */
 
     /* Loop gains */
-    SDO_write16(slaveIdx, 0x2382, 1, 500);        /* position loop gain (Pp) */
-    SDO_write16(slaveIdx, 0x2381, 1, 50);        /* velocity loop gain (Vp) */
+    SDO_write16(slaveIdx, 0x2382, 1, 100);        /* position loop gain (Pp) */
+    SDO_write16(slaveIdx, 0x2381, 1, 10);        /* velocity loop gain (Vp) */
 
     /* Motor limits */
     SDO_write16(slaveIdx, 0x2110, 0, 1400);     /* peak current limit */
