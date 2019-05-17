@@ -27,8 +27,8 @@ void rdda_run (void *ifnameptr) {
     FilterParams filterParams;
     PreviousVariables previousVariables;
     int cycletime;
-    int start_time, end_time;
-    int delta_time;
+    //int start_time, end_time;
+    //int delta_time;
     int loopnum;
 
     /* Configure ethercat network and slaves. */
@@ -48,7 +48,7 @@ void rdda_run (void *ifnameptr) {
     printf("Input/output interface succeed.\n");
 
     /* timer */
-    cycletime = 500; /* 500us */
+    cycletime = 500; /* in microseconds */
 
     /* Initialize controller */
     //pivGainSDOwrite(ecatSlave->bel[0].slave_id, 100, 10);
@@ -56,11 +56,13 @@ void rdda_run (void *ifnameptr) {
     initRddaStates(ecatSlave, rdda);
     dobInit(&controlParams, &filterParams, &previousVariables, rdda);
 
+    rdda_gettime(ecatSlave);
     for (loopnum = 0; loopnum < 120000; loopnum ++) {
 
-        start_time = rdda_gettime(ecatSlave);
+        //start_time = rdda_gettime(ecatSlave);
 
         /* Implement controller */
+        rdda_sleep(ecatSlave, cycletime);
         dobController(rdda, &controlParams, &filterParams, &previousVariables);
         rdda_update(ecatSlave, rdda);
 
@@ -69,9 +71,9 @@ void rdda_run (void *ifnameptr) {
                ecatSlave->bel[1].out_motor->tg_pos, rdda->motor[1].motorIn.act_pos, rdda->motor[1].motorIn.act_vel, rdda->psensor.analogIn.val2, rdda->motor[1].motorOut.tau_off
         );
 
-        end_time = rdda_gettime(ecatSlave);
-        delta_time = cycletime - (end_time - start_time);
-        rdda_sleep(ecatSlave, delta_time);
+        //end_time = rdda_gettime(ecatSlave);
+        //delta_time = cycletime - (end_time - start_time);
+        //rdda_sleep(ecatSlave, delta_time);
     }
 
     rddaStop(ecatSlave);
