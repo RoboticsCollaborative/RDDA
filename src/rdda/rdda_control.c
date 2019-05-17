@@ -17,7 +17,7 @@ void dobInit(ControlParams *controlParams, FilterParams *filterParams, PreviousV
     controlParams->hydraulic_damping = 0.0092573;
     controlParams->hydraulic_stiffness = 12.76140;
     controlParams->cutoff_frequency[0] = 20;
-    controlParams->cutoff_frequency[1] = 20;
+    controlParams->cutoff_frequency[1] = 10;
     controlParams->cutoff_frequency[2] = 20;
     controlParams->pos_gain = 0.0;
     controlParams->vel_gain = 0.0;
