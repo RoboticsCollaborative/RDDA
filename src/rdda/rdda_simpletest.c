@@ -56,7 +56,7 @@ void rdda_run (void *ifnameptr) {
     initRddaStates(ecatSlave, rdda);
     dobInit(&controlParams, &filterParams, &previousVariables, rdda);
 
-    for (loopnum = 0; loopnum < 2000; loopnum ++) {
+    for (loopnum = 0; loopnum < 40000; loopnum ++) {
 
         start_time = rdda_gettime(ecatSlave);
 

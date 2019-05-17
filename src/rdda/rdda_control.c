@@ -23,7 +23,7 @@ void dobInit(ControlParams *controlParams, FilterParams *filterParams, PreviousV
     controlParams->vel_gain = 0.0;
     controlParams->acc_gain = 0.0;
     controlParams->pressure_offset = 0.04;
-    controlParams->max_inner_loop_torque_Nm = 0.4;
+    controlParams->max_inner_loop_torque_Nm = 0.3;
     controlParams->max_torque_Nm = 5.0;
     controlParams->hysteresis_sigma = 400;
     controlParams->hysteresis_friction = 0.016;
