@@ -17,6 +17,13 @@
 #include "shm_data.h"
 #include "shm.h"
 
+volatile sig_atomic_t done = 0;
+void intHandler (int sig) {
+    if (sig == SIGINT) {
+        done = 1;
+    }
+}
+
 void rdda_run (void *ifnameptr) {
     char *ifname = ifnameptr;
     /* EtherCAT struct */
@@ -29,7 +36,7 @@ void rdda_run (void *ifnameptr) {
     int cycletime;
     //int start_time, end_time;
     //int delta_time;
-    int loopnum;
+    //int loopnum;
 
     /* Configure ethercat network and slaves. */
     ecatSlaves = initEcatConfig(ifname);
@@ -57,7 +64,8 @@ void rdda_run (void *ifnameptr) {
     dobInit(&controlParams, &filterParams, &previousVariables, rdda);
 
     rdda_gettime(ecatSlaves);
-    for (loopnum = 0; loopnum < 120000; loopnum ++) {
+    //for (loopnum = 0; loopnum < 120000; loopnum ++) {
+    while (!done) {
 
         //start_time = rdda_gettime(ecatSlave);
 
@@ -80,6 +88,9 @@ void rdda_run (void *ifnameptr) {
 }
 
 int main(int argc, char **argv) {
+    /* ctrl-c */
+    signal(SIGINT, intHandler);
+
     pthread_t rt_thread;
     struct sched_param param;
     int policy = SCHED_FIFO;
