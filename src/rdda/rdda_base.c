@@ -21,21 +21,6 @@ void rddaStop(ecat_slaves *slave) {
     ec_close(); /* stop SOEM, close socket */
 }
 
-/** Sleep and calibrate DC time.
- *
- * @param rddaSlave     =   rdda structure.
- * @param cycletime     =   sleep time.
- */
-void rdda_sleep(Rdda *rdda, int cycletime) {
-    int64 cycletime_ns = cycletime * 1000;
-    int64 toff = 0;
-    if (ec_slave[0].hasdc) {
-        toff = ec_sync(ec_DCtime, cycletime);
-    }
-    add_timespec(&rdda->ts, cycletime_ns + toff);
-    clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &rdda->ts, NULL);
-}
-
 /** Sync PDO data by layers
  *
  * @param rddaSlave
@@ -63,22 +48,38 @@ void rdda_update(ecat_slaves *ecatSlaves, Rdda *rdda) {
     }
 
     /* Timestamp */
-
+    rdda->ts.sec = ecatSlaves->ts.tv_sec;
+    rdda->ts.nsec = ecatSlaves->ts.tv_nsec;
 
     mutex_unlock(&rdda->mutex);
     //ec_receive_processdata(EC_TIMEOUTRET);
     ec_send_processdata();
 }
 
-/** Get system time in microseconds (us)
+/** Sleep and calibrate DC time.
  *
  * @param rddaSlave     =   rdda structure.
+ * @param cycletime     =   sleep time.
+ */
+void rdda_sleep(ecat_slaves *ecatSlaves, int cycletime) {
+    int64 cycletime_ns = cycletime * 1000;
+    int64 toff = 0;
+    if (ec_slave[0].hasdc) {
+        toff = ec_sync(ec_DCtime, cycletime);
+    }
+    add_timespec(&ecatSlaves->ts, cycletime_ns + toff);
+    clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &ecatSlaves->ts, NULL);
+}
+
+/** Get system time in microseconds (us)
+ *
+ * @param ecatslaves     =   Ethercat structure.
  * @return system time at nearest us.
  */
-int rdda_gettime(Rdda *rdda) {
+int rdda_gettime(ecat_slaves *ecatSlaves) {
     int64 nsec_per_sec = 1000000000;
-    clock_gettime(CLOCK_MONOTONIC, &rdda->ts);
-    return (int)(rdda->ts.tv_sec * nsec_per_sec + rdda->ts.tv_nsec) / 1000 + 1;
+    clock_gettime(CLOCK_MONOTONIC, &ecatSlaves->ts);
+    return (int)(ecatSlaves->ts.tv_sec * nsec_per_sec + ecatSlaves->ts.tv_nsec) / 1000 + 1;
 }
 
 /** Torque saturation

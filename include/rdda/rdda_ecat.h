@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <time.h>
 
 #include "ethercat.h"
 #include "init_BEL.h"
@@ -13,14 +14,6 @@
 
 // #define NSEC_PER_SEC 1000000000
 // #define COUNTS_PER_RADIAN 52151.8917
-
-#define COUNTS_PER_RADIAN   52151.8917
-#define COUNTS_PER_REV      327680
-#define LOAD_COUNTS_PER_REV 40000
-#define UNITS_PER_NM        5000
-#define MAX_NM              5.0
-#define PASCAL_PER_COUNT    21.04178
-#define NM_PER_PASCAL 2.822e-6
 
 /** BEL drive CSP Mode inputs to master */
 typedef struct PACKED
@@ -80,6 +73,7 @@ typedef struct
 {
     bel_slave bel[2];
     el3102_slave el3102;
+    struct timespec ts;
 } ecat_slaves;
 
 ecat_slaves *initEcatConfig(void *ifnameptr);

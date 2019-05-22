@@ -20,7 +20,7 @@
 void rdda_run (void *ifnameptr) {
     char *ifname = ifnameptr;
     /* EtherCAT struct */
-    ecat_slaves *ecatSlave;
+    ecat_slaves *ecatSlaves;
     /* User friendly struct */
     Rdda *rdda;
     ControlParams controlParams;
@@ -32,8 +32,8 @@ void rdda_run (void *ifnameptr) {
     int loopnum;
 
     /* Configure ethercat network and slaves. */
-    ecatSlave = initEcatConfig(ifname);
-    if (ecatSlave == NULL) {
+    ecatSlaves = initEcatConfig(ifname);
+    if (ecatSlaves == NULL) {
         fprintf(stderr, "Init ecatslaves failed.\n");
         exit(1);
     }
@@ -53,22 +53,22 @@ void rdda_run (void *ifnameptr) {
     /* Initialize controller */
     //pivGainSDOwrite(ecatSlave->bel[0].slave_id, 100, 10);
     //pivGainSDOwrite(ecatSlave->bel[1].slave_id, 0, 0);
-    initRddaStates(ecatSlave, rdda);
+    initRddaStates(ecatSlaves, rdda);
     dobInit(&controlParams, &filterParams, &previousVariables, rdda);
 
-    rdda_gettime(rdda);
+    rdda_gettime(ecatSlaves);
     for (loopnum = 0; loopnum < 120000; loopnum ++) {
 
         //start_time = rdda_gettime(ecatSlave);
 
         /* Implement controller */
-        rdda_sleep(rdda, cycletime);
+        rdda_sleep(ecatSlaves, cycletime);
         dobController(rdda, &controlParams, &filterParams, &previousVariables);
-        rdda_update(ecatSlave, rdda);
+        rdda_update(ecatSlaves, rdda);
 
         printf("tg_pos[0]: %+d, pos[0]: %+2.4lf, vel[0]: %+2.4lf, pre[0]: %+2.4lf, tau_off[0]: %+2.4lf, tg_pos[1]: %+d, pos[1]: %+2.4lf, vel[1]: %+2.4lf, pre[1]: %+2.4lf, tau_off[1]: %+2.4lf\r",
-               ecatSlave->bel[0].out_motor->tg_pos, rdda->motor[0].motorIn.act_pos, rdda->motor[0].motorIn.act_vel, rdda->psensor.analogIn.val1, rdda->motor[0].motorOut.tau_off,
-               ecatSlave->bel[1].out_motor->tg_pos, rdda->motor[1].motorIn.act_pos, rdda->motor[1].motorIn.act_vel, rdda->psensor.analogIn.val2, rdda->motor[1].motorOut.tau_off
+               ecatSlaves->bel[0].out_motor->tg_pos, rdda->motor[0].motorIn.act_pos, rdda->motor[0].motorIn.act_vel, rdda->psensor.analogIn.val1, rdda->motor[0].motorOut.tau_off,
+               ecatSlaves->bel[1].out_motor->tg_pos, rdda->motor[1].motorIn.act_pos, rdda->motor[1].motorIn.act_vel, rdda->psensor.analogIn.val2, rdda->motor[1].motorOut.tau_off
         );
 
         //end_time = rdda_gettime(ecatSlave);
@@ -76,7 +76,7 @@ void rdda_run (void *ifnameptr) {
         //rdda_sleep(ecatSlave, delta_time);
     }
 
-    rddaStop(ecatSlave);
+    rddaStop(ecatSlaves);
 }
 
 int main(int argc, char **argv) {
