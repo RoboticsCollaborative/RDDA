@@ -96,7 +96,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FilterParams *filte
 
     /* nominal force */
     for (int i = 0; i < num; i ++) {
-        nominal_force[i] = controlParams->motor_inertia[i] * motor_acc[i] + (controlParams->motor_damping[i] - controlParams->finger_damping[i]) * motor_vel[i];
+        nominal_force[i] = controlParams->motor_inertia[i] * motor_acc[i] + (controlParams->motor_damping[i] - controlParams->finger_damping[i]) * motor_vel[i] - controlParams->finger_stiffness[i] * motor_pos[i];
         filtered_nominal_force[i] = firstOrderIIRFilter(nominal_force[i], previousVariables->nominal_force[i], previousVariables->filtered_nominal_force[i], filterParams->b0[1], filterParams->b1[1], filterParams->a1[1]);
     }
 
