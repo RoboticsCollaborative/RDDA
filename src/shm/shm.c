@@ -1,10 +1,5 @@
 #include "shm.h"
 
-/*
-char* JOINT_COMMANDS    = (char*)"/joint_commands";
-char* JOINT_STATES      = (char*)"/joint_states";
- */
-
 char* RDDA_DATA     =   (char *)"/rdda_data";
 
 /** Acuqire robust mutex
@@ -108,7 +103,7 @@ Rdda *initRdda() {
     if (!openSharedMemory(RDDA_DATA, &p)) {
         rdda = (Rdda *) p;
     } else {
-        fprintf(stderr, "open(joint_commands)\n");
+        fprintf(stderr, "open(RDDA_DATA)\n");
         return NULL;
     }
 
