@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <time.h>
 
 #include "ethercat.h"
 #include "init_BEL.h"
@@ -81,7 +80,6 @@ typedef struct
 {
     bel_slave bel[2];
     el3102_slave el3102;
-    struct timespec ts;
 } ecat_slaves;
 
 ecat_slaves *initEcatConfig(void *ifnameptr);

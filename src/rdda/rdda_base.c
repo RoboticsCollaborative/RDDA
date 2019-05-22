@@ -26,7 +26,7 @@ void rddaStop(ecat_slaves *slave) {
  * @param rddaSlave     =   rdda structure.
  * @param cycletime     =   sleep time.
  */
-void rdda_sleep(ecat_slaves *rdda, int cycletime) {
+void rdda_sleep(Rdda *rdda, int cycletime) {
     int64 cycletime_ns = cycletime * 1000;
     int64 toff = 0;
     if (ec_slave[0].hasdc) {
@@ -62,6 +62,9 @@ void rdda_update(ecat_slaves *ecatSlaves, Rdda *rdda) {
         ecatSlaves->bel[j].out_motor->tau_off = (int16)(rdda->motor[j].motorOut.tau_off * ecatSlaves->bel[j].units_per_nm);
     }
 
+    /* Timestamp */
+
+
     mutex_unlock(&rdda->mutex);
     //ec_receive_processdata(EC_TIMEOUTRET);
     ec_send_processdata();
@@ -72,10 +75,10 @@ void rdda_update(ecat_slaves *ecatSlaves, Rdda *rdda) {
  * @param rddaSlave     =   rdda structure.
  * @return system time at nearest us.
  */
-int rdda_gettime(ecat_slaves *ecatSlaves) {
+int rdda_gettime(Rdda *rdda) {
     int64 nsec_per_sec = 1000000000;
-    clock_gettime(CLOCK_MONOTONIC, &ecatSlaves->ts);
-    return (int)(ecatSlaves->ts.tv_sec * nsec_per_sec + ecatSlaves->ts.tv_nsec) / 1000 + 1;
+    clock_gettime(CLOCK_MONOTONIC, &rdda->ts);
+    return (int)(rdda->ts.tv_sec * nsec_per_sec + rdda->ts.tv_nsec) / 1000 + 1;
 }
 
 /** Torque saturation

@@ -9,9 +9,9 @@
 #include "shm_data.h"
 
 void rdda_update(ecat_slaves *ecatSlaves, Rdda *rdda);
-void rddaStop(ecat_slaves *rdda);
-int rdda_gettime(ecat_slaves *rdda);
-void rdda_sleep(ecat_slaves *rddaSlave, int cycletime);
+void rddaStop(ecat_slaves *ecatSlaves);
+int rdda_gettime(Rdda *rdda);
+void rdda_sleep(Rdda *rdda, int cycletime);
 void initRddaStates(ecat_slaves *ecatSlaves, Rdda *rdda);
 double saturation(double max_torque, double raw_torque);
 

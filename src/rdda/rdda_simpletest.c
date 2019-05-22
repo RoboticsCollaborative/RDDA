@@ -34,7 +34,7 @@ void rdda_run (void *ifnameptr) {
     /* Configure ethercat network and slaves. */
     ecatSlave = initEcatConfig(ifname);
     if (ecatSlave == NULL) {
-        fprintf(stderr, "Init rddaSlave failed.\n");
+        fprintf(stderr, "Init ecatslaves failed.\n");
         exit(1);
     }
     printf("Network configuration succeed.\n");
@@ -42,7 +42,7 @@ void rdda_run (void *ifnameptr) {
     /* Initialize user-friendly struct */
     rdda = initRdda();
     if (rdda == NULL) {
-        fprintf(stderr, "Init jointStates failed.\n");
+        fprintf(stderr, "Init rdda failed.\n");
         exit(1);
     }
     printf("Input/output interface succeed.\n");
@@ -56,13 +56,13 @@ void rdda_run (void *ifnameptr) {
     initRddaStates(ecatSlave, rdda);
     dobInit(&controlParams, &filterParams, &previousVariables, rdda);
 
-    rdda_gettime(ecatSlave);
+    rdda_gettime(rdda);
     for (loopnum = 0; loopnum < 120000; loopnum ++) {
 
         //start_time = rdda_gettime(ecatSlave);
 
         /* Implement controller */
-        rdda_sleep(ecatSlave, cycletime);
+        rdda_sleep(rdda, cycletime);
         dobController(rdda, &controlParams, &filterParams, &previousVariables);
         rdda_update(ecatSlave, rdda);
 
