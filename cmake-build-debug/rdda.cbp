@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6"/>
+	<Project>
+		<Option title="rdda"/>
+		<Option makefile_is_custom="1"/>
+		<Option compiler="gcc"/>
+		<Option virtualFolders="CMake Files\;"/>
+		<Build>
+			<Target title="all">
+				<Option working_dir="/home/rc/RDDA/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/home/rc/RDDA/cmake-build-debug/Makefile&quot;  VERBOSE=1 all"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/home/rc/RDDA/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/home/rc/RDDA/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/home/rc/RDDA/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="rebuild_cache">
+				<Option working_dir="/home/rc/RDDA/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/home/rc/RDDA/cmake-build-debug/Makefile&quot;  VERBOSE=1 rebuild_cache"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/home/rc/RDDA/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/home/rc/RDDA/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/home/rc/RDDA/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="edit_cache">
+				<Option working_dir="/home/rc/RDDA/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/home/rc/RDDA/cmake-build-debug/Makefile&quot;  VERBOSE=1 edit_cache"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/home/rc/RDDA/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/home/rc/RDDA/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/home/rc/RDDA/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="rdda_src">
+				<Option output="/home/rc/RDDA/cmake-build-debug/librdda_src.a" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/rc/RDDA/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="2"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/include/soem"/>
+					<Add directory="/home/rc/RDDA/include/rdda"/>
+					<Add directory="/home/rc/RDDA/include/shm"/>
+					<Add directory="/home/rc/RDDA/src/rdda"/>
+					<Add directory="/home/rc/RDDA/src/shm"/>
+					<Add directory="/usr/include/c++/5"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/5"/>
+					<Add directory="/usr/include/c++/5/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include-fixed"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/home/rc/RDDA/cmake-build-debug/Makefile&quot;  VERBOSE=1 rdda_src"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/home/rc/RDDA/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/home/rc/RDDA/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/home/rc/RDDA/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="rdda_src/fast">
+				<Option output="/home/rc/RDDA/cmake-build-debug/librdda_src.a" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/rc/RDDA/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="2"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/include/soem"/>
+					<Add directory="/home/rc/RDDA/include/rdda"/>
+					<Add directory="/home/rc/RDDA/include/shm"/>
+					<Add directory="/home/rc/RDDA/src/rdda"/>
+					<Add directory="/home/rc/RDDA/src/shm"/>
+					<Add directory="/usr/include/c++/5"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/5"/>
+					<Add directory="/usr/include/c++/5/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include-fixed"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/home/rc/RDDA/cmake-build-debug/Makefile&quot;  VERBOSE=1 rdda_src/fast"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/home/rc/RDDA/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/home/rc/RDDA/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/home/rc/RDDA/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="rdda_simpletest">
+				<Option output="/home/rc/RDDA/cmake-build-debug/rdda_simpletest" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/rc/RDDA/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/include/soem"/>
+					<Add directory="/home/rc/RDDA/include/rdda"/>
+					<Add directory="/home/rc/RDDA/include/shm"/>
+					<Add directory="/home/rc/RDDA/src/rdda"/>
+					<Add directory="/home/rc/RDDA/src/shm"/>
+					<Add directory="/usr/include/c++/5"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/5"/>
+					<Add directory="/usr/include/c++/5/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include-fixed"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/home/rc/RDDA/cmake-build-debug/Makefile&quot;  VERBOSE=1 rdda_simpletest"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/home/rc/RDDA/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/home/rc/RDDA/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/home/rc/RDDA/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="rdda_simpletest/fast">
+				<Option output="/home/rc/RDDA/cmake-build-debug/rdda_simpletest" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/rc/RDDA/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/include/soem"/>
+					<Add directory="/home/rc/RDDA/include/rdda"/>
+					<Add directory="/home/rc/RDDA/include/shm"/>
+					<Add directory="/home/rc/RDDA/src/rdda"/>
+					<Add directory="/home/rc/RDDA/src/shm"/>
+					<Add directory="/usr/include/c++/5"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/5"/>
+					<Add directory="/usr/include/c++/5/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include-fixed"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/home/rc/RDDA/cmake-build-debug/Makefile&quot;  VERBOSE=1 rdda_simpletest/fast"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/home/rc/RDDA/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/home/rc/RDDA/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/home/rc/RDDA/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+		</Build>
+		<Unit filename="/home/rc/RDDA/src/rdda/init_BEL.c">
+			<Option target="rdda_src"/>
+		</Unit>
+		<Unit filename="/home/rc/RDDA/src/rdda/rdda_base.c">
+			<Option target="rdda_src"/>
+		</Unit>
+		<Unit filename="/home/rc/RDDA/src/rdda/rdda_control.c">
+			<Option target="rdda_src"/>
+		</Unit>
+		<Unit filename="/home/rc/RDDA/src/rdda/rdda_ecat.c">
+			<Option target="rdda_src"/>
+		</Unit>
+		<Unit filename="/home/rc/RDDA/src/rdda/rdda_simpletest.c">
+			<Option target="rdda_simpletest"/>
+		</Unit>
+		<Unit filename="/home/rc/RDDA/src/shm/shm.c">
+			<Option target="rdda_src"/>
+		</Unit>
+		<Unit filename="/home/rc/RDDA/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+	</Project>
+</CodeBlocks_project_file>

@@ -1,0 +1,1 @@
+/usr/bin/cc  -Wall -Wextra -Werror -g  -rdynamic CMakeFiles/rdda_simpletest.dir/src/rdda/rdda_simpletest.c.o  -o rdda_simpletest librdda_src.a -lsoem -lpthread -lrt 

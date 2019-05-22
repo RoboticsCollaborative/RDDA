@@ -1,0 +1,2 @@
+/usr/bin/ar qc librdda_src.a  CMakeFiles/rdda_src.dir/src/rdda/rdda_ecat.c.o CMakeFiles/rdda_src.dir/src/rdda/init_BEL.c.o CMakeFiles/rdda_src.dir/src/rdda/rdda_base.c.o CMakeFiles/rdda_src.dir/src/rdda/rdda_control.c.o CMakeFiles/rdda_src.dir/src/shm/shm.c.o
+/usr/bin/ranlib librdda_src.a
