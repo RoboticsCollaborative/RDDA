@@ -42,7 +42,8 @@ typedef struct
 {
     double motor_pos[2];
     double motor_vel[2];
-    double psensor[2];
+    double pressure[2];
+    double filtered_pressure[2];
     double nominal_force[2];
     double filtered_nominal_force[2];
     double output_force[2];
