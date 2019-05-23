@@ -72,7 +72,7 @@ void rdda_run (void *ifnameptr) {
         /* Implement controller */
         rdda_sleep(ecatSlaves, cycletime);
         dobController(rdda, &controlParams, &filterParams, &previousVariables);
-        //rdda_update(ecatSlaves, rdda);
+        rdda_update(ecatSlaves, rdda);
 
         printf("tg_pos[0]: %+d, pos[0]: %+2.4lf, vel[0]: %+2.4lf, pre[0]: %+2.4lf, tau_off[0]: %+2.4lf, tg_pos[1]: %+d, pos[1]: %+2.4lf, vel[1]: %+2.4lf, pre[1]: %+2.4lf, tau_off[1]: %+2.4lf\r",
                ecatSlaves->bel[0].out_motor->tg_pos, rdda->motor[0].motorIn.act_pos, rdda->motor[0].motorIn.act_vel, rdda->psensor.analogIn.val1, rdda->motor[0].motorOut.tau_off,
