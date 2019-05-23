@@ -114,4 +114,5 @@ void initRddaStates(ecat_slaves *ecatSlaves, Rdda *rdda) {
         rdda->motor[i].motorOut.tg_pos = (double)(initial_theta1_cnts[i]) / ecatSlaves->bel[i].counts_per_rad;
         rdda->motor[i].motorOut.tau_off = 0.0;
     }
+    rdda->ts.sec = rdda->ts.nsec = 0;
 }
