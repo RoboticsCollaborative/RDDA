@@ -42,7 +42,7 @@ void dobInit(ControlParams *controlParams, FilterParams *filterParams, PreviousV
     previousVariables->pressure[0] = rdda->psensor.analogIn.val1 - controlParams->pressure_offset;
     previousVariables->pressure[1] = rdda->psensor.analogIn.val2 - controlParams->pressure_offset;
     previousVariables->filtered_pressure[0] = rdda->psensor.analogIn.val1 - controlParams->pressure_offset;
-    previousVariables->filtered_pressure[1] = rdda->psensor.analogIn.val1 - controlParams->pressure_offset;
+    previousVariables->filtered_pressure[1] = rdda->psensor.analogIn.val2 - controlParams->pressure_offset;
     for (int i = 0; i < 2; i ++) {
         previousVariables->motor_pos[i] = rdda->motor[i].motorIn.act_pos;
         previousVariables->motor_vel[i] = rdda->motor[i].motorIn.act_vel;
@@ -111,11 +111,11 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FilterParams *filte
         filtered_output_force[i] = firstOrderIIRFilter(output_force[i], previousVariables->output_force[i], previousVariables->filtered_output_force[i], filterParams->b0[0], filterParams->b1[0], filterParams->a1[0]);
         if ((filtered_output_force[i] - filtered_nominal_force[i]) > controlParams->max_inner_loop_torque_Nm) {
             output_force[i] = controlParams->max_inner_loop_torque_Nm + filtered_pressure[i];
-            filtered_nominal_force[i] = firstOrderIIRFilter(nominal_force[i], previousVariables->nominal_force[i], previousVariables->filtered_nominal_force[i], filterParams->b0[0], filterParams->b1[0], filterParams->a1[0]);
+            filtered_output_force[i] = firstOrderIIRFilter(output_force[i], previousVariables->output_force[i], previousVariables->filtered_output_force[i], filterParams->b0[0], filterParams->b1[0], filterParams->a1[0]);
         }
         else if ((filtered_output_force[i] - filtered_nominal_force[i]) < -1.0 * controlParams->max_inner_loop_torque_Nm) {
             output_force[i] = -1.0 * controlParams->max_inner_loop_torque_Nm + filtered_pressure[i];
-            filtered_nominal_force[i] = firstOrderIIRFilter(nominal_force[i], previousVariables->nominal_force[i], previousVariables->filtered_nominal_force[i], filterParams->b0[0], filterParams->b1[0], filterParams->a1[0]);
+            filtered_output_force[i] = firstOrderIIRFilter(output_force[i], previousVariables->output_force[i], previousVariables->filtered_output_force[i], filterParams->b0[0], filterParams->b1[0], filterParams->a1[0]);
         }
     }
 
