@@ -31,7 +31,8 @@ void rdda_run (void *ifnameptr) {
     /* User friendly struct */
     Rdda *rdda;
     ControlParams controlParams;
-    FilterParams filterParams;
+    FirstOrderFilterParams firstOrderFilterParams;
+    SecondOrderFilterParams secondOrderFilterParams;
     PreviousVariables previousVariables;
     int cycletime;
     //int start_time, end_time;
@@ -61,7 +62,7 @@ void rdda_run (void *ifnameptr) {
     //pivGainSDOwrite(ecatSlave->bel[0].slave_id, 100, 10);
     //pivGainSDOwrite(ecatSlave->bel[1].slave_id, 0, 0);
     initRddaStates(ecatSlaves, rdda);
-    dobInit(&controlParams, &filterParams, &previousVariables, rdda);
+    dobInit(&controlParams, &firstOrderFilterParams, &secondOrderFilterParams, &previousVariables, rdda);
 
     rdda_gettime(ecatSlaves);
     //for (loopnum = 0; loopnum < 120000; loopnum ++) {
@@ -71,7 +72,7 @@ void rdda_run (void *ifnameptr) {
 
         /* Implement controller */
         rdda_sleep(ecatSlaves, cycletime);
-        dobController(rdda, &controlParams, &filterParams, &previousVariables);
+        dobController(rdda, &controlParams, &firstOrderFilterParams, &secondOrderFilterParams, &previousVariables);
         rdda_update(ecatSlaves, rdda);
 
         printf("tg_pos[0]: %+d, pos[0]: %+2.4lf, vel[0]: %+2.4lf, pre[0]: %+2.4lf, tau_off[0]: %+2.4lf, tg_pos[1]: %+d, pos[1]: %+2.4lf, vel[1]: %+2.4lf, pre[1]: %+2.4lf, tau_off[1]: %+2.4lf\r",
