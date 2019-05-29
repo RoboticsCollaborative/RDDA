@@ -12,8 +12,8 @@ void dobInit(ControlParams *controlParams, FirstOrderFilterParams *firstOrderFil
     controlParams->motor_damping[1] = 0.0;
     controlParams->finger_damping[0] = 0.014289;
     controlParams->finger_damping[1] = 0.014289;
-    controlParams->finger_stiffness[0] = 0.07;//0.04494;
-    controlParams->finger_stiffness[1] = 0.02;//0.04494;
+    controlParams->finger_stiffness[0] = 0.0;//0.04494;
+    controlParams->finger_stiffness[1] = 0.0;//0.04494;
     controlParams->hydraulic_damping = 0.0092573;
     controlParams->hydraulic_stiffness = 12.76140;
     controlParams->cutoff_frequency[0] = 20;
@@ -149,7 +149,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterPar
         finger_vel[i] = finger_vel_pressure_part[i] + motor_vel[i];
         /* hysteresis force */
         hysteresis_force[i] = (previousVariables->hysteresis_force[i] + controlParams->sample_time * controlParams->hysteresis_sigma * finger_vel[i] * controlParams->hysteresis_friction) / (1.0 + controlParams->sample_time * controlParams->hysteresis_sigma * fabs(finger_vel[i]));
-        //hysteresis_force[i] = 0.0;
+        hysteresis_force[i] = 0.0;
     }
 
     /* output force */
