@@ -10,8 +10,8 @@ void dobInit(ControlParams *controlParams, FirstOrderFilterParams *firstOrderFil
     controlParams->motor_inertia[1] = 1.1051e-3;
     controlParams->motor_damping[0] = 0.0;
     controlParams->motor_damping[1] = 0.0;
-    controlParams->finger_damping[0] = 0.014289;
-    controlParams->finger_damping[1] = 0.014289;
+    controlParams->finger_damping[0] = 0.01;//0.014289;
+    controlParams->finger_damping[1] = 0.01;//0.014289;
     controlParams->finger_stiffness[0] = 0.0;//0.04494;
     controlParams->finger_stiffness[1] = 0.0;//0.04494;
     controlParams->hydraulic_damping = 0.0092573;
