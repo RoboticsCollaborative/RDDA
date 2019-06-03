@@ -58,8 +58,13 @@ void rdda_run (void *ifnameptr) {
     cycletime = 500; /* in microseconds */
 
     /* Initialize controller */
-    //pivGainSDOwrite(ecatSlave->bel[0].slave_id, 100, 10);
-    //pivGainSDOwrite(ecatSlave->bel[1].slave_id, 0, 0);
+    /* These two lines are to initialize master to position mode while re-initializing piv gains,
+     * comment out them when running DoB
+     */
+    pivGainSDOwrite(ecatSlaves->bel[0].slave_id, 100, 10);
+    pivGainSDOwrite(ecatSlaves->bel[1].slave_id, 0, 0);
+    /**/
+
     initRddaStates(ecatSlaves, rdda);
     dobInit(&controlParams, &filterParams, &previousVariables, rdda);
 
@@ -71,7 +76,7 @@ void rdda_run (void *ifnameptr) {
 
         /* Implement controller */
         rdda_sleep(ecatSlaves, cycletime);
-        dobController(rdda, &controlParams, &filterParams, &previousVariables);
+        //dobController(rdda, &controlParams, &filterParams, &previousVariables);
         rdda_update(ecatSlaves, rdda);
 
         printf("tg_pos[0]: %+d, pos[0]: %+2.4lf, vel[0]: %+2.4lf, pre[0]: %+2.4lf, tau_off[0]: %+2.4lf, tg_pos[1]: %+d, pos[1]: %+2.4lf, vel[1]: %+2.4lf, pre[1]: %+2.4lf, tau_off[1]: %+2.4lf\r",
