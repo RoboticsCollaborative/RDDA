@@ -66,10 +66,12 @@ typedef struct
     double output_force[2];
     double integral_output_force[2];
     double filtered_output_force[2];
+    double impedance_force[2];
+    double filtered_impedance_force[2];
 } PreviousVariables;
 
 void dobInit(ControlParams *controlParams, FirstOrderFilterParams *firstOrderFilterParams, SecondOrderFilterParams *secondOrderFilterParams, PreviousVariables *previousVariables, Rdda *rdda);
 double firstOrderIIRFilter(double input, double input_prev, double output_prev, double b0, double b1, double a1);
-void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterParams *firstOrderFilterParams, SecondOrderFilterParams *secondOrderFilterParams, PreviousVariables *previousVariables);
+void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterParams *firstOrderFilterParams, SecondOrderFilterParams *secondOrderFilterParams, PreviousVariables *previousVariables, double vel_ref);
 
 #endif //RDDA_CONTROL_H

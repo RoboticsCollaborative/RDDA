@@ -10,6 +10,7 @@
 #include <sched.h>
 #include <signal.h>
 #include <time.h>
+#include <math.h>
 
 #include "rdda_ecat.h"
 #include "rdda_base.h"
@@ -38,6 +39,8 @@ void rdda_run (void *ifnameptr) {
     //int start_time, end_time;
     //int delta_time;
     //int loopnum;
+    double time = 0.0;
+    double vel_ref = 0.0;
 
     /* Configure ethercat network and slaves. */
     ecatSlaves = initEcatConfig(ifname);
@@ -68,11 +71,14 @@ void rdda_run (void *ifnameptr) {
     //for (loopnum = 0; loopnum < 120000; loopnum ++) {
     while (!done) {
 
+        vel_ref = 0.3 * sin(time);
+        time += 0.5e-3;
+
         //start_time = rdda_gettime(ecatSlave);
 
         /* Implement controller */
         rdda_sleep(ecatSlaves, cycletime);
-        dobController(rdda, &controlParams, &firstOrderFilterParams, &secondOrderFilterParams, &previousVariables);
+        dobController(rdda, &controlParams, &firstOrderFilterParams, &secondOrderFilterParams, &previousVariables, vel_ref);
         rdda_update(ecatSlaves, rdda);
 
         printf("tg_pos[0]: %+d, pos[0]: %+2.4lf, vel[0]: %+2.4lf, pre[0]: %+2.4lf, tau_off[0]: %+2.4lf, tg_pos[1]: %+d, pos[1]: %+2.4lf, vel[1]: %+2.4lf, pre[1]: %+2.4lf, tau_off[1]: %+2.4lf\r",
