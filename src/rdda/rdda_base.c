@@ -109,6 +109,7 @@ void initRddaStates(ecat_slaves *ecatSlaves, Rdda *rdda) {
     for (int i = 0; i < 2; i++) {
         mot_id[i] = ecatSlaves->bel[i].slave_id;
         ecatSlaves->bel[i].init_pos_cnts = positionSDOread(mot_id[i]);
+        rdda->motor[i].init_pos = (double)(ecatSlaves->bel[i].init_pos_cnts) / ecatSlaves->bel[i].counts_per_rad;
         /* Init motor position */
         rdda->motor[i].motorOut.tg_pos = 0.0;
         rdda->motor[i].motorOut.tau_off = 0.0;

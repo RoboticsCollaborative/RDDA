@@ -29,6 +29,7 @@ typedef struct {
     MotorOut motorOut;
     /* Constant */
     double tau_max;
+    double init_pos;
     /* SDO */
     int Pp;
     int Vp;
