@@ -112,7 +112,6 @@ void initRddaStates(ecat_slaves *ecatSlaves, Rdda *rdda) {
         /* Init motor position */
         rdda->motor[i].motorOut.tg_pos = 0.0;
         rdda->motor[i].motorOut.tau_off = 0.0;
-        rdda->motor[i].motorRef.pos_ref = 0.0;
     }
     rdda->ts.sec = rdda->ts.nsec = 0;
 }
