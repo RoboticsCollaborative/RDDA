@@ -17,10 +17,10 @@ void dobInit(ControlParams *controlParams, FirstOrderFilterParams *firstOrderFil
     controlParams->hydraulic_damping = 0.0092573;
     controlParams->hydraulic_stiffness = 12.76140;
     controlParams->cutoff_frequency[0] = 20;
-    controlParams->cutoff_frequency[1] = 10;
+    controlParams->cutoff_frequency[1] = 20;
     controlParams->cutoff_frequency[2] = 20;
-    controlParams->pos_gain = 0.0;
-    controlParams->vel_gain = 0.0;
+    controlParams->pos_gain = 20.0;
+    controlParams->vel_gain = 0.2;
     controlParams->acc_gain = 0.0;
     controlParams->pressure_offset = 0.04;
     controlParams->max_inner_loop_torque_Nm = 0.5;
@@ -129,7 +129,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterPar
 
     /* impedance controller */
     for (int i = 0; i < num; i ++) {
-        impedance_force[i] = controlParams->pos_gain * (pos_ref - motor_pos[i]) + controlParams->vel_gain * (vel_ref - motor_vel[i]);
+        impedance_force[i] = controlParams->pos_gain * (pos_ref - (motor_pos[i] - rdda->motor[i].init_pos)) + controlParams->vel_gain * (vel_ref - motor_vel[i]);
         filtered_impedance_force[i] = firstOrderIIRFilter(impedance_force[i], previousVariables->impedance_force[i], previousVariables->filtered_impedance_force[i], firstOrderFilterParams->b0[1], firstOrderFilterParams->b1[1], firstOrderFilterParams->a1[1]);
     }
 

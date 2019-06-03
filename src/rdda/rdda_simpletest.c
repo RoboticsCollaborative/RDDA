@@ -65,7 +65,7 @@ void rdda_run (void *ifnameptr) {
     /* These two lines are to initialize master to position mode while re-initializing piv gains,
      * comment out them when running DoB
      */
-    pivGainSDOwrite(ecatSlaves->bel[0].slave_id, 100, 10);
+    pivGainSDOwrite(ecatSlaves->bel[0].slave_id, 0, 0);
     pivGainSDOwrite(ecatSlaves->bel[1].slave_id, 0, 0);
     /**/
 
@@ -76,7 +76,7 @@ void rdda_run (void *ifnameptr) {
     //for (loopnum = 0; loopnum < 120000; loopnum ++) {
     while (!done) {
 
-        vel_ref = 0.3 * sin(time);
+        vel_ref = -4.0 * sin(time);
         time += 0.5e-3;
 
         //start_time = rdda_gettime(ecatSlave);
