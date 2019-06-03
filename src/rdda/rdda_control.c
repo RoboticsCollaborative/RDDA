@@ -61,6 +61,7 @@ void dobInit(ControlParams *controlParams, FirstOrderFilterParams *firstOrderFil
     previousVariables->filtered_finger_bk_comp_force_pressure_part[1] = (rdda->psensor.analogIn.val2 - controlParams->pressure_offset) * controlParams->finger_stiffness[1] / controlParams->hydraulic_stiffness;
     previousVariables->prev_filtered_finger_bk_comp_force_pressure_part[0] = (rdda->psensor.analogIn.val1 - controlParams->pressure_offset) * controlParams->finger_stiffness[0] / controlParams->hydraulic_stiffness;
     previousVariables->prev_filtered_finger_bk_comp_force_pressure_part[1] = (rdda->psensor.analogIn.val2 - controlParams->pressure_offset) * controlParams->finger_stiffness[1] / controlParams->hydraulic_stiffness;
+
     for (int i = 0; i < 2; i ++) {
         previousVariables->motor_pos[i] = rdda->motor[i].motorIn.act_pos;
         previousVariables->motor_vel[i] = rdda->motor[i].motorIn.act_vel;

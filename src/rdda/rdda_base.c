@@ -42,7 +42,7 @@ void rdda_update(ecat_slaves *ecatSlaves, Rdda *rdda) {
     /* Outputs */
     for (int j = 0; j < 2; j++) {
         ecatSlaves->bel[j].out_motor->ctrl_wd = 15;
-        ecatSlaves->bel[j].out_motor->tg_pos = (int32)(rdda->motor[j].motorOut.tg_pos * ecatSlaves->bel[j].counts_per_rad);
+        ecatSlaves->bel[j].out_motor->tg_pos = ecatSlaves->bel[j].init_pos_cnts + (int32)(rdda->motor[j].motorOut.tg_pos * ecatSlaves->bel[j].counts_per_rad);
         ecatSlaves->bel[j].out_motor->vel_off = (int32)(rdda->motor[j].motorOut.vel_off * ecatSlaves->bel[j].counts_per_rad_sec);
         ecatSlaves->bel[j].out_motor->tau_off = (int16)(rdda->motor[j].motorOut.tau_off * ecatSlaves->bel[j].units_per_nm);
     }
@@ -103,15 +103,15 @@ double saturation(double max_value, double raw_value) {
  * @param rddaSlave     =   RDDA structure (user-friendly).
  */
 void initRddaStates(ecat_slaves *ecatSlaves, Rdda *rdda) {
-    int32 initial_theta1_cnts[2];
     uint16  mot_id[2];
 
     /* Request initial data via SDO */
     for (int i = 0; i < 2; i++) {
         mot_id[i] = ecatSlaves->bel[i].slave_id;
-        initial_theta1_cnts[i] = positionSDOread(mot_id[i]);
+        ecatSlaves->bel[i].init_pos_cnts = positionSDOread(mot_id[i]);
         /* Init motor position */
-        rdda->motor[i].motorOut.tg_pos = (double)(initial_theta1_cnts[i]) / ecatSlaves->bel[i].counts_per_rad;
+        rdda->motor[i].motorOut.tg_pos = 0.0;
         rdda->motor[i].motorOut.tau_off = 0.0;
     }
+    rdda->ts.sec = rdda->ts.nsec = 0;
 }
