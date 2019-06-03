@@ -54,6 +54,7 @@ typedef struct
     motor_input *in_motor;
     motor_output *out_motor;
     /* Motor attributes */
+    int32 init_pos_cnts;
     double counts_per_rad;
     double counts_per_rad_sec;
     double pascal_per_count;

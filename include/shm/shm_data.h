@@ -17,6 +17,15 @@ typedef struct {
     double tau_off;
 } MotorOut;
 
+/** Motor reference commands from ros interface */
+typedef  struct {
+    double pos_ref;
+    double vel_sat;
+    double tau_sat;
+    double stiffness;
+    int freq_anti_alias;
+}MotorRef;
+
 /** EL3102 pressure sensor inputs to master */
 typedef struct {
     double val1;
@@ -27,6 +36,7 @@ typedef struct {
 typedef struct {
     MotorIn motorIn;
     MotorOut motorOut;
+    MotorRef motorRef;
     /* Constant */
     double tau_max;
     /* SDO */
