@@ -3,7 +3,7 @@ project(rdda C CXX)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror")
 set(CMAKE_POSITION_INDEPENDENT_CODE true)
-set(OS_LIBS pthread rt)
+set(OS_LIBS pthread rt m)
 
 # SOEM
 include_directories(/usr/include/soem)

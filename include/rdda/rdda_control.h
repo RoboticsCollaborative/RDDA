@@ -33,26 +33,45 @@ typedef struct
 typedef struct
 {
     double lambda[3]; // cut-off frequency(rad/s)
-    double a1[3];
-    double b0[3];
-    double b1[3];
-} FilterParams;
+    double a1[4];
+    double b0[4];
+    double b1[4];
+} FirstOrderFilterParams;
+
+typedef struct
+{
+    double b0[2];
+    double b1[2];
+    double b2[2];
+    double a1;
+    double a2;
+} SecondOrderFilterParams;
 
 typedef struct
 {
     double motor_pos[2];
     double motor_vel[2];
+    double finger_vel_pressure_part[2];
     double pressure[2];
+    double prev_pressure[2];
     double filtered_pressure[2];
     double nominal_force[2];
     double filtered_nominal_force[2];
+    double finger_bk_comp_force_position_part[2];
+    double filtered_finger_bk_comp_force_position_part[2];
+    double filtered_finger_bk_comp_force_pressure_part[2];
+    double prev_filtered_finger_bk_comp_force_pressure_part[2];
+    double hysteresis_force[2];
+    double filtered_hysteresis_force[2];
     double output_force[2];
     double integral_output_force[2];
     double filtered_output_force[2];
+    double impedance_force[2];
+    double filtered_impedance_force[2];
 } PreviousVariables;
 
-void dobInit(ControlParams *controlParams, FilterParams *filterParams, PreviousVariables *previousVariables, Rdda *rdda);
-double firstOrderIIRFilter(double input, double input_prev, double output_prev, double a1, double b0, double b1);
-void dobController(Rdda *rdda, ControlParams *controlParams, FilterParams *filterParams, PreviousVariables *previousVariables);
+void dobInit(ControlParams *controlParams, FirstOrderFilterParams *firstOrderFilterParams, SecondOrderFilterParams *secondOrderFilterParams, PreviousVariables *previousVariables, Rdda *rdda);
+double firstOrderIIRFilter(double input, double input_prev, double output_prev, double b0, double b1, double a1);
+void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterParams *firstOrderFilterParams, SecondOrderFilterParams *secondOrderFilterParams, PreviousVariables *previousVariables, double vel_ref);
 
 #endif //RDDA_CONTROL_H

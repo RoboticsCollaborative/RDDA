@@ -10,6 +10,7 @@
 #include <sched.h>
 #include <signal.h>
 #include <time.h>
+#include <math.h>
 
 #include "rdda_ecat.h"
 #include "rdda_base.h"
@@ -31,12 +32,15 @@ void rdda_run (void *ifnameptr) {
     /* User friendly struct */
     Rdda *rdda;
     ControlParams controlParams;
-    FilterParams filterParams;
+    FirstOrderFilterParams firstOrderFilterParams;
+    SecondOrderFilterParams secondOrderFilterParams;
     PreviousVariables previousVariables;
     int cycletime;
     //int start_time, end_time;
     //int delta_time;
     //int loopnum;
+    double time = 0.0;
+    double vel_ref = 0.0;
 
     /* Configure ethercat network and slaves. */
     ecatSlaves = initEcatConfig(ifname);
@@ -61,22 +65,27 @@ void rdda_run (void *ifnameptr) {
     /* These two lines are to initialize master to position mode while re-initializing piv gains,
      * comment out them when running DoB
      */
-    pivGainSDOwrite(ecatSlaves->bel[0].slave_id, 100, 10);
+    pivGainSDOwrite(ecatSlaves->bel[0].slave_id, 0, 0);
     pivGainSDOwrite(ecatSlaves->bel[1].slave_id, 0, 0);
     /**/
 
     initRddaStates(ecatSlaves, rdda);
-    dobInit(&controlParams, &filterParams, &previousVariables, rdda);
+    dobInit(&controlParams, &firstOrderFilterParams, &secondOrderFilterParams, &previousVariables, rdda);
 
     rdda_gettime(ecatSlaves);
     //for (loopnum = 0; loopnum < 120000; loopnum ++) {
     while (!done) {
 
+        vel_ref = -4.0 * sin(time);
+        time += 0.5e-3;
+
         //start_time = rdda_gettime(ecatSlave);
 
         /* Implement controller */
         rdda_sleep(ecatSlaves, cycletime);
-        //dobController(rdda, &controlParams, &filterParams, &previousVariables);
+
+        dobController(rdda, &controlParams, &firstOrderFilterParams, &secondOrderFilterParams, &previousVariables, vel_ref);
+
         rdda_update(ecatSlaves, rdda);
 
         printf("tg_pos[0]: %+d, pos[0]: %+2.4lf, vel[0]: %+2.4lf, pre[0]: %+2.4lf, tau_off[0]: %+2.4lf, tg_pos[1]: %+d, pos[1]: %+2.4lf, vel[1]: %+2.4lf, pre[1]: %+2.4lf, tau_off[1]: %+2.4lf\r",
