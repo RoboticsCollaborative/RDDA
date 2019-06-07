@@ -19,7 +19,7 @@ void dobInit(ControlParams *controlParams, FirstOrderFilterParams *firstOrderFil
     controlParams->cutoff_frequency[0] = 20;
     controlParams->cutoff_frequency[1] = 20;
     controlParams->cutoff_frequency[2] = 20;
-    controlParams->pos_gain = 20.0;
+    controlParams->pos_gain = 10.0;
     controlParams->vel_gain = 0.2;
     controlParams->acc_gain = 0.0;
     controlParams->pressure_offset = 0.04;
@@ -112,7 +112,9 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterPar
     double pos_ref = 0.0;
 
     /* position reference */
-    pos_ref += vel_ref * controlParams->sample_time;
+    //pos_ref += vel_ref * controlParams->sample_time;
+    /* position reference by ros */
+    pos_ref += rdda->motor[1].motorOut.vel_off * controlParams->sample_time;
 
     /* sensor reading */
     pressure[0] = rdda->psensor.analogIn.val1 - controlParams->pressure_offset;
