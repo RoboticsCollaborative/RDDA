@@ -15,8 +15,7 @@
 #define MODE_FLAG   0777
 #define SHM_SIZE    4096
 
-JointCommands *initJointCommands();
-JointStates *initJointStates();
+Rdda *initRdda();
 int mutex_lock(pthread_mutex_t *mutex);
 int mutex_unlock(pthread_mutex_t *mutex);
 

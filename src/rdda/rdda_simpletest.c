@@ -10,77 +10,108 @@
 #include <sched.h>
 #include <signal.h>
 #include <time.h>
+#include <math.h>
 
-#include "ethercat.h"
 #include "rdda_ecat.h"
 #include "rdda_base.h"
+#include "rdda_control.h"
 #include "shm_data.h"
 #include "shm.h"
 
-void rdda_run (void *ifnameptr)
-{
+volatile sig_atomic_t done = 0;
+void intHandler (int sig) {
+    if (sig == SIGINT) {
+        done = 1;
+    }
+}
+
+void rdda_run (void *ifnameptr) {
     char *ifname = ifnameptr;
     /* EtherCAT struct */
-    RDDA_slave *rddaSlave;
+    ecat_slaves *ecatSlaves;
     /* User friendly struct */
-    JointCommands   *jointCommands;
-    JointStates     *jointStates;
+    Rdda *rdda;
+    ControlParams controlParams;
+    FirstOrderFilterParams firstOrderFilterParams;
+    SecondOrderFilterParams secondOrderFilterParams;
+    PreviousVariables previousVariables;
     int cycletime;
-    int start_time, end_time;
-    int delta_time;
-    int loopnum;
+    //int start_time, end_time;
+    //int delta_time;
+    //int loopnum;
+    double time = 0.0;
+    double vel_ref = 0.0;
 
     /* Configure ethercat network and slaves. */
-    rddaSlave = rddaEcatConfig(ifname);
-    if (rddaSlave == NULL) {
-        fprintf(stderr, "Init rddaSlave failed.\n");
+    ecatSlaves = initEcatConfig(ifname);
+    if (ecatSlaves == NULL) {
+        fprintf(stderr, "Init ecatslaves failed.\n");
         exit(1);
     }
     printf("Network configuration succeed.\n");
 
     /* Initialize user-friendly struct */
-    jointCommands = initJointCommands();
-    if (jointCommands == NULL) {
-        fprintf(stderr, "Init jointCommands failed.\n");
-        exit(1);
-    }
-    jointStates = initJointStates();
-    if (jointStates == NULL) {
-        fprintf(stderr, "Init jointStates failed.\n");
+    rdda = initRdda();
+    if (rdda == NULL) {
+        fprintf(stderr, "Init rdda failed.\n");
         exit(1);
     }
     printf("Input/output interface succeed.\n");
 
     /* timer */
-    cycletime = 500; /* 500us */
+    cycletime = 500; /* in microseconds */
 
-    for (loopnum = 0; loopnum < 20000; loopnum ++) {
+    /* Initialize controller */
+    /* These two lines are to initialize master to position mode while re-initializing piv gains,
+     * comment out them when running DoB
+     */
+    pivGainSDOwrite(ecatSlaves->bel[0].slave_id, 0, 0);
+    pivGainSDOwrite(ecatSlaves->bel[1].slave_id, 0, 0);
+    /**/
 
-        start_time = rdda_gettime(rddaSlave);
-        rdda_update(rddaSlave, jointStates);
-        end_time = rdda_gettime(rddaSlave);
-        delta_time = cycletime - (end_time - start_time);
-        rdda_sleep(rddaSlave, delta_time);
-        printf("pos[0]: +%lf, vel[0]: +%lf, tau[0]: +%lf, pos[1]: +%lf, vel[1]: +%lf, tau[1]: +%lf, ctime: %d\r",
-               jointStates->act_pos[0], jointStates->act_vel[0], jointStates->act_tau[0],
-               jointStates->act_pos[1], jointStates->act_vel[1], jointStates->act_tau[1],
-               delta_time
+    initRddaStates(ecatSlaves, rdda);
+    dobInit(&controlParams, &firstOrderFilterParams, &secondOrderFilterParams, &previousVariables, rdda);
+
+    rdda_gettime(ecatSlaves);
+    //for (loopnum = 0; loopnum < 120000; loopnum ++) {
+    while (!done) {
+
+        vel_ref = -4.0 * sin(time);
+        time += 0.5e-3;
+
+        //start_time = rdda_gettime(ecatSlave);
+
+        /* Implement controller */
+        rdda_sleep(ecatSlaves, cycletime);
+
+        dobController(rdda, &controlParams, &firstOrderFilterParams, &secondOrderFilterParams, &previousVariables, vel_ref);
+
+        rdda_update(ecatSlaves, rdda);
+
+        printf("tg_pos[0]: %+d, pos[0]: %+2.4lf, vel[0]: %+2.4lf, pre[0]: %+2.4lf, tau_off[0]: %+2.4lf, tg_pos[1]: %+d, pos[1]: %+2.4lf, vel[1]: %+2.4lf, pre[1]: %+2.4lf, tau_off[1]: %+2.4lf, vel_off[0]: %+2.4lf\r",
+               ecatSlaves->bel[0].out_motor->tg_pos, rdda->motor[0].motorIn.act_pos, rdda->motor[0].motorIn.act_vel, rdda->psensor.analogIn.val1, rdda->motor[0].motorOut.tau_off,
+               ecatSlaves->bel[1].out_motor->tg_pos, rdda->motor[1].motorIn.act_pos, rdda->motor[1].motorIn.act_vel, rdda->psensor.analogIn.val2, rdda->motor[1].motorOut.tau_off, rdda->motor[0].motorOut.vel_off
         );
+
+        //end_time = rdda_gettime(ecatSlave);
+        //delta_time = cycletime - (end_time - start_time);
+        //rdda_sleep(ecatSlave, delta_time);
     }
 
-    rddaStop(rddaSlave);
+    rddaStop(ecatSlaves);
 }
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
+    /* ctrl-c */
+    signal(SIGINT, intHandler);
+
     pthread_t rt_thread;
     struct sched_param param;
     int policy = SCHED_FIFO;
 
     printf("SOEM (Simple Open EtherCAT Master)\nRDDA-HAND Run\n");
 
-    if (argc > 1)
-    {
+    if (argc > 1) {
 
 
         /* Create realtime thread */
@@ -101,8 +132,7 @@ int main(int argc, char **argv)
         /* Wait until sub-thread is finished */
         pthread_join(rt_thread, NULL);
     }
-    else
-    {
+    else {
         printf("Usage: haptic_run ifname1\nifname = enp1s0 for example\n");
     }
 

@@ -1,89 +1,118 @@
 /** rdda_base.c */
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-
-#include "ethercat.h"
-#include "rdda_ecat.h"
 #include "rdda_base.h"
 
-/** Initialize a struct pointer for slave
+/** Free EtherCAT slave memory.
  *
- * @param slave_id  =   Slave indices.
- * @return a strcut pointer.
+ * @param slave
  */
-/*
-rdda_slavet *initRddaSlave(Slave_id *slave_id)
-{
-    Slave_id *id = slave_id;
-    rdda_slavet *slave;
-
-    slave = (rdda_slavet *)malloc(sizeof(rdda_slavet));
-    if (slave == NULL) {
-        return NULL;
-    }
-
-    slave->motor = (BEL_slave *)malloc(2*sizeof(BEL_slave));
-    if (slave->motor == NULL) {
-        free(slave);
-        return NULL;
-    }
-    memset(slave->motor, 0, 2*sizeof(BEL_slave));
-    slave->motor[0].slave_id = id->motor1;
-    slave->motor[1].slave_id = id->motor2;
-    for (int i = 0; i < 2; i++) {
-        slave->motor[i].in_motor = (in_motor_t *)ec_slave[slave->motor[i].slave_id].inputs;
-        slave->motor[i].out_motor = (out_motor_t *)ec_slave[slave->motor[i].slave_id].outputs;
-    }
-
-    slave->psensor = (EL3102_slave *)malloc(sizeof(EL3102_slave));
-    if (slave->psensor == NULL) {
-        free(slave);
-        free(slave->motor);
-        return NULL;
-    }
-    memset(slave->psensor, 0, sizeof(EL3102_slave));
-    slave->psensor[0].slave_id = id->psensor;
-    slave->psensor->in_pressure = (in_pressure_t *)ec_slave[slave->psensor[0].slave_id].inputs;
-
-    return slave;
+static void
+delete_ecat_slave(ecat_slaves *slave) {
+    free(slave);
 }
-*/
 
-/** Initialize RDDA_slave struct.
- *
- * @param slave_id  =   Slave index.
- * @return struct pointer.
- */
- /*
-RDDA_slave *init_RDDA_slave(SlaveIndex *slave_id)
-{
-    SlaveIndex *idx = slave_id;
-    RDDA_slave *slave;
-
-    slave = (RDDA_slave *)malloc(sizeof(RDDA_slave));
-    if (slave == NULL) {
-        return NULL;
-    }
-
-    slave->motor[0].slave_id = idx->motor1;
-    slave->motor[1].slave_id = idx->motor2;
-    for (int i = 0; i < 2; i++) {
-        slave->motor[i].in_motor = (MotorIn *)ec_slave[slave->motor[i].slave_id].inputs;
-        slave->motor[i].out_motor = (MotorOut *)ec_slave[slave->motor[i].slave_id].outputs;
-    }
-
-    slave->psensor->slave_id = idx->psensor;
-    slave->psensor->in_pressure = (PressureIn *)ec_slave[slave->psensor->slave_id].inputs;
+/** Close socket */
+void rddaStop(ecat_slaves *slave) {
+    printf("\nRequest init state for all slaves\n");
+    ec_slave[0].state = EC_STATE_INIT;
+    ec_writestate(0);
+    delete_ecat_slave(slave);
+    printf("Close socket\n");
+    ec_close(); /* stop SOEM, close socket */
 }
-  */
 
-/** Free RDDA_slave struct.
+/** Sync PDO data by layers
  *
- * @param rdda_slave    =   RDDA_slave struct.
+ * @param rddaSlave
+ * @param jointStates
  */
-void free_RDDA_slave(RDDA_slave *rdda_slave)
-{
-    free(rdda_slave);
+void rdda_update(ecat_slaves *ecatSlaves, Rdda *rdda) {
+    ec_receive_processdata(EC_TIMEOUTRET);
+    //ec_send_processdata();
+    mutex_lock(&rdda->mutex);
+
+    /* Inputs */
+    for (int i = 0; i < 2; i++) {
+        rdda->motor[i].motorIn.act_pos = (double)(ecatSlaves->bel[i].in_motor->act_pos) / ecatSlaves->bel[i].counts_per_rad;
+        rdda->motor[i].motorIn.act_vel = (double)(ecatSlaves->bel[i].in_motor->act_vel) / ecatSlaves->bel[i].counts_per_rad_sec;
+    }
+    rdda->psensor.analogIn.val1 = (double)(ecatSlaves->el3102.in_analog->val1) * ecatSlaves->bel[0].pascal_per_count * ecatSlaves->bel[0].nm_per_pascal;
+    rdda->psensor.analogIn.val2 = (double)(ecatSlaves->el3102.in_analog->val2) * ecatSlaves->bel[1].pascal_per_count * ecatSlaves->bel[1].nm_per_pascal;
+
+    /* Outputs */
+    for (int j = 0; j < 2; j++) {
+        ecatSlaves->bel[j].out_motor->ctrl_wd = 0;
+        ecatSlaves->bel[j].out_motor->tg_pos = ecatSlaves->bel[j].init_pos_cnts + (int32)(rdda->motor[j].motorOut.tg_pos * ecatSlaves->bel[j].counts_per_rad);
+        ecatSlaves->bel[j].out_motor->vel_off = (int32)(rdda->motor[j].motorOut.vel_off * ecatSlaves->bel[j].counts_per_rad_sec);
+        ecatSlaves->bel[j].out_motor->tau_off = (int16)(rdda->motor[j].motorOut.tau_off * ecatSlaves->bel[j].units_per_nm);
+    }
+
+    /* Timestamp */
+    rdda->ts.sec = ecatSlaves->ts.tv_sec;
+    rdda->ts.nsec = ecatSlaves->ts.tv_nsec;
+
+    mutex_unlock(&rdda->mutex);
+    //ec_receive_processdata(EC_TIMEOUTRET);
+    ec_send_processdata();
+}
+
+/** Sleep and calibrate DC time.
+ *
+ * @param rddaSlave     =   rdda structure.
+ * @param cycletime     =   sleep time.
+ */
+void rdda_sleep(ecat_slaves *ecatSlaves, int cycletime) {
+    int64 cycletime_ns = cycletime * 1000;
+    int64 toff = 0;
+    if (ec_slave[0].hasdc) {
+        toff = ec_sync(ec_DCtime, cycletime);
+    }
+    add_timespec(&ecatSlaves->ts, cycletime_ns + toff);
+    clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &ecatSlaves->ts, NULL);
+}
+
+/** Get system time in microseconds (us)
+ *
+ * @param ecatslaves     =   Ethercat structure.
+ * @return system time at nearest us.
+ */
+int rdda_gettime(ecat_slaves *ecatSlaves) {
+    int64 nsec_per_sec = 1000000000;
+    clock_gettime(CLOCK_MONOTONIC, &ecatSlaves->ts);
+    return (int)(ecatSlaves->ts.tv_sec * nsec_per_sec + ecatSlaves->ts.tv_nsec) / 1000 + 1;
+}
+
+/** Torque saturation
+ *
+ * @param max_value    =   Maximum value.
+ * @param raw_value    =   Raw value.
+ * @return filtered value with max value.
+ */
+double saturation(double max_value, double raw_value) {
+    if (raw_value > max_value)
+        return max_value;
+    else if (raw_value < (-1.0 * max_value))
+        return (-1.0 * max_value);
+    else
+        return raw_value;
+}
+
+/** Let motor be static at launch time.
+ *
+ * @param ecatSlave     =   EtherCAT structure.
+ * @param rddaSlave     =   RDDA structure (user-friendly).
+ */
+void initRddaStates(ecat_slaves *ecatSlaves, Rdda *rdda) {
+    uint16  mot_id[2];
+
+    /* Request initial data via SDO */
+    for (int i = 0; i < 2; i++) {
+        mot_id[i] = ecatSlaves->bel[i].slave_id;
+        ecatSlaves->bel[i].init_pos_cnts = positionSDOread(mot_id[i]);
+        rdda->motor[i].init_pos = (double)(ecatSlaves->bel[i].init_pos_cnts) / ecatSlaves->bel[i].counts_per_rad;
+        /* Init motor position */
+        rdda->motor[i].motorOut.tg_pos = 0.0;
+        rdda->motor[i].motorOut.tau_off = 0.0;
+    }
+    rdda->ts.sec = rdda->ts.nsec = 0;
 }

@@ -8,85 +8,75 @@ char IOmap[4096];
 //boolean needlf;
 //uint8 currentgroup = 0;
 
-void delete_RDDA_slave(RDDA_slave *slave)
-{
-    /*
-    for (int mot_id = 0; mot_id < 2; mot_id ++)
-    {
-        free(slave->motor[mot_id]);
-    }
-    free(slave->psensor);
-    */
-    free(slave);
-}
-
-/** Close socket */
-void rddaStop(RDDA_slave *slave)
-{
-    printf("\nRequest init state for all slaves\n");
-    ec_slave[0].state = EC_STATE_INIT;
-    ec_writestate(0);
-    delete_RDDA_slave(slave);
-    printf("Close socket\n");
-    ec_close(); /* stop SOEM, close socket */
-}
-
 /** Locate and identify EtherCAT slaves.
  *
  * @param rdda_slave    = Slave index group.
  * @return 0 on success.
  */
-static int slaveIdentify(RDDA_slave *slave)
-{
+static int
+slaveIdentify(ecat_slaves *slave) {
     uint16 idx = 0;
     int buf = 0;
-    for (idx = 1; idx <= ec_slavecount; idx++)
-    {
+    for (idx = 1; idx <= ec_slavecount; idx++) {
         /* BEL motor drive */
-        if ((ec_slave[idx].eep_man == 0x000000ab) && (ec_slave[idx].eep_id == 0x00001110))
-        {
+        if ((ec_slave[idx].eep_man == 0x000000ab) && (ec_slave[idx].eep_id == 0x00001110)) {
             uint32 serial_num;
             buf = sizeof(serial_num);
             ec_SDOread(idx, 0x1018, 4, FALSE, &buf, &serial_num, EC_TIMEOUTRXM);
 
             /* motor1 */
-            if (serial_num == 0x2098302)
-            {
+            if (serial_num == 0x2098302) {
                 //network->motor[0] = idx;
-                slave->motor[0].slave_id = idx;
+                slave->bel[0].slave_id = idx;
                 /* CompleteAccess disabled for BEL drive */
                 //ec_slave[slaveIdx].CoEdetails ^= ECT_COEDET_SDOCA;
                 /* Set PDO mapping */
                 printf("Found %s at position %d\n", ec_slave[idx].name, idx);
-                if (1 == mapMotorPDOs_callback(idx))
-                {
+                if (1 == mapMotorPDOs_callback(idx)) {
                     fprintf(stderr, "Motor1 mapping failed!\n");
                     exit(1);
                 }
             }
             /* motor2 */
-            if (serial_num == 0x2098303)
-            {
-                slave->motor[1].slave_id = idx;
+            if (serial_num == 0x2098303) {
+                slave->bel[1].slave_id = idx;
                 /* CompleteAccess disabled for BEL drive */
                 //ec_slave[slaveIdx].CoEdetails ^= ECT_COEDET_SDOCA;
                 /* Set PDO mapping */
                 printf("Found %s at position %d\n", ec_slave[idx].name, idx);
-                if (1 == mapMotorPDOs_callback(idx))
-                {
+                if (1 == mapMotorPDOs_callback(idx)) {
                     fprintf(stderr, "Motor2 mapping failed!\n");
                     exit(1);
                 }
             }
         }
         /* pressure sensor */
-        if ((ec_slave[idx].eep_man == 0x00000002) && (ec_slave[idx].eep_id == 0x0c1e3052))
-        {
-            slave->psensor.slave_id = idx;
+        if ((ec_slave[idx].eep_man == 0x00000002) && (ec_slave[idx].eep_id == 0x0c1e3052)) {
+            slave->el3102.slave_id = idx;
         }
     }
 
     return 0;
+}
+
+/** Initialize ETherCAT slavs memory and internal constant parameters.
+ *
+ * @param ecatSlave     =   EtherCAT slave structure.
+ */
+static void
+initEcatSlaves(ecat_slaves *ecatSlave) {
+    for (int mot_id = 0; mot_id < 2; mot_id ++) {
+        /* Input/output memory allocation */
+        ecatSlave->bel[mot_id].in_motor = (motor_input *)ec_slave[ecatSlave->bel[mot_id].slave_id].inputs;
+        ecatSlave->bel[mot_id].out_motor = (motor_output *)ec_slave[ecatSlave->bel[mot_id].slave_id].outputs;
+        /* Constant parameters assignment */
+        ecatSlave->bel[mot_id].counts_per_rad = 52151.8917;
+        ecatSlave->bel[mot_id].counts_per_rad_sec = 52151.8917*10.0;
+        ecatSlave->bel[mot_id].pascal_per_count = 21.04178;
+        ecatSlave->bel[mot_id].nm_per_pascal = 2.822e-6;
+        ecatSlave->bel[mot_id].units_per_nm = 5000.0;
+    }
+    ecatSlave->el3102.in_analog = (analog_input *)ec_slave[ecatSlave->el3102.slave_id].inputs;
 }
 
 /** Set up EtherCAT NIC and state machine to request all slaves to work properly.
@@ -94,8 +84,7 @@ static int slaveIdentify(RDDA_slave *slave)
  * @param ifnameptr = NIC interface pointer
  * @return 0.
  */
-RDDA_slave *rddaEcatConfig(void *ifnameptr)
-{
+ecat_slaves *initEcatConfig(void *ifnameptr) {
     char *ifname  = (char *)ifnameptr;
 
 //    inOP = FALSE;
@@ -103,59 +92,29 @@ RDDA_slave *rddaEcatConfig(void *ifnameptr)
     int expectedWKC;
     int wkc;
 
-/*
-    SlaveIndex *slaveIndex;
-    slaveIndex = (SlaveIndex *)malloc(sizeof(SlaveIndex));
-    if ( slaveIndex == NULL)
-    {
-        return NULL;
-    }
-    memset(slaveIndex, 0, sizeof(SlaveIndex));
-*/
-
     /* Initialize data structure */
     printf("Init data structure.\n");
-    RDDA_slave *rddaSlave;
-    rddaSlave = (RDDA_slave *)malloc(sizeof(RDDA_slave));
-    if (rddaSlave == NULL)
-    {
+    ecat_slaves *ecatSlaves;
+    ecatSlaves = (ecat_slaves *)malloc(sizeof(ecat_slaves));
+    if (ecatSlaves == NULL) {
         return NULL;
     }
-
-    /*
-    rddaSlave->motor = (BEL_slave **)malloc(2 * sizeof(BEL_slave *));
-    if (rddaSlave->motor == NULL)
-    {
-        free(rddaSlave);
-        return NULL;
-    }
-    rddaSlave->psensor = (EL3102_slave *)malloc(sizeof(EL3102_slave));
-    if (rddaSlave->psensor == NULL)
-    {
-        free(rddaSlave);
-        return NULL;
-    }
-    */
 
     printf("Begin network configuration\n");
     /* Initialize SOEM, bind socket to ifname */
-    if (ec_init(ifname))
-    {
+    if (ec_init(ifname)) {
 	    printf("Socket connection on %s succeeded.\n", ifname);
     }
-    else
-    {
+    else {
 	    fprintf(stderr, "No socket connection on %s.\nExcecuted as root\n", ifname);
 	    exit(1);
     }
 
     /* Find and configure slaves */
-    if (ec_config_init(FALSE) > 0)
-    {
+    if (ec_config_init(FALSE) > 0) {
 	    printf("%d slaves found and configured.\n", ec_slavecount);
     }
-    else
-    {
+    else {
 	    fprintf(stderr, "No slaves found!\n");
 	    ec_close();
 	    exit(1);
@@ -165,10 +124,9 @@ RDDA_slave *rddaEcatConfig(void *ifnameptr)
     ec_statecheck(0, EC_STATE_PRE_OP, EC_TIMEOUTSTATE);
 
     /* Locate slaves */
-    slaveIdentify(rddaSlave);
-    printf("psensor_id: %d\n", rddaSlave->psensor.slave_id);
-    if (rddaSlave->motor[0].slave_id == 0 || rddaSlave->motor[1].slave_id == 0 || rddaSlave->psensor.slave_id == 0)
-    {
+    slaveIdentify(ecatSlaves);
+    printf("psensor_id: %d\n", ecatSlaves->el3102.slave_id);
+    if (ecatSlaves->bel[0].slave_id == 0 || ecatSlaves->bel[1].slave_id == 0 || ecatSlaves->el3102.slave_id == 0) {
         fprintf(stderr, "Slaves identification failure!");
         exit(1);
     }
@@ -183,16 +141,8 @@ RDDA_slave *rddaEcatConfig(void *ifnameptr)
     /* Wait for all salves to reach SAFE_OP state */
     ec_statecheck(0, EC_STATE_SAFE_OP, EC_TIMEOUTSTATE);
 
-    /* Initialize motor params */
-    /*
-    if (initMotor(rdda_slave->motor1) || initMotor(rdda_slave->motor2))
-    {
-        ec_close();
-        fprintf(stderr, "Motor initialization failure!");
-    }
-     */
-    initMotor(rddaSlave->motor[0].slave_id);
-    initMotor(rddaSlave->motor[1].slave_id);
+    initMotor(ecatSlaves->bel[0].slave_id);
+    initMotor(ecatSlaves->bel[1].slave_id);
     printf("Slaves initialized, state to OP\n");
 
     /* Check if all slaves are working properly */
@@ -204,8 +154,7 @@ RDDA_slave *rddaEcatConfig(void *ifnameptr)
     /* Send one valid process data to make outputs in slave happy */
     ec_send_processdata();
     wkc = ec_receive_processdata(EC_TIMEOUTRET);
-    if (wkc < expectedWKC)
-    {
+    if (wkc < expectedWKC) {
         fprintf(stderr, "WKC failure.\n");
         exit(1);
     }
@@ -215,20 +164,15 @@ RDDA_slave *rddaEcatConfig(void *ifnameptr)
     /* Wait for all slaves to reach OP state */
     ec_statecheck(0, EC_STATE_OPERATIONAL, EC_TIMEOUTSTATE);
 
-    for (int mot_id = 0; mot_id < 2; mot_id ++)
-    {
-        rddaSlave->motor[mot_id].in_motor = (MotorIn *)ec_slave[rddaSlave->motor[mot_id].slave_id].inputs;
-    }
-    rddaSlave->psensor.in_pressure = (PressureIn *)ec_slave[rddaSlave->psensor.slave_id].inputs;
+    /* Initialize slaves before use */
+    initEcatSlaves(ecatSlaves);
 
     /* Recheck */
-    if (ec_slave[0].state == EC_STATE_OPERATIONAL)
-    {
+    if (ec_slave[0].state == EC_STATE_OPERATIONAL) {
         printf("Operational state reached for all slaves\n");
-        return rddaSlave;
+        return ecatSlaves;
     }
-    else
-    {
+    else {
         ec_close();
         fprintf(stderr, "Operational state failed\n");
         exit(1);
@@ -240,8 +184,7 @@ RDDA_slave *rddaEcatConfig(void *ifnameptr)
  * @param ts  =   Structure holding an interval broken down into seconds and nanoseconds
  * @param addtime   =   Elapsed time interval added to previous time.
  */
-void add_timespec(struct timespec *ts, int64 addtime)
-{
+void add_timespec(struct timespec *ts, int64 addtime) {
     int64 sec, nsec;
     int64 NSEC_PER_SEC = 1000000000;
 
@@ -263,8 +206,7 @@ void add_timespec(struct timespec *ts, int64 addtime)
  * @param cycletime    =   Cycle time of PDO transfer.
  * @param offsettime    =   Offset time.
  */
-int64 ec_sync(int64 reftime, int64 cycletime)
-{
+int64 ec_sync(int64 reftime, int64 cycletime) {
     static int64 integral = 0;
     int64 delta;
     /* Set linux sync point 50us later than DC sync */
@@ -275,61 +217,27 @@ int64 ec_sync(int64 reftime, int64 cycletime)
     return -(delta/100)-(integral/20);
 }
 
-/** Sync PDO data by layers
+/** Read actual position value via SDO
  *
- * @param rddaSlave
- * @param jointStates
+ * @param slave_id  =   Slave index.
+ * @return position value in counts.
  */
-void rdda_update(RDDA_slave *rddaSlave, JointStates *jointStates)
-{
-    ec_receive_processdata(EC_TIMEOUTRET);
-
-    /* Update joint states */
-    mutex_lock(&jointStates->mutex);
-
-    for (int i = 0; i < 2; i++) {
-        jointStates->stat_wd[i] = (int)(rddaSlave->motor[i].in_motor->stat_wd);
-        jointStates->act_pos[i] = (double)(rddaSlave->motor[i].in_motor->act_pos/COUNTS_PER_RADIAN);
-        jointStates->act_vel[i] = (double)(rddaSlave->motor[i].in_motor->act_vel/COUNTS_PER_RADIAN/10.0);
-    }
-    jointStates->act_tau[0] = (double)(rddaSlave->psensor.in_pressure->val1 * PASCAL_PER_COUNT * NM_PER_PASCAL);
-    jointStates->act_tau[1] = (double)(rddaSlave->psensor.in_pressure->val2 * PASCAL_PER_COUNT * NM_PER_PASCAL);
-
-    mutex_unlock(&jointStates->mutex);
-
-    /* Update joint commands */
-/*
-    mutex_lock(&jointCommands->mutex);
-
-    for (int j = 0; j < 2; j++) {
-        rddaSlave->motor[j].out_motor->ctrl_wd = (uint16)(jointCommands->ctrl_wd[j]);
-        rddaSlave->motor[j].out_motor->tg_pos = (int32)(jointCommands->tg_pos[j] * (double)COUNTS_PER_RADIAN);
-        rddaSlave->motor[j].out_motor->vel_off = (int32)(jointCommands->vel_off[j] * (double)COUNTS_PER_RADIAN * 10.0);
-        rddaSlave->motor[j].out_motor->tau_off = (int16)(jointCommands->tau_off[j] * (double)UNITS_PER_NM);
-    }
-
-    mutex_unlock(&jointCommands->mutex);
-*/
-
-    ec_send_processdata();
+int32 positionSDOread(uint16 slave_id) {
+    int32 initial_theta1_cnts = 0;
+    int size = sizeof(initial_theta1_cnts);
+    ec_SDOread(slave_id, 0x6064, 0, FALSE, &size, &initial_theta1_cnts, EC_TIMEOUTRXM);
+    return initial_theta1_cnts;
 }
 
-int rdda_gettime(RDDA_slave *rddaSlave)
-{
-    int64 nsec_per_sec = 1000000000;
-    clock_gettime(CLOCK_MONOTONIC, &rddaSlave->ts);
-    return (int)(rddaSlave->ts.tv_sec * nsec_per_sec + rddaSlave->ts.tv_nsec) / 1000;
-}
-
-void rdda_sleep(RDDA_slave *rddaSlave, int cycletime)
-{
-    int64 cycletime_ns = cycletime * 1000;
-    int toff = 0;
-    if (ec_slave[0].hasdc) {
-        toff = ec_sync(ec_DCtime, cycletime);
-    }
-    add_timespec(&rddaSlave->ts, cycletime_ns + toff);
-    clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &rddaSlave->ts, NULL);
+/** Write PIV gain values via SDO
+ *
+ * @param slave_id  =   Slave index.
+ * @param Pp        =   Pp gain.
+ * @param Vp        =   Vp gain.
+ */
+void pivGainSDOwrite(uint16 slave_id, uint16 Pp, uint16 Vp) {
+    SDO_write16(slave_id, 0x2382, 1, Pp);        /* position loop gain (Pp) */
+    SDO_write16(slave_id, 0x2381, 1, Vp);        /* velocity loop gain (Vp) */
 }
 
 //#define EC_TIMEOUTMON 500

@@ -1,7 +1,18 @@
-#ifndef RDDA_RDDA_BASE_H
-#define RDDA_RDDA_BASE_H
+#ifndef RDDA_BASE_H
+#define RDDA_BASE_H
 
-RDDA_slave *init_RDDA_slave(int slave_id);
-void free_RDDA_slave(RDDA_slave *rdda_slave);
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 
-#endif //RDDA_RDDA_BASE_H
+#include "rdda_ecat.h"
+#include "shm_data.h"
+
+void rdda_update(ecat_slaves *ecatSlaves, Rdda *rdda);
+void rddaStop(ecat_slaves *ecatSlaves);
+int rdda_gettime(ecat_slaves *ecatSlaves);
+void rdda_sleep(ecat_slaves *ecatSlaves, int cycletime);
+void initRddaStates(ecat_slaves *ecatSlaves, Rdda *rdda);
+double saturation(double max_torque, double raw_torque);
+
+#endif //RDDA_BASE_H

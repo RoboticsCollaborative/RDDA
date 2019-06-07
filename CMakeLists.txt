@@ -3,7 +3,7 @@ project(rdda C CXX)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror")
 set(CMAKE_POSITION_INDEPENDENT_CODE true)
-set(OS_LIBS pthread rt)
+set(OS_LIBS pthread rt m)
 
 # SOEM
 include_directories(/usr/include/soem)
@@ -34,9 +34,8 @@ add_library(${PROJECT_NAME}_src
         src/${PROJECT_NAME}/rdda_ecat.c
         src/${PROJECT_NAME}/init_BEL.c
         src/${PROJECT_NAME}/rdda_base.c
+        src/${PROJECT_NAME}/rdda_control.c
         src/shm/shm.c
-#        src/shm/shm_master.c
-#        src/shm/shm_slave.c
         )
 
 target_link_libraries(${PROJECT_NAME}_src soem ${OS_LIBS})
