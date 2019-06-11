@@ -17,6 +17,14 @@ typedef struct {
     double tau_off;
 } MotorOut;
 
+/* Reference signals from ROS interface */
+typedef struct {
+    double pos_ref;
+    double vel_sat;
+    double tau_sat;
+    double stiffness;
+} RosOut;
+
 /** EL3102 pressure sensor inputs to master */
 typedef struct {
     double val1;
@@ -27,6 +35,7 @@ typedef struct {
 typedef struct {
     MotorIn motorIn;
     MotorOut motorOut;
+    RosOut rosOut;
     /* Constant */
     double tau_max;
     double init_pos;
@@ -50,6 +59,7 @@ typedef struct {
 typedef struct {
     BEL_slave motor[2];
     EL3102_slave psensor;
+    int freq_anti_alias;
     Timestamp ts;
     pthread_mutex_t mutex;
 } Rdda;

@@ -40,8 +40,10 @@ void rdda_update(ecat_slaves *ecatSlaves, Rdda *rdda) {
     rdda->psensor.analogIn.val2 = (double)(ecatSlaves->el3102.in_analog->val2) * ecatSlaves->bel[1].pascal_per_count * ecatSlaves->bel[1].nm_per_pascal;
 
     /* Outputs */
+    ecatSlaves->bel[0].out_motor->ctrl_wd = 15;
+    ecatSlaves->bel[1].out_motor->ctrl_wd = 0;
     for (int j = 0; j < 2; j++) {
-        ecatSlaves->bel[j].out_motor->ctrl_wd = 0;
+        //ecatSlaves->bel[j].out_motor->ctrl_wd = 0;
         ecatSlaves->bel[j].out_motor->tg_pos = ecatSlaves->bel[j].init_pos_cnts + (int32)(rdda->motor[j].motorOut.tg_pos * ecatSlaves->bel[j].counts_per_rad);
         ecatSlaves->bel[j].out_motor->vel_off = (int32)(rdda->motor[j].motorOut.vel_off * ecatSlaves->bel[j].counts_per_rad_sec);
         ecatSlaves->bel[j].out_motor->tau_off = (int16)(rdda->motor[j].motorOut.tau_off * ecatSlaves->bel[j].units_per_nm);
