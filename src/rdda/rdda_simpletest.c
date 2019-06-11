@@ -76,7 +76,7 @@ void rdda_run (void *ifnameptr) {
     //for (loopnum = 0; loopnum < 120000; loopnum ++) {
     while (!done) {
 
-        vel_ref = -4.0 * sin(time);
+        vel_ref = 0.0;//-4.0 * sin(time);
         time += 0.5e-3;
 
         //start_time = rdda_gettime(ecatSlave);
