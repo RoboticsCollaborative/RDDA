@@ -84,7 +84,7 @@ void rdda_run (void *ifnameptr) {
         /* Implement controller */
         rdda_sleep(ecatSlaves, cycletime);
 
-        dobController(rdda, &controlParams, &firstOrderFilterParams, &secondOrderFilterParams, &previousVariables, vel_ref);
+        dobController(rdda, &controlParams, &firstOrderFilterParams, &secondOrderFilterParams, &previousVariables);
 
         rdda_update(ecatSlaves, rdda);
 

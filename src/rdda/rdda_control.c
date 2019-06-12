@@ -76,6 +76,7 @@ void dobInit(ControlParams *controlParams, FirstOrderFilterParams *firstOrderFil
         previousVariables->filtered_output_force[i] = 0.0;
         previousVariables->impedance_force[i] = 0.0;
         previousVariables->filtered_impedance_force[i] = 0.0;
+        previousVariables->pos_ref[i] = rdda->motor[i].rosOut.pos_ref;
     }
 }
 
@@ -85,7 +86,7 @@ double firstOrderIIRFilter(double input, double input_prev, double output_prev, 
     return output;
 }
 
-void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterParams *firstOrderFilterParams, SecondOrderFilterParams *secondOrderFilterParams, PreviousVariables *previousVariables, double vel_ref) {
+void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterParams *firstOrderFilterParams, SecondOrderFilterParams *secondOrderFilterParams, PreviousVariables *previousVariables) {
     /* dob parameters */
     int num = 2;
     double motor_pos[num];
@@ -109,13 +110,14 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterPar
     double impedance_force[num];
     double filtered_impedance_force[num];
 
-    double pos_ref = 0.0;
+    double pos_ref[num];
+    double vel_ref[num];
 
-    /* position reference */
-    //pos_ref += vel_ref * controlParams->sample_time;
     /* position reference by ros */
-    vel_ref = rdda->motor[0].motorOut.vel_off;
-    pos_ref += rdda->motor[0].motorOut.vel_off * controlParams->sample_time;
+    for (int i = 0; i < num; i ++) {
+        pos_ref[i] = rdda->motor[i].rosOut.pos_ref;
+        vel_ref[i] = (pos_ref[i] - previousVariables->pos_ref[i]) / controlParams->sample_time;
+    }
 
     /* sensor reading */
     pressure[0] = rdda->psensor.analogIn.val1 - controlParams->pressure_offset;
@@ -132,7 +134,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterPar
 
     /* impedance controller */
     for (int i = 0; i < num; i ++) {
-        impedance_force[i] = controlParams->pos_gain * (pos_ref - (motor_pos[i] - rdda->motor[i].init_pos)) + controlParams->vel_gain * (vel_ref - motor_vel[i]);
+        impedance_force[i] = controlParams->pos_gain * (pos_ref[i] - (motor_pos[i] - rdda->motor[i].init_pos)) + controlParams->vel_gain * (vel_ref[i] - motor_vel[i]);
         filtered_impedance_force[i] = firstOrderIIRFilter(impedance_force[i], previousVariables->impedance_force[i], previousVariables->filtered_impedance_force[i], firstOrderFilterParams->b0[1], firstOrderFilterParams->b1[1], firstOrderFilterParams->a1[1]);
     }
 
@@ -209,6 +211,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterPar
         previousVariables->filtered_output_force[i] = filtered_output_force[i];
         previousVariables->impedance_force[i] = impedance_force[i];
         previousVariables->filtered_impedance_force[i] = filtered_impedance_force[i];
+        previousVariables->pos_ref[i] = pos_ref[i];
     }
 
     /* motor output with saturation */
