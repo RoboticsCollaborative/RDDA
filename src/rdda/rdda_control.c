@@ -21,9 +21,12 @@ void dobInit(ControlParams *controlParams, FirstOrderFilterParams *firstOrderFil
     controlParams->cutoff_frequency[0] = 20;
     controlParams->cutoff_frequency[1] = 20;
     controlParams->cutoff_frequency[2] = 20;
-    controlParams->pos_gain = 10.0;
-    controlParams->vel_gain = 0.2;
-    controlParams->acc_gain = 0.0;
+    controlParams->pos_gain[0] = 10.0;
+    controlParams->vel_gain[0] = 0.2;
+    controlParams->acc_gain[0] = 0.0;
+    controlParams->pos_gain[1] = 10.0;
+    controlParams->vel_gain[1] = 0.2;
+    controlParams->acc_gain[1] = 0.0;
     controlParams->pressure_offset = 0.04;
     controlParams->max_inner_loop_torque_Nm = 0.5;
     controlParams->max_torque_Nm = 5.0;
@@ -31,6 +34,7 @@ void dobInit(ControlParams *controlParams, FirstOrderFilterParams *firstOrderFil
     controlParams->hysteresis_friction = 0.016;
     controlParams->gripper_angle_difference = 0.5;
     controlParams->sample_time = 0.5e-3;
+    controlParams->gear_ratio = 1.33;
 
     /* filter parameters initialization */
     /* first order first initialization */
@@ -113,7 +117,6 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterPar
     double filtered_impedance_force[num];
 
     double max_torque_Nm[num];
-    double max_vel_radHz[num];
     double est_vel_radHz[num];
 
     double pos_ref[num];
@@ -138,9 +141,18 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterPar
         motor_acc[i] = (motor_vel[i] - previousVariables->motor_vel[i]) / controlParams->sample_time;
     }
 
+    /* PD gain calculation based on endpoint impedance */
+/*    for (int i = 0; i < num; i ++) {
+        controlParams->pos_gain[i] = controlParams->hydraulic_stiffness * (rdda->motor[i].rosOut.stiffness - controlParams->finger_stiffness[i] * pow(controlParams->gear_ratio, 2)) / ((controlParams->hydraulic_stiffness + controlParams->finger_stiffness[i]) * pow(controlParams->gear_ratio, 2) - rdda->motor[i].rosOut.stiffness);
+        if (controlParams->pos_gain[i] <= 10.0) {
+            controlParams->vel_gain[i] = controlParams->pos_gain[i] / 100;
+        }
+        else controlParams->vel_gain[i] = 0.1;
+    }
+*/
     /* impedance controller */
     for (int i = 0; i < num; i ++) {
-        impedance_force[i] = controlParams->pos_gain * (pos_ref[i] - (motor_pos[i] - rdda->motor[i].init_pos)) + controlParams->vel_gain * (vel_ref[i] - motor_vel[i]);
+        impedance_force[i] = controlParams->pos_gain[i] * (pos_ref[i] - (motor_pos[i] - rdda->motor[i].init_pos)) + controlParams->vel_gain[i] * (vel_ref[i] - motor_vel[i]);
         filtered_impedance_force[i] = firstOrderIIRFilter(impedance_force[i], previousVariables->impedance_force[i], previousVariables->filtered_impedance_force[i], firstOrderFilterParams->b0[1], firstOrderFilterParams->b1[1], firstOrderFilterParams->a1[1]);
     }
 
@@ -166,7 +178,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterPar
         filtered_finger_bk_comp_force_pressure_part[i] = secondOrderFilterParams->b0[i] * pressure[i] + secondOrderFilterParams->b1[i] * previousVariables->pressure[i] + secondOrderFilterParams->b2[i] * previousVariables->prev_pressure[i] + secondOrderFilterParams->a1 * previousVariables->filtered_finger_bk_comp_force_pressure_part[i] + secondOrderFilterParams->a2 * previousVariables->prev_filtered_finger_bk_comp_force_pressure_part[i];
         /* total */
         filtered_finger_bk_comp_force[i] = filtered_finger_bk_comp_force_position_part[i] + filtered_finger_bk_comp_force_pressure_part[i];
-        //filtered_finger_bk_comp_force[i] = 0.0;
+        filtered_finger_bk_comp_force[i] = 0.0;
     }
 
     /* hysteresis compensation */
@@ -176,7 +188,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterPar
         finger_vel[i] = finger_vel_pressure_part[i] + motor_vel[i];
         /* hysteresis force */
         hysteresis_force[i] = (previousVariables->hysteresis_force[i] + controlParams->sample_time * controlParams->hysteresis_sigma * finger_vel[i] * controlParams->hysteresis_friction) / (1.0 + controlParams->sample_time * controlParams->hysteresis_sigma * fabs(finger_vel[i]));
-        //hysteresis_force[i] = 0.0;
+        hysteresis_force[i] = 0.0;
     }
 
     /* output force */
