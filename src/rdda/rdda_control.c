@@ -4,6 +4,8 @@
 
 #include "rdda_control.h"
 
+#define MIN(x,y) (x)<(y)?(x):(y)
+
 void dobInit(ControlParams *controlParams, FirstOrderFilterParams *firstOrderFilterParams, SecondOrderFilterParams *secondOrderFilterParams, PreviousVariables *previousVariables, Rdda *rdda) {
     /* control parameters initialization */
     controlParams->motor_inertia[0] = 1.1051e-3;
@@ -110,6 +112,10 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterPar
     double impedance_force[num];
     double filtered_impedance_force[num];
 
+    double max_torque_Nm[num];
+    double max_vel_radHz[num];
+    double est_vel_radHz[num];
+
     double pos_ref[num];
     double vel_ref[num];
 
@@ -214,10 +220,22 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterPar
         previousVariables->pos_ref[i] = pos_ref[i];
     }
 
-    /* motor output with saturation */
+    /* motor output with torque saturation */
     for (int i = 0; i < num; i ++) {
-        rdda->motor[i].tau_max = controlParams->max_torque_Nm;
+        max_torque_Nm[i] = MIN(controlParams->max_torque_Nm, rdda->motor[i].rosOut.tau_sat);
+        rdda->motor[i].tau_max = max_torque_Nm[i];
         rdda->motor[i].motorOut.tau_off = saturation(rdda->motor[i].tau_max, output_force[i]);
+    }
+
+    /* motor output with velocity saturation */
+    for (int i = 0; i < num; i ++) {
+        est_vel_radHz[i] = motor_vel[i] + rdda->motor[i].motorOut.tau_off / controlParams->motor_inertia[i] * controlParams->sample_time;
+        if (est_vel_radHz[i] > rdda->motor[i].rosOut.vel_sat) {
+            rdda->motor[i].motorOut.tau_off = (rdda->motor[i].rosOut.vel_sat - motor_vel[i]) / controlParams->sample_time * controlParams->motor_inertia[i];
+        }
+        else if (est_vel_radHz[i] < -rdda->motor[i].rosOut.vel_sat) {
+            rdda->motor[i].motorOut.tau_off = (-rdda->motor[i].rosOut.vel_sat - motor_vel[i]) / controlParams->sample_time * controlParams->motor_inertia[i];
+        }
     }
 
 }
