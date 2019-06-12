@@ -8,16 +8,16 @@
 
 void dobInit(ControlParams *controlParams, FirstOrderFilterParams *firstOrderFilterParams, SecondOrderFilterParams *secondOrderFilterParams, PreviousVariables *previousVariables, Rdda *rdda) {
     /* control parameters initialization */
-    controlParams->motor_inertia[0] = 1.1051e-3;
-    controlParams->motor_inertia[1] = 1.1051e-3;
+    controlParams->motor_inertia[0] = 1.1144e-3;
+    controlParams->motor_inertia[1] = 1.1144e-3;
     controlParams->motor_damping[0] = 0.0;
     controlParams->motor_damping[1] = 0.0;
-    controlParams->finger_damping[0] = 0.01;//0.014289;
-    controlParams->finger_damping[1] = 0.01;//0.014289;
-    controlParams->finger_stiffness[0] = 0.04494;
-    controlParams->finger_stiffness[1] = 0.04494;
-    controlParams->hydraulic_damping = 0.0092573;
-    controlParams->hydraulic_stiffness = 12.76140;
+    controlParams->finger_damping[0] = 1.6933e-2;
+    controlParams->finger_damping[1] = 1.6933e-2;
+    controlParams->finger_stiffness[0] = 0.0235;
+    controlParams->finger_stiffness[1] = 0.0235;
+    controlParams->hydraulic_damping = 0.009257;
+    controlParams->hydraulic_stiffness = 13.0948;
     controlParams->cutoff_frequency[0] = 20;
     controlParams->cutoff_frequency[1] = 20;
     controlParams->cutoff_frequency[2] = 20;
