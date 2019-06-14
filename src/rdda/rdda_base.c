@@ -115,6 +115,12 @@ void initRddaStates(ecat_slaves *ecatSlaves, Rdda *rdda) {
         /* Init motor position */
         rdda->motor[i].motorOut.tg_pos = 0.0;
         rdda->motor[i].motorOut.tau_off = 0.0;
+        /* Init ROS outputs */
+        rdda->motor[i].rosOut.pos_ref = 0.0;
+        rdda->motor[i].rosOut.vel_sat = 3.0;
+        rdda->motor[i].rosOut.tau_sat = 5.0;
+        rdda->motor[i].rosOut.stiffness = 0.0;
     }
+    rdda->freq_anti_alias = 500;
     rdda->ts.sec = rdda->ts.nsec = 0;
 }
