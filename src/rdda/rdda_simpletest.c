@@ -40,7 +40,7 @@ void rdda_run (void *ifnameptr) {
     //int delta_time;
     //int loopnum;
     double time = 0.0;
-    double vel_ref = 0.0;
+    //double vel_ref = 0.0;
 
     /* Configure ethercat network and slaves. */
     ecatSlaves = initEcatConfig(ifname);
@@ -76,7 +76,7 @@ void rdda_run (void *ifnameptr) {
     //for (loopnum = 0; loopnum < 120000; loopnum ++) {
     while (!done) {
 
-        vel_ref = 0.0;//-4.0 * sin(time);
+        //vel_ref = 0.0;//-4.0 * sin(time);
         time += 0.5e-3;
 
         //start_time = rdda_gettime(ecatSlave);
@@ -84,7 +84,7 @@ void rdda_run (void *ifnameptr) {
         /* Implement controller */
         rdda_sleep(ecatSlaves, cycletime);
 
-        dobController(rdda, &controlParams, &firstOrderFilterParams, &secondOrderFilterParams, &previousVariables, vel_ref);
+        dobController(rdda, &controlParams, &firstOrderFilterParams, &secondOrderFilterParams, &previousVariables);
 
         rdda_update(ecatSlaves, rdda);
 

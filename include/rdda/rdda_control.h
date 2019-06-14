@@ -18,9 +18,9 @@ typedef struct
     double hydraulic_stiffness;
     double hydraulic_damping;
     double cutoff_frequency[3];
-    double pos_gain;
-    double vel_gain;
-    double acc_gain;
+    double pos_gain[2];
+    double vel_gain[2];
+    double acc_gain[2];
     double pressure_offset;
     double max_inner_loop_torque_Nm;
     double max_torque_Nm;
@@ -28,6 +28,7 @@ typedef struct
     double hysteresis_friction;
     double gripper_angle_difference;
     double sample_time;
+    double gear_ratio;
 } ControlParams;
 
 typedef struct
@@ -68,10 +69,11 @@ typedef struct
     double filtered_output_force[2];
     double impedance_force[2];
     double filtered_impedance_force[2];
+    double pos_ref[2];
 } PreviousVariables;
 
 void dobInit(ControlParams *controlParams, FirstOrderFilterParams *firstOrderFilterParams, SecondOrderFilterParams *secondOrderFilterParams, PreviousVariables *previousVariables, Rdda *rdda);
 double firstOrderIIRFilter(double input, double input_prev, double output_prev, double b0, double b1, double a1);
-void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterParams *firstOrderFilterParams, SecondOrderFilterParams *secondOrderFilterParams, PreviousVariables *previousVariables, double vel_ref);
+void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterParams *firstOrderFilterParams, SecondOrderFilterParams *secondOrderFilterParams, PreviousVariables *previousVariables);
 
 #endif //RDDA_CONTROL_H
