@@ -234,8 +234,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterPar
 
     /* motor output with torque saturation */
     for (int i = 0; i < num; i ++) {
-        //max_torque_Nm[i] = MIN(controlParams->max_torque_Nm, rdda->motor[i].rosOut.tau_sat);
-        max_torque_Nm[i] = controlParams->max_torque_Nm;
+        max_torque_Nm[i] = MIN(controlParams->max_torque_Nm, rdda->motor[i].rosOut.tau_sat);
         rdda->motor[i].tau_max = max_torque_Nm[i];
         rdda->motor[i].motorOut.tau_off = saturation(rdda->motor[i].tau_max, output_force[i]);
     }
