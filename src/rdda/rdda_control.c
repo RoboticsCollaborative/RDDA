@@ -12,20 +12,20 @@ void dobInit(ControlParams *controlParams, FirstOrderFilterParams *firstOrderFil
     controlParams->motor_inertia[1] = 1.1144e-3;
     controlParams->motor_damping[0] = 0.0;
     controlParams->motor_damping[1] = 0.0;
-    controlParams->finger_damping[0] = 1.6933e-2;
-    controlParams->finger_damping[1] = 1.6933e-2;
-    controlParams->finger_stiffness[0] = 0.0235;
-    controlParams->finger_stiffness[1] = 0.0235;
+    controlParams->finger_damping[0] = 1.0933e-2;//1.6933e-2;
+    controlParams->finger_damping[1] = 1.0933e-2;//1.6933e-2;
+    controlParams->finger_stiffness[0] = 0.0;//0.0235;
+    controlParams->finger_stiffness[1] = 0.0;//0.0235;
     controlParams->hydraulic_damping = 0.009257;
     controlParams->hydraulic_stiffness = 13.0948;
     controlParams->cutoff_frequency[0] = 20;
     controlParams->cutoff_frequency[1] = 20;
     controlParams->cutoff_frequency[2] = 20;
-    controlParams->pos_gain[0] = 10.0;
-    controlParams->vel_gain[0] = 0.2;
+    controlParams->pos_gain[0] = 0.0;
+    controlParams->vel_gain[0] = 0.0;
     controlParams->acc_gain[0] = 0.0;
-    controlParams->pos_gain[1] = 10.0;
-    controlParams->vel_gain[1] = 0.2;
+    controlParams->pos_gain[1] = 0.0;
+    controlParams->vel_gain[1] = 0.0;
     controlParams->acc_gain[1] = 0.0;
     controlParams->pressure_offset = 0.04;
     controlParams->max_inner_loop_torque_Nm = 0.5;
@@ -117,7 +117,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterPar
     double filtered_impedance_force[num];
 
     double max_torque_Nm[num];
-    double est_vel_radHz[num];
+    //double est_vel_radHz[num];
 
     double pos_ref[num];
     double vel_ref[num];
@@ -178,7 +178,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterPar
         filtered_finger_bk_comp_force_pressure_part[i] = secondOrderFilterParams->b0[i] * pressure[i] + secondOrderFilterParams->b1[i] * previousVariables->pressure[i] + secondOrderFilterParams->b2[i] * previousVariables->prev_pressure[i] + secondOrderFilterParams->a1 * previousVariables->filtered_finger_bk_comp_force_pressure_part[i] + secondOrderFilterParams->a2 * previousVariables->prev_filtered_finger_bk_comp_force_pressure_part[i];
         /* total */
         filtered_finger_bk_comp_force[i] = filtered_finger_bk_comp_force_position_part[i] + filtered_finger_bk_comp_force_pressure_part[i];
-        filtered_finger_bk_comp_force[i] = 0.0;
+        //filtered_finger_bk_comp_force[i] = 0.0;
     }
 
     /* hysteresis compensation */
@@ -234,13 +234,14 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterPar
 
     /* motor output with torque saturation */
     for (int i = 0; i < num; i ++) {
-        max_torque_Nm[i] = MIN(controlParams->max_torque_Nm, rdda->motor[i].rosOut.tau_sat);
+        //max_torque_Nm[i] = MIN(controlParams->max_torque_Nm, rdda->motor[i].rosOut.tau_sat);
+        max_torque_Nm[i] = controlParams->max_torque_Nm;
         rdda->motor[i].tau_max = max_torque_Nm[i];
         rdda->motor[i].motorOut.tau_off = saturation(rdda->motor[i].tau_max, output_force[i]);
     }
 
     /* motor output with velocity saturation */
-    for (int i = 0; i < num; i ++) {
+/*    for (int i = 0; i < num; i ++) {
         est_vel_radHz[i] = motor_vel[i] + rdda->motor[i].motorOut.tau_off / controlParams->motor_inertia[i] * controlParams->sample_time;
         if (est_vel_radHz[i] > rdda->motor[i].rosOut.vel_sat) {
             rdda->motor[i].motorOut.tau_off = (rdda->motor[i].rosOut.vel_sat - motor_vel[i]) / controlParams->sample_time * controlParams->motor_inertia[i];
@@ -248,6 +249,6 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterPar
         else if (est_vel_radHz[i] < -rdda->motor[i].rosOut.vel_sat) {
             rdda->motor[i].motorOut.tau_off = (-rdda->motor[i].rosOut.vel_sat - motor_vel[i]) / controlParams->sample_time * controlParams->motor_inertia[i];
         }
-    }
+    }*/
 
 }
