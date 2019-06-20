@@ -114,7 +114,6 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterPar
     double filtered_finger_bk_comp_force_pressure_part[num];
     double filtered_finger_bk_comp_force[num];
     double hysteresis_force[num];
-    //double filtered_hysteresis_force[num];
     double output_force[num];
     double integral_output_force[num];
     double filtered_output_force[num];
