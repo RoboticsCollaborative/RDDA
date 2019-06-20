@@ -27,10 +27,10 @@ void dobInit(ControlParams *controlParams, FirstOrderFilterParams *firstOrderFil
     //controlParams->pos_gain[1] = 0.0;
     //controlParams->vel_gain[1] = 0.0;
     //controlParams->acc_gain[1] = 0.0;
-    controlParams->Kp[0] = 0.0;
+    controlParams->Kp[0] = 1.0;
     controlParams->Pp[0] = 0.0;
     controlParams->Vp[0] = 0.0;
-    controlParams->Kp[1] = 0.0;
+    controlParams->Kp[1] = 1.0;
     controlParams->Pp[1] = 0.0;
     controlParams->Vp[1] = 0.0;
     controlParams->pressure_offset = 0.04;
@@ -197,7 +197,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterPar
         filtered_finger_bk_comp_force_pressure_part[i] = secondOrderFilterParams->b0[i] * pressure[i] + secondOrderFilterParams->b1[i] * previousVariables->pressure[i] + secondOrderFilterParams->b2[i] * previousVariables->prev_pressure[i] + secondOrderFilterParams->a1 * previousVariables->filtered_finger_bk_comp_force_pressure_part[i] + secondOrderFilterParams->a2 * previousVariables->prev_filtered_finger_bk_comp_force_pressure_part[i];
         /* total */
         filtered_finger_bk_comp_force[i] = filtered_finger_bk_comp_force_position_part[i] + filtered_finger_bk_comp_force_pressure_part[i];
-        //filtered_finger_bk_comp_force[i] = 0.0;
+        filtered_finger_bk_comp_force[i] = 0.0;
     }
 
     /* hysteresis compensation */
