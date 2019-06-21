@@ -27,10 +27,10 @@ void dobInit(ControlParams *controlParams, FirstOrderFilterParams *firstOrderFil
     //controlParams->pos_gain[1] = 0.0;
     //controlParams->vel_gain[1] = 0.0;
     //controlParams->acc_gain[1] = 0.0;
-    controlParams->Kp[0] = 1.0;
+    controlParams->Kp[0] = 0.1;
     controlParams->Pp[0] = 0.0;
     controlParams->Vp[0] = 0.0;
-    controlParams->Kp[1] = 1.0;
+    controlParams->Kp[1] = 0.1;
     controlParams->Pp[1] = 0.0;
     controlParams->Vp[1] = 0.0;
     controlParams->pressure_offset = 0.04;
@@ -154,8 +154,10 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterPar
 
     /* PV gain calculation based on Kp */
     for (int i = 0; i < num; i ++) {
-        controlParams->Vp[i] = sqrt(controlParams->Kp[i] / 10.0);
-        controlParams->Pp[i] = controlParams->Vp[i] * 10.0;
+        //controlParams->Vp[i] = sqrt(controlParams->Kp[i] / 10.0 / 1.0e3);
+        //controlParams->Pp[i] = sqrt(controlParams->Kp[i] * 10.0 * 1.0e3);
+        controlParams->Vp[i] = 1.414 * sqrt(controlParams->Kp[i] * controlParams->motor_inertia[i]);
+        controlParams->Pp[i] = sqrt(controlParams->Kp[i] / controlParams->motor_inertia[i]) / 1.414;
     }
 
     /* PV controller */
