@@ -27,18 +27,21 @@ void dobInit(ControlParams *controlParams, FirstOrderFilterParams *firstOrderFil
     //controlParams->pos_gain[1] = 0.0;
     //controlParams->vel_gain[1] = 0.0;
     //controlParams->acc_gain[1] = 0.0;
-    controlParams->Kp[0] = 0.1;
+    controlParams->Kp[0] = 0.0;
     controlParams->Pp[0] = 0.0;
     controlParams->Vp[0] = 0.0;
-    controlParams->Kp[1] = 0.1;
+    controlParams->Kp[1] = 0.0;
     controlParams->Pp[1] = 0.0;
     controlParams->Vp[1] = 0.0;
     controlParams->pressure_offset = 0.04;
     controlParams->max_inner_loop_torque_Nm = 0.5;
     controlParams->max_torque_Nm = 5.0;
+    controlParams->max_velocity = 3.0;
+    controlParams->max_position = 0.5;
+    controlParams->max_stiffness = 20.0;
     controlParams->hysteresis_sigma = 400;
     controlParams->hysteresis_friction = 0.016;
-    controlParams->gripper_angle_difference = 0.5;
+    //controlParams->gripper_angle_difference = 0.5;
     controlParams->sample_time = 0.5e-3;
     controlParams->gear_ratio = 1.33;
 
@@ -127,7 +130,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterPar
 
     /* position reference by ros */
     for (int i = 0; i < num; i ++) {
-        pos_ref[i] = rdda->motor[i].rosOut.pos_ref;
+        pos_ref[i] = saturation(controlParams->max_position, rdda->motor[i].rosOut.pos_ref);
     }
 
     /* sensor reading */
@@ -154,8 +157,12 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterPar
 
     /* PV gain calculation based on Kp */
     for (int i = 0; i < num; i ++) {
-        //controlParams->Vp[i] = sqrt(controlParams->Kp[i] / 10.0 / 1.0e3);
-        //controlParams->Pp[i] = sqrt(controlParams->Kp[i] * 10.0 * 1.0e3);
+        if (rdda->motor[i].rosOut.stiffness < 0) {
+            controlParams->Kp[i] = 0.0;
+        }
+        else {
+            controlParams->Kp[i] = MIN(rdda->motor[i].rosOut.stiffness, controlParams->max_stiffness);
+        }
         controlParams->Vp[i] = 1.414 * sqrt(controlParams->Kp[i] * controlParams->motor_inertia[i]);
         controlParams->Pp[i] = sqrt(controlParams->Kp[i] / controlParams->motor_inertia[i]) / 1.414;
     }
@@ -254,7 +261,12 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterPar
 
     /* motor output with torque saturation */
     for (int i = 0; i < num; i ++) {
-        max_torque_Nm[i] = MIN(controlParams->max_torque_Nm, rdda->motor[i].rosOut.tau_sat);
+        if (rdda->motor[i].rosOut.tau_sat < 0) {
+            max_torque_Nm[i] = 0.0;
+        }
+        else {
+            max_torque_Nm[i] = MIN(controlParams->max_torque_Nm, rdda->motor[i].rosOut.tau_sat);
+        }
         rdda->motor[i].tau_max = max_torque_Nm[i];
         rdda->motor[i].motorOut.tau_off = saturation(rdda->motor[i].tau_max, output_force[i]);
     }
