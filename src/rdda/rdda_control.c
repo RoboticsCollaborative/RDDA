@@ -8,8 +8,8 @@
 
 void dobInit(ControlParams *controlParams, FirstOrderFilterParams *firstOrderFilterParams, SecondOrderFilterParams *secondOrderFilterParams, PreviousVariables *previousVariables, Rdda *rdda) {
     /* control parameters initialization */
-    controlParams->motor_inertia[0] = 1.1144e-3;
-    controlParams->motor_inertia[1] = 1.1144e-3;
+    controlParams->motor_inertia[0] = 1.11e-3;//1.1144e-3;
+    controlParams->motor_inertia[1] = 1.11e-3;//1.1144e-3;
     controlParams->motor_damping[0] = 0.0;
     controlParams->motor_damping[1] = 0.0;
     controlParams->finger_damping[0] = 1.0933e-2;//1.6933e-2;
@@ -170,7 +170,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterPar
     /* PV controller */
     /* velocity reference calculation with saturation */
     for (int i = 0; i < num; i ++) {
-        vel_ref[i] = saturation(rdda->motor[i].rosOut.vel_sat, controlParams->Pp[i] * (pos_ref[i] - (motor_pos[i] - rdda->motor[i].init_pos)));
+        vel_ref[i] = saturation(saturation(controlParams->max_velocity, rdda->motor[i].rosOut.vel_sat), controlParams->Pp[i] * (pos_ref[i] - (motor_pos[i] - rdda->motor[i].init_pos)));
     }
 
     /* reference force */
