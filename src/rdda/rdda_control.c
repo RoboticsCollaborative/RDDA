@@ -163,8 +163,8 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterPar
         else {
             controlParams->Kp[i] = MIN(rdda->motor[i].rosOut.stiffness, controlParams->max_stiffness);
         }
-        controlParams->Vp[i] = 1.414 * sqrt(controlParams->Kp[i] * controlParams->motor_inertia[i]);
-        controlParams->Pp[i] = sqrt(controlParams->Kp[i] / controlParams->motor_inertia[i]) / 1.414;
+        controlParams->Vp[i] = 1.0 * sqrt(controlParams->Kp[i] * controlParams->motor_inertia[i]);
+        controlParams->Pp[i] = sqrt(controlParams->Kp[i] / controlParams->motor_inertia[i]) / 1.0;
     }
 
     /* PV controller */
