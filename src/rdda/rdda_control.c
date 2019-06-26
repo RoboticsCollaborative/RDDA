@@ -37,7 +37,6 @@ void dobInit(ControlParams *controlParams, FirstOrderFilterParams *firstOrderFil
     controlParams->max_inner_loop_torque_Nm = 0.5;
     controlParams->max_torque_Nm = 5.0;
     controlParams->max_velocity = 3.0;
-    controlParams->max_position = 1.0;
     controlParams->max_stiffness = 20.0;
     controlParams->hysteresis_sigma = 400;
     controlParams->hysteresis_friction = 0.016;
@@ -130,7 +129,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterPar
 
     /* position reference by ros */
     for (int i = 0; i < num; i ++) {
-        pos_ref[i] = saturation(controlParams->max_position, rdda->motor[i].rosOut.pos_ref);
+        pos_ref[i] = rdda->motor[i].rosOut.pos_ref;
     }
 
     /* sensor reading */

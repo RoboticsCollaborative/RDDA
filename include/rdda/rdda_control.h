@@ -28,7 +28,6 @@ typedef struct
     double max_inner_loop_torque_Nm;
     double max_torque_Nm;
     double max_velocity;
-    double max_position;
     double max_stiffness;
     double hysteresis_sigma;
     double hysteresis_friction;
