@@ -35,9 +35,13 @@ void rdda_update(ecat_slaves *ecatSlaves, Rdda *rdda) {
     for (int i = 0; i < 2; i++) {
         rdda->motor[i].motorIn.act_pos = (double)(ecatSlaves->bel[i].in_motor->act_pos) / ecatSlaves->bel[i].counts_per_rad;
         rdda->motor[i].motorIn.act_vel = (double)(ecatSlaves->bel[i].in_motor->act_vel) / ecatSlaves->bel[i].counts_per_rad_sec;
+        rdda->motor[i].motorIn.act_tau = (double)(ecatSlaves->bel[i].in_motor->act_tau) / ecatSlaves->bel[i].units_per_nm;
     }
     rdda->psensor.analogIn.val1 = (double)(ecatSlaves->el3102.in_analog->val1) * ecatSlaves->bel[0].pascal_per_count * ecatSlaves->bel[0].nm_per_pascal;
     rdda->psensor.analogIn.val2 = (double)(ecatSlaves->el3102.in_analog->val2) * ecatSlaves->bel[1].pascal_per_count * ecatSlaves->bel[1].nm_per_pascal;
+
+    rdda->ts.nsec = ecatSlaves->ts.tv_nsec;
+    rdda->ts.sec = ecatSlaves->ts.tv_sec;
 
     /* Outputs */
     ecatSlaves->bel[0].out_motor->ctrl_wd = 15;
