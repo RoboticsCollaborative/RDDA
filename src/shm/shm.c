@@ -68,6 +68,7 @@ openSharedMemory(char *shm_name, void **p) {
     int fd = 0, ret = 0, err = 0; /* error detector*/
 
     /* Create or open a POSIX shared memory object */
+    mode_t old_umask = umask(0);
     fd = shm_open(shm_name, OPEN_FLAG, MODE_FLAG);  /* return 0 on success, -1 on error */
     err = fd < 0;
 
@@ -88,6 +89,7 @@ openSharedMemory(char *shm_name, void **p) {
         err = close(fd);
     }
 
+    umask(old_umask);
     return err;
 }
 
