@@ -227,12 +227,12 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterPar
     /* dob inner loop saturation */
     for (int i = 0; i < num; i ++) {
         filtered_output_force[i] = firstOrderIIRFilter(output_force[i], previousVariables->output_force[i], previousVariables->filtered_output_force[i], firstOrderFilterParams->b0[0], firstOrderFilterParams->b1[0], firstOrderFilterParams->a1[0]);
-        if ((filtered_output_force[i] - filtered_nominal_force[i]) > controlParams->max_inner_loop_torque_Nm) {
-            output_force[i] = controlParams->max_inner_loop_torque_Nm + filtered_reference_force[i] + filtered_pressure[i] + filtered_finger_bk_comp_force[i] + hysteresis_force[i];
+        if ((filtered_output_force[i] + filtered_pressure[i] - filtered_nominal_force[i]) > controlParams->max_inner_loop_torque_Nm) {
+            output_force[i] = controlParams->max_inner_loop_torque_Nm + filtered_reference_force[i] + filtered_finger_bk_comp_force[i] + hysteresis_force[i];
             filtered_output_force[i] = firstOrderIIRFilter(output_force[i], previousVariables->output_force[i], previousVariables->filtered_output_force[i], firstOrderFilterParams->b0[0], firstOrderFilterParams->b1[0], firstOrderFilterParams->a1[0]);
         }
-        else if ((filtered_output_force[i] - filtered_nominal_force[i]) < -1.0 * controlParams->max_inner_loop_torque_Nm) {
-            output_force[i] = -1.0 * controlParams->max_inner_loop_torque_Nm + filtered_reference_force[i] + filtered_pressure[i] + filtered_finger_bk_comp_force[i] + hysteresis_force[i];
+        else if ((filtered_output_force[i] + filtered_pressure[i] - filtered_nominal_force[i]) < -1.0 * controlParams->max_inner_loop_torque_Nm) {
+            output_force[i] = -1.0 * controlParams->max_inner_loop_torque_Nm + filtered_reference_force[i] + filtered_finger_bk_comp_force[i] + hysteresis_force[i];
             filtered_output_force[i] = firstOrderIIRFilter(output_force[i], previousVariables->output_force[i], previousVariables->filtered_output_force[i], firstOrderFilterParams->b0[0], firstOrderFilterParams->b1[0], firstOrderFilterParams->a1[0]);
         }
     }
