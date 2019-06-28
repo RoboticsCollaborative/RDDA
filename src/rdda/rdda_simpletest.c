@@ -85,6 +85,8 @@ void rdda_run (void *ifnameptr) {
         /* Implement controller */
         rdda_sleep(ecatSlaves, cycletime);
 
+        mutex_lock(&rdda->mutex);
+
         dobController(rdda, &controlParams, &firstOrderFilterParams, &secondOrderFilterParams, &previousVariables);
 
         rdda_update(ecatSlaves, rdda);
@@ -97,6 +99,8 @@ void rdda_run (void *ifnameptr) {
         //end_time = rdda_gettime(ecatSlave);
         //delta_time = cycletime - (end_time - start_time);
         //rdda_sleep(ecatSlave, delta_time);
+
+        mutex_unlock(&rdda->mutex);
     }
 
     rddaStop(ecatSlaves);

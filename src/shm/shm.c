@@ -63,13 +63,13 @@ mutex_init(pthread_mutex_t *mutex) {
  * return 0 on success.
  */
 static int
-openSharedMemory(char *shm_name, void **p) {
+createSharedMemory(char *shm_name, void **p) {
 
     int fd = 0, ret = 0, err = 0; /* error detector*/
 
     /* Create or open a POSIX shared memory object */
     mode_t old_umask = umask(0);
-    fd = shm_open(shm_name, OPEN_FLAG, MODE_FLAG);  /* return 0 on success, -1 on error */
+    fd = shm_open(shm_name, O_RDWR | O_CREAT | O_TRUNC, 0777);  /* return 0 on success, -1 on error */
     err = fd < 0;
 
     /* Resize the shared memory file */
@@ -102,7 +102,7 @@ Rdda *initRdda() {
     Rdda *rdda;
     void *p;
 
-    if (!openSharedMemory(RDDA_DATA, &p)) {
+    if (!createSharedMemory(RDDA_DATA, &p)) {
         rdda = (Rdda *) p;
     } else {
         fprintf(stderr, "open(RDDA_DATA)\n");

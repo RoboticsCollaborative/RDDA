@@ -33,7 +33,6 @@ void rdda_update(ecat_slaves *ecatSlaves, Rdda *rdda) {
 
     ec_receive_processdata(EC_TIMEOUTRET);
     //ec_send_processdata();
-    mutex_lock(&rdda->mutex);
 
     /* Inputs */
     for (int i = 0; i < 2; i++) {
@@ -61,7 +60,6 @@ void rdda_update(ecat_slaves *ecatSlaves, Rdda *rdda) {
     rdda->ts.sec = ecatSlaves->ts.tv_sec;
     rdda->ts.nsec = ecatSlaves->ts.tv_nsec;
 
-    mutex_unlock(&rdda->mutex);
     //ec_receive_processdata(EC_TIMEOUTRET);
     ec_send_processdata();
 }
