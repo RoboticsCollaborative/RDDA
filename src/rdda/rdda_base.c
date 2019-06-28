@@ -27,6 +27,10 @@ void rddaStop(ecat_slaves *slave) {
  * @param jointStates
  */
 void rdda_update(ecat_slaves *ecatSlaves, Rdda *rdda) {
+
+    double limit_int16 = 32767.0;
+    double limit_int32 = 2147483647.0;
+
     ec_receive_processdata(EC_TIMEOUTRET);
     //ec_send_processdata();
     mutex_lock(&rdda->mutex);
@@ -44,13 +48,13 @@ void rdda_update(ecat_slaves *ecatSlaves, Rdda *rdda) {
     rdda->ts.sec = ecatSlaves->ts.tv_sec;
 
     /* Outputs */
-    ecatSlaves->bel[0].out_motor->ctrl_wd = 15;
-    ecatSlaves->bel[1].out_motor->ctrl_wd = 15;
+    ecatSlaves->bel[0].out_motor->ctrl_wd = 0;
+    ecatSlaves->bel[1].out_motor->ctrl_wd = 0;
     for (int j = 0; j < 2; j++) {
         //ecatSlaves->bel[j].out_motor->ctrl_wd = 0;
-        ecatSlaves->bel[j].out_motor->tg_pos = ecatSlaves->bel[j].init_pos_cnts + (int32)(rdda->motor[j].motorOut.tg_pos * ecatSlaves->bel[j].counts_per_rad);
-        ecatSlaves->bel[j].out_motor->vel_off = (int32)(rdda->motor[j].motorOut.vel_off * ecatSlaves->bel[j].counts_per_rad_sec);
-        ecatSlaves->bel[j].out_motor->tau_off = (int16)(rdda->motor[j].motorOut.tau_off * ecatSlaves->bel[j].units_per_nm);
+        ecatSlaves->bel[j].out_motor->tg_pos = (int32)saturation(limit_int32, ecatSlaves->bel[j].init_pos_cnts + (int32)saturation(limit_int32, rdda->motor[j].motorOut.tg_pos * ecatSlaves->bel[j].counts_per_rad));
+        ecatSlaves->bel[j].out_motor->vel_off = (int32)saturation(limit_int32, rdda->motor[j].motorOut.vel_off * ecatSlaves->bel[j].counts_per_rad_sec);
+        ecatSlaves->bel[j].out_motor->tau_off = (int16)saturation(limit_int16, rdda->motor[j].motorOut.tau_off * ecatSlaves->bel[j].units_per_nm);
     }
 
     /* Timestamp */

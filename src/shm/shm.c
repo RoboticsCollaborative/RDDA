@@ -2,16 +2,16 @@
 
 char* RDDA_DATA     =   (char *)"/rdda_data";
 
-/** Acuqire robust mutex
+/** Acquire robust mutex
   *
   * @param[in] mutex     =       mutex lock
-  * return 0 if owener died, return -1 on error, return 1 on success.
+  * return 0 if owner died, return -1 on error, return 1 on success.
   */
 int mutex_lock(pthread_mutex_t *mutex) {
     int err = pthread_mutex_lock(mutex);
 
     if (err == 0) {
-        return 1; /* Acuqire mutex success */
+        return 1; /* Acquire mutex success */
     }
     else if (err == EOWNERDEAD) {
         pthread_mutex_consistent(mutex);
