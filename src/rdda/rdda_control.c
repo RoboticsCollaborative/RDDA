@@ -270,6 +270,5 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterPar
         rdda->motor[i].tau_max = max_torque_Nm[i];
         rdda->motor[i].motorOut.tau_off = saturation(rdda->motor[i].tau_max, output_force[i]);
     }
-    printf("tau_max[0]: %lf, tau_off[0]: %lf\n", rdda->motor[0].tau_max, rdda->motor[0].motorOut.tau_off);
 
 }
