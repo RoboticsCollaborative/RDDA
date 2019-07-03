@@ -47,7 +47,7 @@ void rdda_update(ecat_slaves *ecatSlaves, Rdda *rdda) {
     rdda->ts.sec = ecatSlaves->ts.tv_sec;
 
     /* Outputs */
-    ecatSlaves->bel[0].out_motor->ctrl_wd = 0;
+    ecatSlaves->bel[0].out_motor->ctrl_wd = 15;
     ecatSlaves->bel[1].out_motor->ctrl_wd = 0;
     for (int j = 0; j < 2; j++) {
         //ecatSlaves->bel[j].out_motor->ctrl_wd = 0;
