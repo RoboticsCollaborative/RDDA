@@ -89,7 +89,7 @@ void dobInit(ControlParams *controlParams, FirstOrderFilterParams *firstOrderFil
         previousVariables->integral_output_force[i] = 0.0;
         previousVariables->filtered_output_force[i] = 0.0;
         previousVariables->reference_force[i] = 0.0;
-        previousVariables->filtered_reference_force[i] = 0.0;
+        //previousVariables->filtered_reference_force[i] = 0.0;
     }
 }
 
@@ -123,7 +123,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterPar
     double filtered_output_force[num];
 
     double reference_force[num];
-    double filtered_reference_force[num];
+    //double filtered_reference_force[num];
 
     double max_torque_Nm[num];
 
@@ -164,12 +164,12 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterPar
 
     /* PV gain calculation based on Kp */
     for (int i = 0; i < num; i ++) {
-        /*if (rdda->motor[i].rosOut.stiffness < 0) {
+        if (rdda->motor[i].rosOut.stiffness < 0) {
             controlParams->Kp[i] = 0.0;
         }
         else {
             controlParams->Kp[i] = MIN(rdda->motor[i].rosOut.stiffness, controlParams->max_stiffness);
-        }*/
+        }
         controlParams->Vp[i] = 0.6 * sqrt(controlParams->Kp[i] * controlParams->motor_inertia[i]);
         controlParams->Pp[i] = sqrt(controlParams->Kp[i] / controlParams->motor_inertia[i]) / 0.6;
     }
@@ -183,7 +183,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterPar
     /* reference force */
     for (int i = 0; i < num; i ++) {
         reference_force[i] = controlParams->Vp[i] * (vel_ref[i] - motor_vel[i]);
-        filtered_reference_force[i] = firstOrderIIRFilter(reference_force[i], previousVariables->reference_force[i], previousVariables->filtered_reference_force[i], firstOrderFilterParams->b0[1], firstOrderFilterParams->b1[1], firstOrderFilterParams->a1[1]);
+        //filtered_reference_force[i] = firstOrderIIRFilter(reference_force[i], previousVariables->reference_force[i], previousVariables->filtered_reference_force[i], firstOrderFilterParams->b0[1], firstOrderFilterParams->b1[1], firstOrderFilterParams->a1[1]);
     }
 
     /* impedance controller */
@@ -259,7 +259,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterPar
         previousVariables->integral_output_force[i] = integral_output_force[i];
         previousVariables->filtered_output_force[i] = filtered_output_force[i];
         previousVariables->reference_force[i] = reference_force[i];
-        previousVariables->filtered_reference_force[i] = filtered_reference_force[i];
+        //previousVariables->filtered_reference_force[i] = filtered_reference_force[i];
     }
 
     /* motor output with torque saturation */

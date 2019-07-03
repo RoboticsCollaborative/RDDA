@@ -73,7 +73,7 @@ typedef struct
     double integral_output_force[2];
     double filtered_output_force[2];
     double reference_force[2];
-    double filtered_reference_force[2];
+    //double filtered_reference_force[2];
 } PreviousVariables;
 
 void dobInit(ControlParams *controlParams, FirstOrderFilterParams *firstOrderFilterParams, SecondOrderFilterParams *secondOrderFilterParams, PreviousVariables *previousVariables, Rdda *rdda);
