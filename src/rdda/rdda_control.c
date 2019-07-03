@@ -27,10 +27,10 @@ void dobInit(ControlParams *controlParams, FirstOrderFilterParams *firstOrderFil
     //controlParams->pos_gain[1] = 0.0;
     //controlParams->vel_gain[1] = 0.0;
     //controlParams->acc_gain[1] = 0.0;
-    controlParams->Kp[0] = 10.0;
+    controlParams->Kp[0] = 0.0;
     controlParams->Pp[0] = 0.0;
     controlParams->Vp[0] = 0.0;
-    controlParams->Kp[1] = 10.0;
+    controlParams->Kp[1] = 0.0;
     controlParams->Pp[1] = 0.0;
     controlParams->Vp[1] = 0.0;
     controlParams->pressure_offset = 0.04;
