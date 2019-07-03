@@ -34,7 +34,7 @@ void dobInit(ControlParams *controlParams, FirstOrderFilterParams *firstOrderFil
     controlParams->Pp[1] = 0.0;
     controlParams->Vp[1] = 0.0;
     controlParams->pressure_offset = 0.04;
-    controlParams->max_inner_loop_torque_Nm = 0.5;
+    controlParams->max_inner_loop_torque_Nm = 0.1;
     controlParams->max_torque_Nm = 5.0;
     controlParams->max_velocity = 3.0;
     controlParams->max_stiffness = 20.0;
@@ -225,7 +225,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterPar
     }
 
     /* dob inner loop saturation */
-    for (int i = 0; i < num; i ++) {
+    /*for (int i = 0; i < num; i ++) {
         filtered_output_force[i] = firstOrderIIRFilter(output_force[i], previousVariables->output_force[i], previousVariables->filtered_output_force[i], firstOrderFilterParams->b0[0], firstOrderFilterParams->b1[0], firstOrderFilterParams->a1[0]);
         if ((filtered_output_force[i] + filtered_pressure[i] - filtered_nominal_force[i]) > controlParams->max_inner_loop_torque_Nm) {
             output_force[i] = controlParams->max_inner_loop_torque_Nm + filtered_reference_force[i] + filtered_finger_bk_comp_force[i] + hysteresis_force[i];
@@ -235,7 +235,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterPar
             output_force[i] = -1.0 * controlParams->max_inner_loop_torque_Nm + filtered_reference_force[i] + filtered_finger_bk_comp_force[i] + hysteresis_force[i];
             filtered_output_force[i] = firstOrderIIRFilter(output_force[i], previousVariables->output_force[i], previousVariables->filtered_output_force[i], firstOrderFilterParams->b0[0], firstOrderFilterParams->b1[0], firstOrderFilterParams->a1[0]);
         }
-    }
+    }*/
 
     /* previous variables update */
     for (int i = 0; i < num; i ++) {
