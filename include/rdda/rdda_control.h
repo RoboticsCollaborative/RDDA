@@ -34,9 +34,6 @@ typedef struct
     //double gripper_angle_difference;
     double sample_time;
     double gear_ratio;
-    double model_velocity[2];
-    double model_acceleration[2];
-    double anti_windup_coefficient;
 } ControlParams;
 
 typedef struct
@@ -77,8 +74,6 @@ typedef struct
     double filtered_output_force[2];
     double reference_force[2];
     double filtered_reference_force[2];
-    double anti_windup_force[2];
-    double filtered_anti_windup_force[2];
 } PreviousVariables;
 
 void dobInit(ControlParams *controlParams, FirstOrderFilterParams *firstOrderFilterParams, SecondOrderFilterParams *secondOrderFilterParams, PreviousVariables *previousVariables, Rdda *rdda);
