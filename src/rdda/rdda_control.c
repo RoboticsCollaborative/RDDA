@@ -18,13 +18,13 @@ void dobInit(ControlParams *controlParams, FirstOrderFilterParams *firstOrderFil
     controlParams->finger_stiffness[1] = 0.0;//0.0235;
     controlParams->hydraulic_damping = 0.009257;
     controlParams->hydraulic_stiffness = 13.0948;
-    controlParams->cutoff_frequency[0] = 15; // Q_A for overall DOB
+    controlParams->cutoff_frequency[0] = 14; // Q_A for overall DOB
     controlParams->cutoff_frequency[1] = 20; // Q_B for nominal plant
     controlParams->cutoff_frequency[2] = 20; // Q_C for pressure
-    controlParams->Kp[0] = 0.0;
+    controlParams->Kp[0] = 20.0;
     controlParams->Pp[0] = 0.0;
     controlParams->Vp[0] = 0.0;
-    controlParams->Kp[1] = 0.0;
+    controlParams->Kp[1] = 20.0;
     controlParams->Pp[1] = 0.0;
     controlParams->Vp[1] = 0.0;
     //controlParams->pressure_offset = 0.04;
@@ -82,7 +82,6 @@ void dobInit(ControlParams *controlParams, FirstOrderFilterParams *firstOrderFil
         previousVariables->output_force[i] = 0.0;
         previousVariables->integral_output_force[i] = 0.0;
         previousVariables->filtered_output_force[i] = 0.0;
-        previousVariables->reference_force[i] = 0.0;
     }
 }
 
@@ -156,12 +155,12 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterPar
 
     /* PV gain calculation based on Kp */
     for (int i = 0; i < num; i ++) {
-        if (rdda->motor[i].rosOut.stiffness < 0) {
+        /*if (rdda->motor[i].rosOut.stiffness < 0) {
             controlParams->Kp[i] = 0.0;
         }
         else {
             controlParams->Kp[i] = MIN(rdda->motor[i].rosOut.stiffness, controlParams->max_stiffness);
-        }
+        }*/
         controlParams->Vp[i] = 0.6 * sqrt(controlParams->Kp[i] * controlParams->motor_inertia[i]);
         controlParams->Pp[i] = sqrt(controlParams->Kp[i] / controlParams->motor_inertia[i]) / 0.6;
     }
@@ -250,7 +249,6 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterPar
         previousVariables->output_force[i] = output_force[i];
         previousVariables->integral_output_force[i] = integral_output_force[i];
         previousVariables->filtered_output_force[i] = filtered_output_force[i];
-        previousVariables->reference_force[i] = reference_force[i];
     }
 
     /* motor output with torque saturation */
