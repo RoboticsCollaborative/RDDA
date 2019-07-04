@@ -18,9 +18,6 @@ typedef struct
     double hydraulic_stiffness;
     double hydraulic_damping;
     double cutoff_frequency[3];
-    //double pos_gain[2];
-    //double vel_gain[2];
-    //double acc_gain[2];
     double Kp[2];
     double Pp[2];
     double Vp[2];
@@ -73,7 +70,6 @@ typedef struct
     double integral_output_force[2];
     double filtered_output_force[2];
     double reference_force[2];
-    //double filtered_reference_force[2];
 } PreviousVariables;
 
 void dobInit(ControlParams *controlParams, FirstOrderFilterParams *firstOrderFilterParams, SecondOrderFilterParams *secondOrderFilterParams, PreviousVariables *previousVariables, Rdda *rdda);
