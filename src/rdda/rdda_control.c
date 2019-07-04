@@ -33,7 +33,7 @@ void dobInit(ControlParams *controlParams, FirstOrderFilterParams *firstOrderFil
     controlParams->Kp[1] = 0.0;
     controlParams->Pp[1] = 0.0;
     controlParams->Vp[1] = 0.0;
-    controlParams->pressure_offset = 0.04;
+    //controlParams->pressure_offset = 0.04;
     controlParams->max_inner_loop_torque_Nm = 0.5;
     controlParams->max_torque_Nm = 5.0;
     controlParams->max_velocity = 3.0;
@@ -66,16 +66,16 @@ void dobInit(ControlParams *controlParams, FirstOrderFilterParams *firstOrderFil
     }
 
     /* previous variables initialization */
-    previousVariables->pressure[0] = rdda->psensor.analogIn.val1 - controlParams->pressure_offset;
-    previousVariables->pressure[1] = rdda->psensor.analogIn.val2 - controlParams->pressure_offset;
-    previousVariables->filtered_pressure[0] = rdda->psensor.analogIn.val1 - controlParams->pressure_offset;
-    previousVariables->filtered_pressure[1] = rdda->psensor.analogIn.val2 - controlParams->pressure_offset;
-    previousVariables->prev_pressure[0] = rdda->psensor.analogIn.val1 - controlParams->pressure_offset;
-    previousVariables->prev_pressure[1] = rdda->psensor.analogIn.val2 - controlParams->pressure_offset;
-    previousVariables->filtered_finger_bk_comp_force_pressure_part[0] = (rdda->psensor.analogIn.val1 - controlParams->pressure_offset) * controlParams->finger_stiffness[0] / controlParams->hydraulic_stiffness;
-    previousVariables->filtered_finger_bk_comp_force_pressure_part[1] = (rdda->psensor.analogIn.val2 - controlParams->pressure_offset) * controlParams->finger_stiffness[1] / controlParams->hydraulic_stiffness;
-    previousVariables->prev_filtered_finger_bk_comp_force_pressure_part[0] = (rdda->psensor.analogIn.val1 - controlParams->pressure_offset) * controlParams->finger_stiffness[0] / controlParams->hydraulic_stiffness;
-    previousVariables->prev_filtered_finger_bk_comp_force_pressure_part[1] = (rdda->psensor.analogIn.val2 - controlParams->pressure_offset) * controlParams->finger_stiffness[1] / controlParams->hydraulic_stiffness;
+    previousVariables->pressure[0] = rdda->psensor.analogIn.val1;
+    previousVariables->pressure[1] = rdda->psensor.analogIn.val2;
+    previousVariables->filtered_pressure[0] = rdda->psensor.analogIn.val1;
+    previousVariables->filtered_pressure[1] = rdda->psensor.analogIn.val2;
+    previousVariables->prev_pressure[0] = rdda->psensor.analogIn.val1;
+    previousVariables->prev_pressure[1] = rdda->psensor.analogIn.val2;
+    previousVariables->filtered_finger_bk_comp_force_pressure_part[0] = rdda->psensor.analogIn.val1 * controlParams->finger_stiffness[0] / controlParams->hydraulic_stiffness;
+    previousVariables->filtered_finger_bk_comp_force_pressure_part[1] = rdda->psensor.analogIn.val2 * controlParams->finger_stiffness[1] / controlParams->hydraulic_stiffness;
+    previousVariables->prev_filtered_finger_bk_comp_force_pressure_part[0] = rdda->psensor.analogIn.val1 * controlParams->finger_stiffness[0] / controlParams->hydraulic_stiffness;
+    previousVariables->prev_filtered_finger_bk_comp_force_pressure_part[1] = rdda->psensor.analogIn.val2 * controlParams->finger_stiffness[1] / controlParams->hydraulic_stiffness;
 
     for (int i = 0; i < 2; i ++) {
         previousVariables->motor_pos[i] = rdda->motor[i].motorIn.act_pos;
@@ -134,8 +134,8 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterPar
     }
 
     /* sensor reading */
-    pressure[0] = rdda->psensor.analogIn.val1 - controlParams->pressure_offset;
-    pressure[1] = rdda->psensor.analogIn.val2 - controlParams->pressure_offset;
+    pressure[0] = rdda->psensor.analogIn.val1;
+    pressure[1] = rdda->psensor.analogIn.val2;
     for (int i = 0; i < num; i ++) {
         motor_pos[i] = rdda->motor[i].motorIn.act_pos;
         motor_vel[i] = rdda->motor[i].motorIn.act_vel;
