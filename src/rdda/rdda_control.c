@@ -8,8 +8,8 @@
 
 void dobInit(ControlParams *controlParams, FirstOrderFilterParams *firstOrderFilterParams, SecondOrderFilterParams *secondOrderFilterParams, PreviousVariables *previousVariables, Rdda *rdda) {
     /* control parameters initialization */
-    controlParams->motor_inertia[0] = 1.1144e-3;
-    controlParams->motor_inertia[1] = 1.1144e-3;
+    controlParams->motor_inertia[0] = 1.11e-3;//1.1144e-3;
+    controlParams->motor_inertia[1] = 1.11e-3;//1.1144e-3;
     controlParams->motor_damping[0] = 0.0;
     controlParams->motor_damping[1] = 0.0;
     controlParams->finger_damping[0] = 1.0933e-2;//1.6933e-2;
@@ -18,15 +18,9 @@ void dobInit(ControlParams *controlParams, FirstOrderFilterParams *firstOrderFil
     controlParams->finger_stiffness[1] = 0.0;//0.0235;
     controlParams->hydraulic_damping = 0.009257;
     controlParams->hydraulic_stiffness = 13.0948;
-    controlParams->cutoff_frequency[0] = 20;
-    controlParams->cutoff_frequency[1] = 20;
-    controlParams->cutoff_frequency[2] = 20;
-    //controlParams->pos_gain[0] = 0.0;
-    //controlParams->vel_gain[0] = 0.0;
-    //controlParams->acc_gain[0] = 0.0;
-    //controlParams->pos_gain[1] = 0.0;
-    //controlParams->vel_gain[1] = 0.0;
-    //controlParams->acc_gain[1] = 0.0;
+    controlParams->cutoff_frequency[0] = 14; // Q_A for overall DOB
+    controlParams->cutoff_frequency[1] = 20; // Q_B for nominal plant
+    controlParams->cutoff_frequency[2] = 20; // Q_C for pressure
     controlParams->Kp[0] = 0.0;
     controlParams->Pp[0] = 0.0;
     controlParams->Vp[0] = 0.0;
@@ -37,8 +31,7 @@ void dobInit(ControlParams *controlParams, FirstOrderFilterParams *firstOrderFil
     controlParams->max_inner_loop_torque_Nm = 0.5;
     controlParams->max_torque_Nm = 5.0;
     controlParams->max_velocity = 3.0;
-    controlParams->max_position = 1.0;
-    controlParams->max_stiffness = 20.0;
+    controlParams->max_stiffness = 10.0;
     controlParams->hysteresis_sigma = 400;
     controlParams->hysteresis_friction = 0.016;
     //controlParams->gripper_angle_difference = 0.5;
@@ -89,8 +82,6 @@ void dobInit(ControlParams *controlParams, FirstOrderFilterParams *firstOrderFil
         previousVariables->output_force[i] = 0.0;
         previousVariables->integral_output_force[i] = 0.0;
         previousVariables->filtered_output_force[i] = 0.0;
-        previousVariables->reference_force[i] = 0.0;
-        previousVariables->filtered_reference_force[i] = 0.0;
     }
 }
 
@@ -112,16 +103,18 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterPar
     double filtered_pressure[num];
     double nominal_force[num];
     double filtered_nominal_force[num];
+
     double finger_bk_comp_force_position_part[num];
     double filtered_finger_bk_comp_force_position_part[num];
     double filtered_finger_bk_comp_force_pressure_part[num];
     double filtered_finger_bk_comp_force[num];
     double hysteresis_force[num];
+
     double output_force[num];
     double integral_output_force[num];
     double filtered_output_force[num];
+
     double reference_force[num];
-    double filtered_reference_force[num];
 
     double max_torque_Nm[num];
 
@@ -130,7 +123,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterPar
 
     /* position reference by ros */
     for (int i = 0; i < num; i ++) {
-        pos_ref[i] = saturation(controlParams->max_position, rdda->motor[i].rosOut.pos_ref);
+        pos_ref[i] = rdda->motor[i].rosOut.pos_ref;
     }
 
     /* sensor reading */
@@ -139,6 +132,11 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterPar
     for (int i = 0; i < num; i ++) {
         motor_pos[i] = rdda->motor[i].motorIn.act_pos;
         motor_vel[i] = rdda->motor[i].motorIn.act_vel;
+    }
+
+    /* pressure filtering */
+    for (int i = 0; i < num; i ++) {
+        filtered_pressure[i] = firstOrderIIRFilter(pressure[i], previousVariables->pressure[i], previousVariables->filtered_pressure[i], firstOrderFilterParams->b0[0], firstOrderFilterParams->b1[0], firstOrderFilterParams->a1[0]);
     }
 
     /* motor acceleration calculation */
@@ -163,20 +161,19 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterPar
         else {
             controlParams->Kp[i] = MIN(rdda->motor[i].rosOut.stiffness, controlParams->max_stiffness);
         }
-        controlParams->Vp[i] = 1.414 * sqrt(controlParams->Kp[i] * controlParams->motor_inertia[i]);
-        controlParams->Pp[i] = sqrt(controlParams->Kp[i] / controlParams->motor_inertia[i]) / 1.414;
+        controlParams->Vp[i] = 0.6 * sqrt(controlParams->Kp[i] * controlParams->motor_inertia[i]);
+        controlParams->Pp[i] = sqrt(controlParams->Kp[i] / controlParams->motor_inertia[i]) / 0.6;
     }
 
     /* PV controller */
     /* velocity reference calculation with saturation */
     for (int i = 0; i < num; i ++) {
-        vel_ref[i] = saturation(rdda->motor[i].rosOut.vel_sat, controlParams->Pp[i] * (pos_ref[i] - (motor_pos[i] - rdda->motor[i].init_pos)));
+        vel_ref[i] = saturation(saturation(controlParams->max_velocity, rdda->motor[i].rosOut.vel_sat), controlParams->Pp[i] * (pos_ref[i] - (motor_pos[i] - rdda->motor[i].init_pos)));
     }
 
     /* reference force */
     for (int i = 0; i < num; i ++) {
         reference_force[i] = controlParams->Vp[i] * (vel_ref[i] - motor_vel[i]);
-        filtered_reference_force[i] = firstOrderIIRFilter(reference_force[i], previousVariables->reference_force[i], previousVariables->filtered_reference_force[i], firstOrderFilterParams->b0[1], firstOrderFilterParams->b1[1], firstOrderFilterParams->a1[1]);
     }
 
     /* impedance controller */
@@ -186,10 +183,6 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterPar
     }*/
 
     /* disturbance observer */
-    /* pressure */
-    for (int i = 0; i < num; i ++) {
-        filtered_pressure[i] = firstOrderIIRFilter(pressure[i], previousVariables->pressure[i], previousVariables->filtered_pressure[i], firstOrderFilterParams->b0[0], firstOrderFilterParams->b1[0], firstOrderFilterParams->a1[0]);
-    }
 
     /* nominal force */
     for (int i = 0; i < num; i ++) {
@@ -221,22 +214,23 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterPar
 
     /* output force */
     for (int i = 0; i < num; i ++) {
-        integral_output_force[i] = previousVariables->integral_output_force[i] + firstOrderFilterParams->lambda[0] * controlParams->sample_time * (filtered_reference_force[i] + filtered_pressure[i] + filtered_finger_bk_comp_force[i] + hysteresis_force[i] - filtered_nominal_force[i]);
-        output_force[i] = (filtered_reference_force[i] + filtered_pressure[i] + filtered_finger_bk_comp_force[i] + hysteresis_force[i] - filtered_nominal_force[i]) + integral_output_force[i];
+        integral_output_force[i] = previousVariables->integral_output_force[i] + firstOrderFilterParams->lambda[0] * controlParams->sample_time * (reference_force[i] + filtered_pressure[i] + filtered_finger_bk_comp_force[i] + hysteresis_force[i] - filtered_nominal_force[i]);
+        output_force[i] = (reference_force[i] + filtered_pressure[i] + filtered_finger_bk_comp_force[i] + hysteresis_force[i] - filtered_nominal_force[i]) + integral_output_force[i];
+        //output_force[i] = reference_force[i];
     }
 
     /* dob inner loop saturation */
-    for (int i = 0; i < num; i ++) {
+    /*for (int i = 0; i < num; i ++) {
         filtered_output_force[i] = firstOrderIIRFilter(output_force[i], previousVariables->output_force[i], previousVariables->filtered_output_force[i], firstOrderFilterParams->b0[0], firstOrderFilterParams->b1[0], firstOrderFilterParams->a1[0]);
-        if ((filtered_output_force[i] - filtered_nominal_force[i]) > controlParams->max_inner_loop_torque_Nm) {
-            output_force[i] = controlParams->max_inner_loop_torque_Nm + filtered_reference_force[i] + filtered_pressure[i] + filtered_finger_bk_comp_force[i] + hysteresis_force[i];
+        if ((filtered_output_force[i] + filtered_pressure[i] - filtered_nominal_force[i]) > controlParams->max_inner_loop_torque_Nm) {
+            output_force[i] = controlParams->max_inner_loop_torque_Nm + filtered_reference_force[i] + filtered_finger_bk_comp_force[i] + hysteresis_force[i];
             filtered_output_force[i] = firstOrderIIRFilter(output_force[i], previousVariables->output_force[i], previousVariables->filtered_output_force[i], firstOrderFilterParams->b0[0], firstOrderFilterParams->b1[0], firstOrderFilterParams->a1[0]);
         }
-        else if ((filtered_output_force[i] - filtered_nominal_force[i]) < -1.0 * controlParams->max_inner_loop_torque_Nm) {
-            output_force[i] = -1.0 * controlParams->max_inner_loop_torque_Nm + filtered_reference_force[i] + filtered_pressure[i] + filtered_finger_bk_comp_force[i] + hysteresis_force[i];
+        else if ((filtered_output_force[i] + filtered_pressure[i] - filtered_nominal_force[i]) < -1.0 * controlParams->max_inner_loop_torque_Nm) {
+            output_force[i] = -1.0 * controlParams->max_inner_loop_torque_Nm + filtered_reference_force[i] + filtered_finger_bk_comp_force[i] + hysteresis_force[i];
             filtered_output_force[i] = firstOrderIIRFilter(output_force[i], previousVariables->output_force[i], previousVariables->filtered_output_force[i], firstOrderFilterParams->b0[0], firstOrderFilterParams->b1[0], firstOrderFilterParams->a1[0]);
         }
-    }
+    }*/
 
     /* previous variables update */
     for (int i = 0; i < num; i ++) {
@@ -255,8 +249,6 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterPar
         previousVariables->output_force[i] = output_force[i];
         previousVariables->integral_output_force[i] = integral_output_force[i];
         previousVariables->filtered_output_force[i] = filtered_output_force[i];
-        previousVariables->reference_force[i] = reference_force[i];
-        previousVariables->filtered_reference_force[i] = filtered_reference_force[i];
     }
 
     /* motor output with torque saturation */
@@ -268,6 +260,12 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterPar
             max_torque_Nm[i] = MIN(controlParams->max_torque_Nm, rdda->motor[i].rosOut.tau_sat);
         }
         rdda->motor[i].tau_max = max_torque_Nm[i];
+        if (output_force[i] > max_torque_Nm[i]) {
+            previousVariables->integral_output_force[i] = max_torque_Nm[i] - (reference_force[i] + filtered_pressure[i] + filtered_finger_bk_comp_force[i] + hysteresis_force[i] - filtered_nominal_force[i]);
+        }
+        else if (output_force[i] < -max_torque_Nm[i]) {
+            previousVariables->integral_output_force[i] = -max_torque_Nm[i] - (reference_force[i] + filtered_pressure[i] + filtered_finger_bk_comp_force[i] + hysteresis_force[i] - filtered_nominal_force[i]);
+        }
         rdda->motor[i].motorOut.tau_off = saturation(rdda->motor[i].tau_max, output_force[i]);
     }
 
