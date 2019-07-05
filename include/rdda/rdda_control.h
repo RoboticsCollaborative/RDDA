@@ -17,7 +17,7 @@ typedef struct
     double finger_stiffness[2];
     double hydraulic_stiffness;
     double hydraulic_damping;
-    double cutoff_frequency[3];
+    double cutoff_frequency[4];
     double Kp[2];
     double Pp[2];
     double Vp[2];
@@ -35,10 +35,10 @@ typedef struct
 
 typedef struct
 {
-    double lambda[3]; // cut-off frequency(rad/s)
-    double a1[4];
-    double b0[4];
-    double b1[4];
+    double lambda[4]; // cut-off frequency(rad/s)
+    double a1[5];
+    double b0[5];
+    double b1[5];
 } FirstOrderFilterParams;
 
 typedef struct
@@ -69,6 +69,8 @@ typedef struct
     double output_force[2];
     double integral_output_force[2];
     double filtered_output_force[2];
+    double reference_force[2];
+    double filtered_reference_force[2];
 } PreviousVariables;
 
 void dobInit(ControlParams *controlParams, FirstOrderFilterParams *firstOrderFilterParams, SecondOrderFilterParams *secondOrderFilterParams, PreviousVariables *previousVariables, Rdda *rdda);
