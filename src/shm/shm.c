@@ -2,16 +2,16 @@
 
 char* RDDA_DATA     =   (char *)"/rdda_data";
 
-/** Acuqire robust mutex
+/** Acquire robust mutex
   *
   * @param[in] mutex     =       mutex lock
-  * return 0 if owener died, return -1 on error, return 1 on success.
+  * return 0 if owner died, return -1 on error, return 1 on success.
   */
 int mutex_lock(pthread_mutex_t *mutex) {
     int err = pthread_mutex_lock(mutex);
 
     if (err == 0) {
-        return 1; /* Acuqire mutex success */
+        return 1; /* Acquire mutex success */
     }
     else if (err == EOWNERDEAD) {
         pthread_mutex_consistent(mutex);
@@ -63,12 +63,13 @@ mutex_init(pthread_mutex_t *mutex) {
  * return 0 on success.
  */
 static int
-openSharedMemory(char *shm_name, void **p) {
+createSharedMemory(char *shm_name, void **p) {
 
     int fd = 0, ret = 0, err = 0; /* error detector*/
 
     /* Create or open a POSIX shared memory object */
-    fd = shm_open(shm_name, OPEN_FLAG, MODE_FLAG);  /* return 0 on success, -1 on error */
+    mode_t old_umask = umask(0);
+    fd = shm_open(shm_name, O_RDWR | O_CREAT | O_TRUNC, 0777);  /* return 0 on success, -1 on error */
     err = fd < 0;
 
     /* Resize the shared memory file */
@@ -88,6 +89,7 @@ openSharedMemory(char *shm_name, void **p) {
         err = close(fd);
     }
 
+    umask(old_umask);
     return err;
 }
 
@@ -100,7 +102,7 @@ Rdda *initRdda() {
     Rdda *rdda;
     void *p;
 
-    if (!openSharedMemory(RDDA_DATA, &p)) {
+    if (!createSharedMemory(RDDA_DATA, &p)) {
         rdda = (Rdda *) p;
     } else {
         fprintf(stderr, "open(RDDA_DATA)\n");
