@@ -18,10 +18,10 @@ void dobInit(ControlParams *controlParams, FirstOrderFilterParams *firstOrderFil
     controlParams->finger_stiffness[1] = 0.0;//0.0235;
     controlParams->hydraulic_damping = 0.009257;
     controlParams->hydraulic_stiffness = 13.0948;
-    controlParams->cutoff_frequency[0] = 14; // Q_A for overall DOB
-    controlParams->cutoff_frequency[1] = 20; // Q_B for nominal plant
-    controlParams->cutoff_frequency[2] = 20; // Q_C for finger damping compensation
-    controlParams->cutoff_frequency[3] = 20; // Q_D for reference input
+    controlParams->cutoff_frequency[0] = 20.0; // Q_A for overall DOB
+    controlParams->cutoff_frequency[1] = controlParams->cutoff_frequency[0]; // Q_B for nominal plant
+    controlParams->cutoff_frequency[2] = controlParams->cutoff_frequency[0]; // Q_C for finger damping compensation
+    controlParams->cutoff_frequency[3] = controlParams->cutoff_frequency[0]; // Q_D for reference input
     controlParams->Kp[0] = 0.0;
     controlParams->Pp[0] = 0.0;
     controlParams->Vp[0] = 0.0;
@@ -159,12 +159,12 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterPar
 
     /* PV gain calculation based on Kp */
     for (int i = 0; i < num; i ++) {
-        if (rdda->motor[i].rosOut.stiffness < 0) {
+        /*if (rdda->motor[i].rosOut.stiffness < 0) {
             controlParams->Kp[i] = 0.0;
         }
         else {
             controlParams->Kp[i] = MIN(rdda->motor[i].rosOut.stiffness, controlParams->max_stiffness);
-        }
+        }*/
         controlParams->Vp[i] = 0.6 * sqrt(controlParams->Kp[i] * controlParams->motor_inertia[i]);
         controlParams->Pp[i] = sqrt(controlParams->Kp[i] / controlParams->motor_inertia[i]) / 0.6;
     }
