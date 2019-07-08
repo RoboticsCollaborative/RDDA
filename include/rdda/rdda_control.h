@@ -17,7 +17,8 @@ typedef struct
     double finger_stiffness[2];
     double hydraulic_stiffness;
     double hydraulic_damping;
-    double cutoff_frequency[4];
+    double cutoff_frequency_LPF[4];
+    double cutoff_frequency_HPF[2];
     double Kp[2];
     double Pp[2];
     double Vp[2];
@@ -40,7 +41,15 @@ typedef struct
     double a1[5];
     double b0[5];
     double b1[5];
-} FirstOrderFilterParams;
+} FirstOrderLowPassFilterParams;
+
+typedef struct
+{
+    double lambda[2];
+    double a1[2];
+    double b0[2];
+    double b1[2];
+} FirstOrderHighPassFilterParams;
 
 typedef struct
 {
@@ -49,7 +58,7 @@ typedef struct
     double b2[2];
     double a1;
     double a2;
-} SecondOrderFilterParams;
+} SecondOrderLowPassFilterParams;
 
 typedef struct
 {
@@ -59,8 +68,10 @@ typedef struct
     double pressure[2];
     double prev_pressure[2];
     double filtered_pressure[2];
+    double filtered_pressure_HPF[2];
     double nominal_force[2];
     double filtered_nominal_force[2];
+    double filtered_nominal_force_HPF[2];
     double finger_bk_comp_force_position_part[2];
     double filtered_finger_bk_comp_force_position_part[2];
     double filtered_finger_bk_comp_force_pressure_part[2];
@@ -74,8 +85,8 @@ typedef struct
     double filtered_reference_force[2];
 } PreviousVariables;
 
-void dobInit(ControlParams *controlParams, FirstOrderFilterParams *firstOrderFilterParams, SecondOrderFilterParams *secondOrderFilterParams, PreviousVariables *previousVariables, Rdda *rdda);
+void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstOrderLowPassFilterParams, FirstOrderHighPassFilterParams *firstOrderHighPassFilterParams, SecondOrderLowPassFilterParams *secondOrderLowPassFilterParams, PreviousVariables *previousVariables, Rdda *rdda);
 double firstOrderIIRFilter(double input, double input_prev, double output_prev, double b0, double b1, double a1);
-void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderFilterParams *firstOrderFilterParams, SecondOrderFilterParams *secondOrderFilterParams, PreviousVariables *previousVariables);
+void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFilterParams *firstOrderLowPassFilterParams, FirstOrderHighPassFilterParams *firstOrderHighPassFilterParams, SecondOrderLowPassFilterParams *secondOrderLowPassFilterParams, PreviousVariables *previousVariables);
 
 #endif //RDDA_CONTROL_H
