@@ -23,6 +23,7 @@ typedef struct
     double Vp[2];
     //double pressure_offset;
     double max_inner_loop_torque_Nm;
+    double max_output_torque_integral_part_Nm;
     double max_torque_Nm;
     double max_velocity;
     double max_stiffness;
