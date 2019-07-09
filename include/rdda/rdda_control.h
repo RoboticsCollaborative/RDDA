@@ -22,7 +22,7 @@ typedef struct
     double Kp[2];
     double Pp[2];
     double Vp[2];
-    //double pressure_offset;
+    double zeta;
     double max_inner_loop_torque_Nm;
     double max_output_torque_integral_part_Nm;
     double max_torque_Nm;
@@ -30,7 +30,6 @@ typedef struct
     double max_stiffness;
     double hysteresis_sigma;
     double hysteresis_friction;
-    //double gripper_angle_difference;
     double sample_time;
     double gear_ratio;
 } ControlParams;

@@ -19,26 +19,25 @@ void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstO
     controlParams->hydraulic_damping = 0.009257;
     controlParams->hydraulic_stiffness = 13.0948;
     controlParams->cutoff_frequency_LPF[0] = 14.0; // Q_A for overall DOB
-    controlParams->cutoff_frequency_LPF[1] = 20; // Q_B for nominal plant
+    controlParams->cutoff_frequency_LPF[1] = 20.0; // Q_B for nominal plant
     controlParams->cutoff_frequency_LPF[2] = controlParams->cutoff_frequency_LPF[1]; // Q_C for finger damping compensation
     controlParams->cutoff_frequency_LPF[3] = controlParams->cutoff_frequency_LPF[1]; // Q_D for reference input
     controlParams->cutoff_frequency_HPF[0] = 0.1; // for pressure
     controlParams->cutoff_frequency_HPF[1] = 0.1; // for nominal plant
-    controlParams->Kp[0] = 0.0;
+    controlParams->Kp[0] = 0.0; // max stable value 40 with zeta = 0.3 and max_velocity <= 5.0 when DOB turned off
     controlParams->Pp[0] = 0.0;
     controlParams->Vp[0] = 0.0;
     controlParams->Kp[1] = 0.0;
     controlParams->Pp[1] = 0.0;
     controlParams->Vp[1] = 0.0;
-    //controlParams->pressure_offset = 0.04;
+    controlParams->zeta = 0.3;
     controlParams->max_inner_loop_torque_Nm = 0.5;
     controlParams->max_output_torque_integral_part_Nm = 1.0;
     controlParams->max_torque_Nm = 5.0;
-    controlParams->max_velocity = 5.0;
+    controlParams->max_velocity = 3.5; // stable for Kp = 20 and cutoff_frequency_LPF[0] = 14
     controlParams->max_stiffness = 10.0;
     controlParams->hysteresis_sigma = 400;
     controlParams->hysteresis_friction = 0.016;
-    //controlParams->gripper_angle_difference = 0.5;
     controlParams->sample_time = 0.5e-3;
     controlParams->gear_ratio = 1.33;
 
@@ -183,8 +182,8 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
         else {
             controlParams->Kp[i] = MIN(rdda->motor[i].rosOut.stiffness, controlParams->max_stiffness);
         }*/
-        controlParams->Vp[i] = 0.6 * sqrt(controlParams->Kp[i] * controlParams->motor_inertia[i]);
-        controlParams->Pp[i] = sqrt(controlParams->Kp[i] / controlParams->motor_inertia[i]) / 0.6;
+        controlParams->Vp[i] = 2 * controlParams->zeta * sqrt(controlParams->Kp[i] * controlParams->motor_inertia[i]);
+        controlParams->Pp[i] = sqrt(controlParams->Kp[i] / controlParams->motor_inertia[i]) / (2 * controlParams->zeta);
     }
 
     /* PV controller */
@@ -241,7 +240,6 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
         integral_output_force[i] = previousVariables->integral_output_force[i] + firstOrderLowPassFilterParams->lambda[0] * controlParams->sample_time * (reference_force[i] + filtered_pressure[i] + filtered_finger_bk_comp_force[i] + hysteresis_force[i] - filtered_nominal_force[i]);
         integral_output_force[i] = saturation(controlParams->max_output_torque_integral_part_Nm, integral_output_force[i]);
         output_force[i] = (reference_force[i] + filtered_pressure[i] + filtered_finger_bk_comp_force[i] + hysteresis_force[i] - filtered_nominal_force[i]) + integral_output_force[i];
-        //output_force[i] = reference_force[i];
     }
 
     /* dob inner loop saturation */
