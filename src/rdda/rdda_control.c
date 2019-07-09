@@ -24,17 +24,17 @@ void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstO
     controlParams->cutoff_frequency_LPF[3] = controlParams->cutoff_frequency_LPF[1]; // Q_D for reference input
     controlParams->cutoff_frequency_HPF[0] = 0.1; // for pressure
     controlParams->cutoff_frequency_HPF[1] = 0.1; // for nominal plant
-    controlParams->Kp[0] = 0.0; // max stable value 40 with zeta = 0.3 and max_velocity <= 5.0 when DOB turned off
+    controlParams->Kp[0] = 10.0; // max stable value 40 with zeta = 0.3 and max_velocity <= 5.0 when DOB turned off
     controlParams->Pp[0] = 0.0;
     controlParams->Vp[0] = 0.0;
-    controlParams->Kp[1] = 0.0;
+    controlParams->Kp[1] = 10.0;
     controlParams->Pp[1] = 0.0;
     controlParams->Vp[1] = 0.0;
     controlParams->zeta = 0.3;
     controlParams->max_inner_loop_torque_Nm = 0.5;
     controlParams->max_output_torque_integral_part_Nm = 0.5;
     controlParams->max_torque_Nm = 5.0;
-    controlParams->max_velocity = 3.5; // stable for Kp = 20 and cutoff_frequency_LPF[0] = 14
+    controlParams->max_velocity = 1000.0; // stable for Kp = 20 and cutoff_frequency_LPF[0] = 14
     controlParams->max_stiffness = 10.0;
     controlParams->hysteresis_sigma = 400;
     controlParams->hysteresis_friction = 0.016;
