@@ -27,7 +27,7 @@ void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstO
     controlParams->Kp[0] = 0.0; // max stable value 40 with zeta = 0.3 and max_velocity <= 5.0 when DOB turned off
     controlParams->Pp[0] = 0.0;
     controlParams->Vp[0] = 0.0;
-    controlParams->Kp[1] = 0.0;
+    controlParams->Kp[1] = controlParams->Kp[0];
     controlParams->Pp[1] = 0.0;
     controlParams->Vp[1] = 0.0;
     controlParams->zeta = 0.3;
@@ -193,12 +193,12 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
 
     /* PV gain calculation based on Kp */
     for (int i = 0; i < num; i ++) {
-        if (rdda->motor[i].rosOut.stiffness < 0) {
+        /*if (rdda->motor[i].rosOut.stiffness < 0) {
             controlParams->Kp[i] = 0.0;
         }
         else {
             controlParams->Kp[i] = MIN(rdda->motor[i].rosOut.stiffness, controlParams->max_stiffness);
-        }
+        }*/
         controlParams->Vp[i] = 2 * controlParams->zeta * sqrt(controlParams->Kp[i] * controlParams->motor_inertia[i]);
         controlParams->Pp[i] = sqrt(controlParams->Kp[i] / controlParams->motor_inertia[i]) / (2 * controlParams->zeta);
     }
