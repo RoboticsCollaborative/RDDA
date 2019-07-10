@@ -18,23 +18,23 @@ void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstO
     controlParams->finger_stiffness[1] = 0.0;//0.0235;
     controlParams->hydraulic_damping = 0.009257;
     controlParams->hydraulic_stiffness = 13.0948;
-    controlParams->cutoff_frequency_LPF[0] = 14.0; // Q_A for overall DOB
-    controlParams->cutoff_frequency_LPF[1] = 20.0; // Q_B for nominal plant
-    controlParams->cutoff_frequency_LPF[2] = controlParams->cutoff_frequency_LPF[1]; // Q_C for finger damping compensation
-    controlParams->cutoff_frequency_LPF[3] = controlParams->cutoff_frequency_LPF[1]; // Q_D for reference input
+    controlParams->cutoff_frequency_LPF[0] = 20.0; // Q_A for overall DOB
+    controlParams->cutoff_frequency_LPF[1] = controlParams->cutoff_frequency_LPF[0]; // Q_B for nominal plant
+    controlParams->cutoff_frequency_LPF[2] = controlParams->cutoff_frequency_LPF[0]; // Q_C for finger damping compensation
+    controlParams->cutoff_frequency_LPF[3] = controlParams->cutoff_frequency_LPF[0]; // Q_D for reference input
     controlParams->cutoff_frequency_HPF[0] = 0.1; // for pressure
     controlParams->cutoff_frequency_HPF[1] = 0.1; // for nominal plant
-    controlParams->Kp[0] = 10.0; // max stable value 40 with zeta = 0.3 and max_velocity <= 5.0 when DOB turned off
+    controlParams->Kp[0] = 0.0; // max stable value 40 with zeta = 0.3 and max_velocity <= 5.0 when DOB turned off
     controlParams->Pp[0] = 0.0;
     controlParams->Vp[0] = 0.0;
-    controlParams->Kp[1] = 10.0;
+    controlParams->Kp[1] = 0.0;
     controlParams->Pp[1] = 0.0;
     controlParams->Vp[1] = 0.0;
     controlParams->zeta = 0.3;
     controlParams->max_inner_loop_torque_Nm = 0.5;
     controlParams->max_output_torque_integral_part_Nm = 0.5;
     controlParams->max_torque_Nm = 5.0;
-    controlParams->max_velocity = 1000.0; // stable for Kp = 20 and cutoff_frequency_LPF[0] = 14
+    controlParams->max_velocity = 3.0; // stable for Kp = 20 and cutoff_frequency_LPF[0] = 14
     controlParams->max_stiffness = 10.0;
     controlParams->hysteresis_sigma = 400;
     controlParams->hysteresis_friction = 0.016;
@@ -84,6 +84,7 @@ void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstO
     previousVariables->prev_filtered_finger_bk_comp_force_pressure_part[1] = rdda->psensor.analogIn.val2 * controlParams->finger_stiffness[1] / controlParams->hydraulic_stiffness;
 
     for (int i = 0; i < 2; i ++) {
+        previousVariables->pos_ref[i] = rdda->motor[i].rosOut.pos_ref;
         previousVariables->motor_pos[i] = rdda->motor[i].motorIn.act_pos;
         previousVariables->motor_vel[i] = rdda->motor[i].motorIn.act_vel;
         previousVariables->nominal_force[i] = 0.0;
@@ -104,6 +105,20 @@ void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstO
 double firstOrderIIRFilter(double input, double input_prev, double output_prev, double b0, double b1, double a1) {
     double output;
     output = b0 * input + b1 * input_prev + a1 * output_prev;
+    return output;
+}
+
+double trajectoryGenerator(double input, double pre_output, double max_vel, double dt) {
+    double output;
+    if (input - pre_output > max_vel * dt) {
+        output = pre_output + max_vel * dt;
+    }
+    else if (input - pre_output < -max_vel * dt) {
+        output = pre_output - max_vel * dt;
+    }
+    else {
+        output = input;
+    }
     return output;
 }
 
@@ -138,12 +153,14 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
 
     double max_torque_Nm[num];
 
+    double pos_tar[num];
     double pos_ref[num];
     double vel_ref[num];
 
-    /* position reference by ros */
+    /* position reference considering max velocity */
     for (int i = 0; i < num; i ++) {
-        pos_ref[i] = rdda->motor[i].rosOut.pos_ref;
+        pos_tar[i] = rdda->motor[i].rosOut.pos_ref;
+        pos_ref[i] = trajectoryGenerator(pos_tar[i], previousVariables->pos_ref[i], controlParams->max_velocity, controlParams->sample_time);
     }
 
     /* sensor reading */
@@ -176,12 +193,12 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
 
     /* PV gain calculation based on Kp */
     for (int i = 0; i < num; i ++) {
-        /*if (rdda->motor[i].rosOut.stiffness < 0) {
+        if (rdda->motor[i].rosOut.stiffness < 0) {
             controlParams->Kp[i] = 0.0;
         }
         else {
             controlParams->Kp[i] = MIN(rdda->motor[i].rosOut.stiffness, controlParams->max_stiffness);
-        }*/
+        }
         controlParams->Vp[i] = 2 * controlParams->zeta * sqrt(controlParams->Kp[i] * controlParams->motor_inertia[i]);
         controlParams->Pp[i] = sqrt(controlParams->Kp[i] / controlParams->motor_inertia[i]) / (2 * controlParams->zeta);
     }
@@ -189,7 +206,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
     /* PV controller */
     /* velocity reference calculation with saturation */
     for (int i = 0; i < num; i ++) {
-        vel_ref[i] = saturation(saturation(controlParams->max_velocity, rdda->motor[i].rosOut.vel_sat), controlParams->Pp[i] * (pos_ref[i] - (motor_pos[i] - rdda->motor[i].init_pos)));
+        vel_ref[i] = controlParams->Pp[i] * (pos_ref[i] - (motor_pos[i] - rdda->motor[i].init_pos));
     }
 
     /* reference force */
@@ -257,6 +274,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
 
     /* previous variables update */
     for (int i = 0; i < num; i ++) {
+        previousVariables->pos_ref[i] = pos_ref[i];
         previousVariables->motor_pos[i] = motor_pos[i];
         previousVariables->motor_vel[i] = motor_vel[i];
         previousVariables->finger_vel_pressure_part[i] = finger_vel_pressure_part[i];

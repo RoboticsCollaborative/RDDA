@@ -61,6 +61,7 @@ typedef struct
 
 typedef struct
 {
+    double pos_ref[2];
     double motor_pos[2];
     double motor_vel[2];
     double finger_vel_pressure_part[2];
