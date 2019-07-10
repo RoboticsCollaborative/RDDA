@@ -32,8 +32,9 @@ void rdda_run (void *ifnameptr) {
     /* User friendly struct */
     Rdda *rdda;
     ControlParams controlParams;
-    FirstOrderFilterParams firstOrderFilterParams;
-    SecondOrderFilterParams secondOrderFilterParams;
+    FirstOrderLowPassFilterParams firstOrderLowPassFilterParams;
+    FirstOrderHighPassFilterParams firstOrderHighPassFilterParams;
+    SecondOrderLowPassFilterParams secondOrderLowPassFilterParams;
     PreviousVariables previousVariables;
     int cycletime;
     //int start_time, end_time;
@@ -71,7 +72,7 @@ void rdda_run (void *ifnameptr) {
     /**/
 
     initRddaStates(ecatSlaves, rdda);
-    dobInit(&controlParams, &firstOrderFilterParams, &secondOrderFilterParams, &previousVariables, rdda);
+    dobInit(&controlParams, &firstOrderLowPassFilterParams, &firstOrderHighPassFilterParams, &secondOrderLowPassFilterParams, &previousVariables, rdda);
 
     rdda_gettime(ecatSlaves);
     //for (loopnum = 0; loopnum < 120000; loopnum ++) {
@@ -88,7 +89,7 @@ void rdda_run (void *ifnameptr) {
 
         mutex_lock(&rdda->mutex);
 
-        dobController(rdda, &controlParams, &firstOrderFilterParams, &secondOrderFilterParams, &previousVariables);
+        dobController(rdda, &controlParams, &firstOrderLowPassFilterParams, &firstOrderHighPassFilterParams, &secondOrderLowPassFilterParams, &previousVariables);
 
         rdda_update(ecatSlaves, rdda);
 
