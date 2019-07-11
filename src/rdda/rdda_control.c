@@ -177,14 +177,14 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
     }
 
     /* Stiffness reading */
-    /*for (int i = 0; i < num; i ++) {
+    for (int i = 0; i < num; i ++) {
         if (rdda->motor[i].rosOut.stiffness < 0) {
             controlParams->Kp[i] = 0.0;
         }
         else {
             controlParams->Kp[i] = MIN(rdda->motor[i].rosOut.stiffness, controlParams->max_stiffness);
         }
-    }*/
+    }
 
     /* cutoff frequency update based on Kp */
     for (int i = 0; i < 4; i ++) {
