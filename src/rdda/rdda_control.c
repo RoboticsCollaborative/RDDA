@@ -5,6 +5,48 @@
 #include "rdda_control.h"
 
 #define MIN(x,y) (x)<(y)?(x):(y)
+#define MAX(x,y) (x)>(y)?(x):(y)
+
+double firstOrderIIRFilter(double input, double input_prev, double output_prev, double b0, double b1, double a1) {
+    double output;
+    output = b0 * input + b1 * input_prev + a1 * output_prev;
+    return output;
+}
+
+double trajectoryGenerator(double input, double pre_output, double max_vel, double dt) {
+    double output;
+    if (input - pre_output > max_vel * dt) {
+        output = pre_output + max_vel * dt;
+    }
+    else if (input - pre_output < -max_vel * dt) {
+        output = pre_output - max_vel * dt;
+    }
+    else {
+        output = input;
+    }
+    return output;
+}
+
+void lowPassFilterParamsUpdate(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstOrderLowPassFilterParams, SecondOrderLowPassFilterParams *secondOrderLowPassFilterParams) {
+    /* first order filter update */
+    for (int i = 0; i < 4; i ++) {
+        firstOrderLowPassFilterParams->lambda[i] = 2.0 * M_PI * controlParams->cutoff_frequency_LPF[i];
+        firstOrderLowPassFilterParams->a1[i] = -1.0 * (firstOrderLowPassFilterParams->lambda[i] * controlParams->sample_time - 2.0) / (firstOrderLowPassFilterParams->lambda[i] * controlParams->sample_time + 2.0);
+        firstOrderLowPassFilterParams->b0[i] = firstOrderLowPassFilterParams->lambda[i] * controlParams->sample_time / (firstOrderLowPassFilterParams->lambda[i] * controlParams->sample_time + 2.0);
+        firstOrderLowPassFilterParams->b1[i] = firstOrderLowPassFilterParams->lambda[i] * controlParams->sample_time / (firstOrderLowPassFilterParams->lambda[i] * controlParams->sample_time + 2.0);
+    }
+    firstOrderLowPassFilterParams->a1[4] = (2.0 * controlParams->hydraulic_damping - controlParams->hydraulic_stiffness * controlParams->sample_time) / (2.0 * controlParams->hydraulic_damping + controlParams->hydraulic_stiffness * controlParams->sample_time);
+    firstOrderLowPassFilterParams->b0[4] = 2.0 / (2.0 * controlParams->hydraulic_damping + controlParams->hydraulic_stiffness * controlParams->sample_time);
+    firstOrderLowPassFilterParams->b1[4] = -2.0 / (2.0 * controlParams->hydraulic_damping + controlParams->hydraulic_stiffness * controlParams->sample_time);
+    /* second order filter update */
+    secondOrderLowPassFilterParams->a1 = -1.0 * ((firstOrderLowPassFilterParams->lambda[2] * controlParams->sample_time - 2.0) * (2.0 * controlParams->hydraulic_damping + controlParams->hydraulic_stiffness * controlParams->sample_time) + (2.0 + firstOrderLowPassFilterParams->lambda[2] * controlParams->sample_time) * (controlParams->hydraulic_stiffness * controlParams->sample_time - 2.0 * controlParams->hydraulic_damping)) / ((firstOrderLowPassFilterParams->lambda[2] * controlParams->sample_time + 2.0) * (2.0 * controlParams->hydraulic_damping + controlParams->hydraulic_stiffness * controlParams->sample_time));
+    secondOrderLowPassFilterParams->a2 = -1.0 * (firstOrderLowPassFilterParams->lambda[2] * controlParams->sample_time - 2.0) * (controlParams->hydraulic_stiffness * controlParams->sample_time - 2.0 * controlParams->hydraulic_damping) / ((firstOrderLowPassFilterParams->lambda[2] * controlParams->sample_time + 2.0) * (2.0 * controlParams->hydraulic_damping + controlParams->hydraulic_stiffness * controlParams->sample_time));
+    for (int i = 0; i < 2; i ++) {
+        secondOrderLowPassFilterParams->b0[i] = firstOrderLowPassFilterParams->lambda[2] * controlParams->sample_time * (2.0 * controlParams->finger_damping[i] + controlParams->finger_stiffness[i] * controlParams->sample_time) / ((firstOrderLowPassFilterParams->lambda[2] * controlParams->sample_time + 2.0) * (2.0 * controlParams->hydraulic_damping + controlParams->hydraulic_stiffness * controlParams->sample_time));
+        secondOrderLowPassFilterParams->b1[i] = firstOrderLowPassFilterParams->lambda[2] * controlParams->sample_time * 2.0 * controlParams->finger_stiffness[i] * controlParams->sample_time / ((firstOrderLowPassFilterParams->lambda[2] * controlParams->sample_time + 2.0) * (2.0 * controlParams->hydraulic_damping + controlParams->hydraulic_stiffness * controlParams->sample_time));
+        secondOrderLowPassFilterParams->b2[i] = firstOrderLowPassFilterParams->lambda[2] * controlParams->sample_time * (controlParams->finger_stiffness[i] * controlParams->sample_time - 2.0 * controlParams->finger_damping[i]) / ((firstOrderLowPassFilterParams->lambda[2] * controlParams->sample_time + 2.0) * (2.0 * controlParams->hydraulic_damping + controlParams->hydraulic_stiffness * controlParams->sample_time));
+    }
+}
 
 void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstOrderLowPassFilterParams, FirstOrderHighPassFilterParams *firstOrderHighPassFilterParams, SecondOrderLowPassFilterParams *secondOrderLowPassFilterParams, PreviousVariables *previousVariables, Rdda *rdda) {
     /* control parameters initialization */
@@ -27,7 +69,7 @@ void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstO
     controlParams->Kp[0] = 0.0; // max stable value 40 with zeta = 0.3 and max_velocity <= 5.0 when DOB turned off
     controlParams->Pp[0] = 0.0;
     controlParams->Vp[0] = 0.0;
-    controlParams->Kp[1] = 0.0;
+    controlParams->Kp[1] = controlParams->Kp[0];
     controlParams->Pp[1] = 0.0;
     controlParams->Vp[1] = 0.0;
     controlParams->zeta = 0.3;
@@ -35,31 +77,14 @@ void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstO
     controlParams->max_output_torque_integral_part_Nm = 0.5;
     controlParams->max_torque_Nm = 5.0;
     controlParams->max_velocity = 3.0; // stable for Kp = 20 and cutoff_frequency_LPF[0] = 14
-    controlParams->max_stiffness = 10.0;
+    controlParams->max_stiffness = 40.0;
     controlParams->hysteresis_sigma = 400;
     controlParams->hysteresis_friction = 0.016;
     controlParams->sample_time = 0.5e-3;
     controlParams->gear_ratio = 1.33;
 
     /* low-pass filter parameters initialization */
-    /* first order filter initialization */
-    for (int i = 0; i < 4; i ++) {
-        firstOrderLowPassFilterParams->lambda[i] = 2.0 * M_PI * controlParams->cutoff_frequency_LPF[i];
-        firstOrderLowPassFilterParams->a1[i] = -1.0 * (firstOrderLowPassFilterParams->lambda[i] * controlParams->sample_time - 2.0) / (firstOrderLowPassFilterParams->lambda[i] * controlParams->sample_time + 2.0);
-        firstOrderLowPassFilterParams->b0[i] = firstOrderLowPassFilterParams->lambda[i] * controlParams->sample_time / (firstOrderLowPassFilterParams->lambda[i] * controlParams->sample_time + 2.0);
-        firstOrderLowPassFilterParams->b1[i] = firstOrderLowPassFilterParams->lambda[i] * controlParams->sample_time / (firstOrderLowPassFilterParams->lambda[i] * controlParams->sample_time + 2.0);
-    }
-    firstOrderLowPassFilterParams->a1[4] = (2.0 * controlParams->hydraulic_damping - controlParams->hydraulic_stiffness * controlParams->sample_time) / (2.0 * controlParams->hydraulic_damping + controlParams->hydraulic_stiffness * controlParams->sample_time);
-    firstOrderLowPassFilterParams->b0[4] = 2.0 / (2.0 * controlParams->hydraulic_damping + controlParams->hydraulic_stiffness * controlParams->sample_time);
-    firstOrderLowPassFilterParams->b1[4] = -2.0 / (2.0 * controlParams->hydraulic_damping + controlParams->hydraulic_stiffness * controlParams->sample_time);
-    /* second order filter initialization */
-    secondOrderLowPassFilterParams->a1 = -1.0 * ((firstOrderLowPassFilterParams->lambda[2] * controlParams->sample_time - 2.0) * (2.0 * controlParams->hydraulic_damping + controlParams->hydraulic_stiffness * controlParams->sample_time) + (2.0 + firstOrderLowPassFilterParams->lambda[2] * controlParams->sample_time) * (controlParams->hydraulic_stiffness * controlParams->sample_time - 2.0 * controlParams->hydraulic_damping)) / ((firstOrderLowPassFilterParams->lambda[2] * controlParams->sample_time + 2.0) * (2.0 * controlParams->hydraulic_damping + controlParams->hydraulic_stiffness * controlParams->sample_time));
-    secondOrderLowPassFilterParams->a2 = -1.0 * (firstOrderLowPassFilterParams->lambda[2] * controlParams->sample_time - 2.0) * (controlParams->hydraulic_stiffness * controlParams->sample_time - 2.0 * controlParams->hydraulic_damping) / ((firstOrderLowPassFilterParams->lambda[2] * controlParams->sample_time + 2.0) * (2.0 * controlParams->hydraulic_damping + controlParams->hydraulic_stiffness * controlParams->sample_time));
-    for (int i = 0; i < 2; i ++) {
-        secondOrderLowPassFilterParams->b0[i] = firstOrderLowPassFilterParams->lambda[2] * controlParams->sample_time * (2.0 * controlParams->finger_damping[i] + controlParams->finger_stiffness[i] * controlParams->sample_time) / ((firstOrderLowPassFilterParams->lambda[2] * controlParams->sample_time + 2.0) * (2.0 * controlParams->hydraulic_damping + controlParams->hydraulic_stiffness * controlParams->sample_time));
-        secondOrderLowPassFilterParams->b1[i] = firstOrderLowPassFilterParams->lambda[2] * controlParams->sample_time * 2.0 * controlParams->finger_stiffness[i] * controlParams->sample_time / ((firstOrderLowPassFilterParams->lambda[2] * controlParams->sample_time + 2.0) * (2.0 * controlParams->hydraulic_damping + controlParams->hydraulic_stiffness * controlParams->sample_time));
-        secondOrderLowPassFilterParams->b2[i] = firstOrderLowPassFilterParams->lambda[2] * controlParams->sample_time * (controlParams->finger_stiffness[i] * controlParams->sample_time - 2.0 * controlParams->finger_damping[i]) / ((firstOrderLowPassFilterParams->lambda[2] * controlParams->sample_time + 2.0) * (2.0 * controlParams->hydraulic_damping + controlParams->hydraulic_stiffness * controlParams->sample_time));
-    }
+    lowPassFilterParamsUpdate(controlParams, firstOrderLowPassFilterParams, secondOrderLowPassFilterParams);
 
     /* high-pass filter parameters initialization */
     for (int i = 0; i < 2; i ++) {
@@ -100,26 +125,6 @@ void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstO
         previousVariables->reference_force[i] = 0.0;
         previousVariables->filtered_reference_force[i] = 0.0;
     }
-}
-
-double firstOrderIIRFilter(double input, double input_prev, double output_prev, double b0, double b1, double a1) {
-    double output;
-    output = b0 * input + b1 * input_prev + a1 * output_prev;
-    return output;
-}
-
-double trajectoryGenerator(double input, double pre_output, double max_vel, double dt) {
-    double output;
-    if (input - pre_output > max_vel * dt) {
-        output = pre_output + max_vel * dt;
-    }
-    else if (input - pre_output < -max_vel * dt) {
-        output = pre_output - max_vel * dt;
-    }
-    else {
-        output = input;
-    }
-    return output;
 }
 
 void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFilterParams *firstOrderLowPassFilterParams, FirstOrderHighPassFilterParams *firstOrderHighPassFilterParams, SecondOrderLowPassFilterParams *secondOrderLowPassFilterParams, PreviousVariables *previousVariables) {
@@ -171,6 +176,46 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
         motor_vel[i] = rdda->motor[i].motorIn.act_vel;
     }
 
+    /* Stiffness reading */
+    for (int i = 0; i < num; i ++) {
+        if (rdda->motor[i].rosOut.stiffness < 0) {
+            controlParams->Kp[i] = 0.0;
+        }
+        else {
+            controlParams->Kp[i] = MIN(rdda->motor[i].rosOut.stiffness, controlParams->max_stiffness);
+        }
+    }
+
+    /* cutoff frequency update based on Kp */
+    for (int i = 0; i < 4; i ++) {
+        if ((MAX(controlParams->Kp[0], controlParams->Kp[1])) < 28.0) {
+            controlParams->cutoff_frequency_LPF[i] = 20.0 * (1.0 - (MAX(controlParams->Kp[0], controlParams->Kp[1])) / 28.0);
+        }
+        else {
+            controlParams->cutoff_frequency_LPF[i] = 0.0;
+        }
+    }
+
+    /* low-pass filter parameters update*/
+    lowPassFilterParamsUpdate(controlParams, firstOrderLowPassFilterParams, secondOrderLowPassFilterParams);
+
+    /* PV gain calculation based on Kp */
+    for (int i = 0; i < num; i ++) {
+        controlParams->Vp[i] = 2 * controlParams->zeta * sqrt(controlParams->Kp[i] * controlParams->motor_inertia[i]);
+        controlParams->Pp[i] = sqrt(controlParams->Kp[i] / controlParams->motor_inertia[i]) / (2 * controlParams->zeta);
+    }
+
+    /* PV controller */
+    for (int i = 0; i < num; i ++) {
+        vel_ref[i] = controlParams->Pp[i] * (pos_ref[i] - (motor_pos[i] - rdda->motor[i].init_pos));
+    }
+
+    /* reference force */
+    for (int i = 0; i < num; i ++) {
+        reference_force[i] = controlParams->Vp[i] * (vel_ref[i] - motor_vel[i]);
+        filtered_reference_force[i] = firstOrderIIRFilter(reference_force[i], previousVariables->reference_force[i], previousVariables->filtered_reference_force[i], firstOrderLowPassFilterParams->b0[3], firstOrderLowPassFilterParams->b1[3], firstOrderLowPassFilterParams->a1[3]);
+    }
+
     /* pressure filtering */
     for (int i = 0; i < num; i ++) {
         filtered_pressure[i] = firstOrderIIRFilter(pressure[i], previousVariables->pressure[i], previousVariables->filtered_pressure[i], firstOrderLowPassFilterParams->b0[0], firstOrderLowPassFilterParams->b1[0], firstOrderLowPassFilterParams->a1[0]);
@@ -190,30 +235,6 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
         }
         else controlParams->vel_gain[i] = 0.1;
     }*/
-
-    /* PV gain calculation based on Kp */
-    for (int i = 0; i < num; i ++) {
-        if (rdda->motor[i].rosOut.stiffness < 0) {
-            controlParams->Kp[i] = 0.0;
-        }
-        else {
-            controlParams->Kp[i] = MIN(rdda->motor[i].rosOut.stiffness, controlParams->max_stiffness);
-        }
-        controlParams->Vp[i] = 2 * controlParams->zeta * sqrt(controlParams->Kp[i] * controlParams->motor_inertia[i]);
-        controlParams->Pp[i] = sqrt(controlParams->Kp[i] / controlParams->motor_inertia[i]) / (2 * controlParams->zeta);
-    }
-
-    /* PV controller */
-    /* velocity reference calculation with saturation */
-    for (int i = 0; i < num; i ++) {
-        vel_ref[i] = controlParams->Pp[i] * (pos_ref[i] - (motor_pos[i] - rdda->motor[i].init_pos));
-    }
-
-    /* reference force */
-    for (int i = 0; i < num; i ++) {
-        reference_force[i] = controlParams->Vp[i] * (vel_ref[i] - motor_vel[i]);
-        filtered_reference_force[i] = firstOrderIIRFilter(reference_force[i], previousVariables->reference_force[i], previousVariables->filtered_reference_force[i], firstOrderLowPassFilterParams->b0[3], firstOrderLowPassFilterParams->b1[3], firstOrderLowPassFilterParams->a1[3]);
-    }
 
     /* impedance controller */
 /*    for (int i = 0; i < num; i ++) {
