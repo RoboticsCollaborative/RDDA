@@ -39,9 +39,10 @@ void lowPassFilterParamsUpdate(ControlParams *controlParams, FirstOrderLowPassFi
     firstOrderLowPassFilterParams->b0[4] = 2.0 / (2.0 * controlParams->hydraulic_damping + controlParams->hydraulic_stiffness * controlParams->sample_time);
     firstOrderLowPassFilterParams->b1[4] = -2.0 / (2.0 * controlParams->hydraulic_damping + controlParams->hydraulic_stiffness * controlParams->sample_time);
     /* second order filter update */
-    secondOrderLowPassFilterParams->a1 = -1.0 * ((firstOrderLowPassFilterParams->lambda[2] * controlParams->sample_time - 2.0) * (2.0 * controlParams->hydraulic_damping + controlParams->hydraulic_stiffness * controlParams->sample_time) + (2.0 + firstOrderLowPassFilterParams->lambda[2] * controlParams->sample_time) * (controlParams->hydraulic_stiffness * controlParams->sample_time - 2.0 * controlParams->hydraulic_damping)) / ((firstOrderLowPassFilterParams->lambda[2] * controlParams->sample_time + 2.0) * (2.0 * controlParams->hydraulic_damping + controlParams->hydraulic_stiffness * controlParams->sample_time));
-    secondOrderLowPassFilterParams->a2 = -1.0 * (firstOrderLowPassFilterParams->lambda[2] * controlParams->sample_time - 2.0) * (controlParams->hydraulic_stiffness * controlParams->sample_time - 2.0 * controlParams->hydraulic_damping) / ((firstOrderLowPassFilterParams->lambda[2] * controlParams->sample_time + 2.0) * (2.0 * controlParams->hydraulic_damping + controlParams->hydraulic_stiffness * controlParams->sample_time));
+
     for (int i = 0; i < 2; i ++) {
+        secondOrderLowPassFilterParams->a1[i] = -1.0 * ((firstOrderLowPassFilterParams->lambda[2] * controlParams->sample_time - 2.0) * (2.0 * controlParams->hydraulic_damping + controlParams->hydraulic_stiffness * controlParams->sample_time) + (2.0 + firstOrderLowPassFilterParams->lambda[2] * controlParams->sample_time) * (controlParams->hydraulic_stiffness * controlParams->sample_time - 2.0 * controlParams->hydraulic_damping)) / ((firstOrderLowPassFilterParams->lambda[2] * controlParams->sample_time + 2.0) * (2.0 * controlParams->hydraulic_damping + controlParams->hydraulic_stiffness * controlParams->sample_time));
+        secondOrderLowPassFilterParams->a2[i] = -1.0 * (firstOrderLowPassFilterParams->lambda[2] * controlParams->sample_time - 2.0) * (controlParams->hydraulic_stiffness * controlParams->sample_time - 2.0 * controlParams->hydraulic_damping) / ((firstOrderLowPassFilterParams->lambda[2] * controlParams->sample_time + 2.0) * (2.0 * controlParams->hydraulic_damping + controlParams->hydraulic_stiffness * controlParams->sample_time));
         secondOrderLowPassFilterParams->b0[i] = firstOrderLowPassFilterParams->lambda[2] * controlParams->sample_time * (2.0 * controlParams->finger_damping[i] + controlParams->finger_stiffness[i] * controlParams->sample_time) / ((firstOrderLowPassFilterParams->lambda[2] * controlParams->sample_time + 2.0) * (2.0 * controlParams->hydraulic_damping + controlParams->hydraulic_stiffness * controlParams->sample_time));
         secondOrderLowPassFilterParams->b1[i] = firstOrderLowPassFilterParams->lambda[2] * controlParams->sample_time * 2.0 * controlParams->finger_stiffness[i] * controlParams->sample_time / ((firstOrderLowPassFilterParams->lambda[2] * controlParams->sample_time + 2.0) * (2.0 * controlParams->hydraulic_damping + controlParams->hydraulic_stiffness * controlParams->sample_time));
         secondOrderLowPassFilterParams->b2[i] = firstOrderLowPassFilterParams->lambda[2] * controlParams->sample_time * (controlParams->finger_stiffness[i] * controlParams->sample_time - 2.0 * controlParams->finger_damping[i]) / ((firstOrderLowPassFilterParams->lambda[2] * controlParams->sample_time + 2.0) * (2.0 * controlParams->hydraulic_damping + controlParams->hydraulic_stiffness * controlParams->sample_time));
@@ -64,6 +65,7 @@ void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstO
     controlParams->cutoff_frequency_LPF[1] = controlParams->cutoff_frequency_LPF[0]; // Q_B for nominal plant
     controlParams->cutoff_frequency_LPF[2] = controlParams->cutoff_frequency_LPF[0]; // Q_C for finger damping compensation
     controlParams->cutoff_frequency_LPF[3] = controlParams->cutoff_frequency_LPF[0]; // Q_D for reference input
+    controlParams->cutoff_frequency_LPF[4] = 1000.0; // target position filter
     controlParams->cutoff_frequency_HPF[0] = 0.1; // for pressure
     controlParams->cutoff_frequency_HPF[1] = 0.1; // for nominal plant
     controlParams->Kp[0] = 0.0; // max stable value 40 with zeta = 0.3 and max_velocity <= 5.0 when DOB turned off
@@ -85,6 +87,14 @@ void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstO
 
     /* low-pass filter parameters initialization */
     lowPassFilterParamsUpdate(controlParams, firstOrderLowPassFilterParams, secondOrderLowPassFilterParams);
+
+    /* target position low-pass filter */
+    firstOrderLowPassFilterParams->lambda[4] = 2 * M_PI * controlParams->cutoff_frequency_LPF[4];
+    secondOrderLowPassFilterParams->a1[2] = - (8.0 + 2.0 * pow((firstOrderLowPassFilterParams->lambda[4] * controlParams->sample_time), 2.0)) / (4.0 + 4.0 * 0.707 * firstOrderLowPassFilterParams->lambda[4] * controlParams->sample_time + pow((firstOrderLowPassFilterParams->lambda[4] * controlParams->sample_time), 2.0));
+    secondOrderLowPassFilterParams->a2[2] = - (4.0 - 4.0 * 0.707 * firstOrderLowPassFilterParams->lambda[4] * controlParams->sample_time + pow((firstOrderLowPassFilterParams->lambda[4] * controlParams->sample_time), 2.0)) / (4.0 + 4.0 * 0.707 * firstOrderLowPassFilterParams->lambda[4] * controlParams->sample_time + pow((firstOrderLowPassFilterParams->lambda[4] * controlParams->sample_time), 2.0));
+    secondOrderLowPassFilterParams->b0[2] = pow((firstOrderLowPassFilterParams->lambda[4] * controlParams->sample_time), 2.0) / (4.0 + 4.0 * 0.707 * firstOrderLowPassFilterParams->lambda[4] * controlParams->sample_time + pow((firstOrderLowPassFilterParams->lambda[4] * controlParams->sample_time), 2.0));
+    secondOrderLowPassFilterParams->b1[2] = 2.0 * pow((firstOrderLowPassFilterParams->lambda[4] * controlParams->sample_time), 2.0) / (4.0 + 4.0 * 0.707 * firstOrderLowPassFilterParams->lambda[4] * controlParams->sample_time + pow((firstOrderLowPassFilterParams->lambda[4] * controlParams->sample_time), 2.0));
+    secondOrderLowPassFilterParams->b2[2] = pow((firstOrderLowPassFilterParams->lambda[4] * controlParams->sample_time), 2.0) / (4.0 + 4.0 * 0.707 * firstOrderLowPassFilterParams->lambda[4] * controlParams->sample_time + pow((firstOrderLowPassFilterParams->lambda[4] * controlParams->sample_time), 2.0));
 
     /* high-pass filter parameters initialization */
     for (int i = 0; i < 2; i ++) {
@@ -109,6 +119,10 @@ void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstO
     previousVariables->prev_filtered_finger_bk_comp_force_pressure_part[1] = rdda->psensor.analogIn.val2 * controlParams->finger_stiffness[1] / controlParams->hydraulic_stiffness;
 
     for (int i = 0; i < 2; i ++) {
+        previousVariables->pos_tar[i] = rdda->motor[i].rosOut.pos_ref;
+        previousVariables->prev_pos_tar[i] = rdda->motor[i].rosOut.pos_ref;
+        previousVariables->filtered_pos_tar[i] = rdda->motor[i].rosOut.pos_ref;
+        previousVariables->prev_filtered_pos_tar[i] = rdda->motor[i].rosOut.pos_ref;
         previousVariables->pos_ref[i] = rdda->motor[i].rosOut.pos_ref;
         previousVariables->motor_pos[i] = rdda->motor[i].motorIn.act_pos;
         previousVariables->motor_vel[i] = rdda->motor[i].motorIn.act_vel;
@@ -159,13 +173,15 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
     double max_torque_Nm[num];
 
     double pos_tar[num];
+    double filtered_pos_tar[num];
     double pos_ref[num];
     double vel_ref[num];
 
     /* position reference considering max velocity */
     for (int i = 0; i < num; i ++) {
         pos_tar[i] = rdda->motor[i].rosOut.pos_ref;
-        pos_ref[i] = trajectoryGenerator(pos_tar[i], previousVariables->pos_ref[i], controlParams->max_velocity, controlParams->sample_time);
+        filtered_pos_tar[i] = secondOrderLowPassFilterParams->a1[2] * previousVariables->filtered_pos_tar[i] + secondOrderLowPassFilterParams->a2[2] * previousVariables->prev_filtered_pos_tar[i] + secondOrderLowPassFilterParams->b0[2] * pos_tar[i] + secondOrderLowPassFilterParams->b1[2] * previousVariables->pos_tar[i] + secondOrderLowPassFilterParams->b2[2] * previousVariables->prev_pos_tar[i];
+        pos_ref[i] = trajectoryGenerator(filtered_pos_tar[i], previousVariables->pos_ref[i], controlParams->max_velocity, controlParams->sample_time);
     }
 
     /* sensor reading */
@@ -257,7 +273,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
         finger_bk_comp_force_position_part[i] = controlParams->finger_damping[i] * motor_vel[i] + controlParams->finger_stiffness[i] * motor_pos[i];
         filtered_finger_bk_comp_force_position_part[i] = firstOrderIIRFilter(finger_bk_comp_force_position_part[i], previousVariables->finger_bk_comp_force_position_part[i], previousVariables->filtered_finger_bk_comp_force_position_part[i], firstOrderLowPassFilterParams->b0[2], firstOrderLowPassFilterParams->b1[2], firstOrderLowPassFilterParams->a1[2]);
         /* pressure part*/
-        filtered_finger_bk_comp_force_pressure_part[i] = secondOrderLowPassFilterParams->b0[i] * pressure[i] + secondOrderLowPassFilterParams->b1[i] * previousVariables->pressure[i] + secondOrderLowPassFilterParams->b2[i] * previousVariables->prev_pressure[i] + secondOrderLowPassFilterParams->a1 * previousVariables->filtered_finger_bk_comp_force_pressure_part[i] + secondOrderLowPassFilterParams->a2 * previousVariables->prev_filtered_finger_bk_comp_force_pressure_part[i];
+        filtered_finger_bk_comp_force_pressure_part[i] = secondOrderLowPassFilterParams->b0[i] * pressure[i] + secondOrderLowPassFilterParams->b1[i] * previousVariables->pressure[i] + secondOrderLowPassFilterParams->b2[i] * previousVariables->prev_pressure[i] + secondOrderLowPassFilterParams->a1[i] * previousVariables->filtered_finger_bk_comp_force_pressure_part[i] + secondOrderLowPassFilterParams->a2[i] * previousVariables->prev_filtered_finger_bk_comp_force_pressure_part[i];
         /* total */
         filtered_finger_bk_comp_force[i] = filtered_finger_bk_comp_force_position_part[i] + filtered_finger_bk_comp_force_pressure_part[i];
         filtered_finger_bk_comp_force[i] = 0.0;
@@ -295,6 +311,10 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
 
     /* previous variables update */
     for (int i = 0; i < num; i ++) {
+        previousVariables->prev_pos_tar[i] = previousVariables->pos_tar[i];
+        previousVariables->pos_tar[i] = pos_tar[i];
+        previousVariables->prev_filtered_pos_tar[i] = previousVariables->filtered_pos_tar[i];
+        previousVariables->filtered_pos_tar[i] = filtered_pos_tar[i];
         previousVariables->pos_ref[i] = pos_ref[i];
         previousVariables->motor_pos[i] = motor_pos[i];
         previousVariables->motor_vel[i] = motor_vel[i];
