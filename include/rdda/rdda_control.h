@@ -17,7 +17,7 @@ typedef struct
     double finger_stiffness[2];
     double hydraulic_stiffness;
     double hydraulic_damping;
-    double cutoff_frequency_LPF[4];
+    double cutoff_frequency_LPF[5];
     double cutoff_frequency_HPF[2];
     double Kp[2];
     double Pp[2];
@@ -36,7 +36,7 @@ typedef struct
 
 typedef struct
 {
-    double lambda[4]; // cut-off frequency(rad/s)
+    double lambda[5]; // cut-off frequency(rad/s)
     double a1[5];
     double b0[5];
     double b1[5];
@@ -52,15 +52,19 @@ typedef struct
 
 typedef struct
 {
-    double b0[2];
-    double b1[2];
-    double b2[2];
-    double a1;
-    double a2;
+    double b0[3];
+    double b1[3];
+    double b2[3];
+    double a1[3];
+    double a2[3];
 } SecondOrderLowPassFilterParams;
 
 typedef struct
 {
+    double pos_tar[2];
+    double prev_pos_tar[2];
+    double filtered_pos_tar[2];
+    double prev_filtered_pos_tar[2];
     double pos_ref[2];
     double motor_pos[2];
     double motor_vel[2];
