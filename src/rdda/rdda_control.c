@@ -65,7 +65,7 @@ void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstO
     controlParams->cutoff_frequency_LPF[1] = controlParams->cutoff_frequency_LPF[0]; // Q_B for nominal plant
     controlParams->cutoff_frequency_LPF[2] = controlParams->cutoff_frequency_LPF[0]; // Q_C for finger damping compensation
     controlParams->cutoff_frequency_LPF[3] = controlParams->cutoff_frequency_LPF[0]; // Q_D for reference input
-    controlParams->cutoff_frequency_LPF[4] = 1000.0; // target position filter
+    controlParams->cutoff_frequency_LPF[4] = 10.0; // target position filter
     controlParams->cutoff_frequency_HPF[0] = 0.1; // for pressure
     controlParams->cutoff_frequency_HPF[1] = 0.1; // for nominal plant
     controlParams->Kp[0] = 0.0; // max stable value 40 with zeta = 0.3 and max_velocity <= 5.0 when DOB turned off
@@ -90,7 +90,7 @@ void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstO
 
     /* target position low-pass filter */
     firstOrderLowPassFilterParams->lambda[4] = 2 * M_PI * controlParams->cutoff_frequency_LPF[4];
-    secondOrderLowPassFilterParams->a1[2] = - (8.0 + 2.0 * pow((firstOrderLowPassFilterParams->lambda[4] * controlParams->sample_time), 2.0)) / (4.0 + 4.0 * 0.707 * firstOrderLowPassFilterParams->lambda[4] * controlParams->sample_time + pow((firstOrderLowPassFilterParams->lambda[4] * controlParams->sample_time), 2.0));
+    secondOrderLowPassFilterParams->a1[2] = - (-8.0 + 2.0 * pow((firstOrderLowPassFilterParams->lambda[4] * controlParams->sample_time), 2.0)) / (4.0 + 4.0 * 0.707 * firstOrderLowPassFilterParams->lambda[4] * controlParams->sample_time + pow((firstOrderLowPassFilterParams->lambda[4] * controlParams->sample_time), 2.0));
     secondOrderLowPassFilterParams->a2[2] = - (4.0 - 4.0 * 0.707 * firstOrderLowPassFilterParams->lambda[4] * controlParams->sample_time + pow((firstOrderLowPassFilterParams->lambda[4] * controlParams->sample_time), 2.0)) / (4.0 + 4.0 * 0.707 * firstOrderLowPassFilterParams->lambda[4] * controlParams->sample_time + pow((firstOrderLowPassFilterParams->lambda[4] * controlParams->sample_time), 2.0));
     secondOrderLowPassFilterParams->b0[2] = pow((firstOrderLowPassFilterParams->lambda[4] * controlParams->sample_time), 2.0) / (4.0 + 4.0 * 0.707 * firstOrderLowPassFilterParams->lambda[4] * controlParams->sample_time + pow((firstOrderLowPassFilterParams->lambda[4] * controlParams->sample_time), 2.0));
     secondOrderLowPassFilterParams->b1[2] = 2.0 * pow((firstOrderLowPassFilterParams->lambda[4] * controlParams->sample_time), 2.0) / (4.0 + 4.0 * 0.707 * firstOrderLowPassFilterParams->lambda[4] * controlParams->sample_time + pow((firstOrderLowPassFilterParams->lambda[4] * controlParams->sample_time), 2.0));
