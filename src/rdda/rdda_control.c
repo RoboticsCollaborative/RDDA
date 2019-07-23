@@ -13,6 +13,12 @@ double firstOrderIIRFilter(double input, double input_prev, double output_prev, 
     return output;
 }
 
+double secondOrderIIRFilter(double input, double input_prev, double input_prev2, double output_prev, double output_prev2, double b0, double b1, double b2, double a1, double a2) {
+    double output;
+    output = b0 * input + b1 * input_prev + b2 * input_prev2 + a1 * output_prev + a2 * output_prev2;
+    return output;
+}
+
 double trajectoryGenerator(double input, double pre_output, double max_vel, double dt) {
     double output;
     if (input - pre_output > max_vel * dt) {
@@ -123,6 +129,18 @@ void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstO
         previousVariables->prev_pos_tar[i] = rdda->motor[i].rosOut.pos_ref;
         previousVariables->filtered_pos_tar[i] = rdda->motor[i].rosOut.pos_ref;
         previousVariables->prev_filtered_pos_tar[i] = rdda->motor[i].rosOut.pos_ref;
+        previousVariables->stiffness[i] = rdda->motor[i].rosOut.stiffness;
+        previousVariables->prev_stiffness[i] = rdda->motor[i].rosOut.stiffness;
+        previousVariables->filtered_stiffness[i] = rdda->motor[i].rosOut.stiffness;
+        previousVariables->prev_filtered_stiffness[i] = rdda->motor[i].rosOut.stiffness;
+        previousVariables->vel_sat[i] = rdda->motor[i].rosOut.vel_sat;
+        previousVariables->prev_vel_sat[i] = rdda->motor[i].rosOut.vel_sat;
+        previousVariables->filtered_vel_sat[i] = rdda->motor[i].rosOut.vel_sat;
+        previousVariables->prev_filtered_vel_sat[i] = rdda->motor[i].rosOut.vel_sat;
+        previousVariables->tau_sat[i] = rdda->motor[i].rosOut.tau_sat;
+        previousVariables->prev_tau_sat[i] = rdda->motor[i].rosOut.tau_sat;
+        previousVariables->filtered_tau_sat[i] = rdda->motor[i].rosOut.tau_sat;
+        previousVariables->prev_filtered_tau_sat[i] = rdda->motor[i].rosOut.tau_sat;
         previousVariables->pos_ref[i] = rdda->motor[i].rosOut.pos_ref;
         previousVariables->motor_pos[i] = rdda->motor[i].motorIn.act_pos;
         previousVariables->motor_vel[i] = rdda->motor[i].motorIn.act_vel;
@@ -170,18 +188,29 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
     double reference_force[num];
     double filtered_reference_force[num];
 
-    double max_torque_Nm[num];
-
     double pos_tar[num];
     double filtered_pos_tar[num];
     double pos_ref[num];
     double vel_ref[num];
 
+    double stiffness[num];
+    double filtered_stiffness[num];
+
+    double vel_sat[num];
+    double filtered_vel_sat[num];
+
+    double tau_sat[num];
+    double filtered_tau_sat[num];
+
     /* position reference considering max velocity */
     for (int i = 0; i < num; i ++) {
         pos_tar[i] = rdda->motor[i].rosOut.pos_ref;
-        filtered_pos_tar[i] = secondOrderLowPassFilterParams->a1[2] * previousVariables->filtered_pos_tar[i] + secondOrderLowPassFilterParams->a2[2] * previousVariables->prev_filtered_pos_tar[i] + secondOrderLowPassFilterParams->b0[2] * pos_tar[i] + secondOrderLowPassFilterParams->b1[2] * previousVariables->pos_tar[i] + secondOrderLowPassFilterParams->b2[2] * previousVariables->prev_pos_tar[i];
-        pos_ref[i] = trajectoryGenerator(filtered_pos_tar[i], previousVariables->pos_ref[i], MIN(controlParams->max_velocity, rdda->motor[i].rosOut.vel_sat), controlParams->sample_time);
+        filtered_pos_tar[i] = secondOrderIIRFilter(pos_tar[i], previousVariables->pos_tar[i], previousVariables->prev_pos_tar[i], previousVariables->filtered_pos_tar[i], previousVariables->prev_filtered_pos_tar[i], secondOrderLowPassFilterParams->b0[2], secondOrderLowPassFilterParams->b1[2], secondOrderLowPassFilterParams->b2[2], secondOrderLowPassFilterParams->a1[2], secondOrderLowPassFilterParams->a2[2]);
+        //filtered_pos_tar[i] = secondOrderLowPassFilterParams->a1[2] * previousVariables->filtered_pos_tar[i] + secondOrderLowPassFilterParams->a2[2] * previousVariables->prev_filtered_pos_tar[i] + secondOrderLowPassFilterParams->b0[2] * pos_tar[i] + secondOrderLowPassFilterParams->b1[2] * previousVariables->pos_tar[i] + secondOrderLowPassFilterParams->b2[2] * previousVariables->prev_pos_tar[i];
+        vel_sat[i] = rdda->motor[i].rosOut.vel_sat;
+        filtered_vel_sat[i] = secondOrderIIRFilter(vel_sat[i], previousVariables->vel_sat[i], previousVariables->prev_vel_sat[i], previousVariables->filtered_vel_sat[i], previousVariables->prev_filtered_vel_sat[i], secondOrderLowPassFilterParams->b0[2], secondOrderLowPassFilterParams->b1[2], secondOrderLowPassFilterParams->b2[2], secondOrderLowPassFilterParams->a1[2], secondOrderLowPassFilterParams->a2[2]);
+        filtered_vel_sat[i] = MIN(controlParams->max_velocity, filtered_vel_sat[i]);
+        pos_ref[i] = trajectoryGenerator(filtered_pos_tar[i], previousVariables->pos_ref[i], filtered_vel_sat[i], controlParams->sample_time);
     }
 
     /* sensor reading */
@@ -194,18 +223,20 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
 
     /* Stiffness reading */
     for (int i = 0; i < num; i ++) {
-        if (rdda->motor[i].rosOut.stiffness < 0) {
-            controlParams->Kp[i] = 0.0;
+        stiffness[i] = rdda->motor[i].rosOut.stiffness;
+        filtered_stiffness[i] = secondOrderIIRFilter(stiffness[i], previousVariables->stiffness[i], previousVariables->prev_stiffness[i], previousVariables->filtered_stiffness[i], previousVariables->prev_filtered_stiffness[i], secondOrderLowPassFilterParams->b0[2], secondOrderLowPassFilterParams->b1[2], secondOrderLowPassFilterParams->b2[2], secondOrderLowPassFilterParams->a1[2], secondOrderLowPassFilterParams->a2[2]);
+        if (filtered_stiffness[i] < 0) {
+            filtered_stiffness[i] = 0.0;
         }
         else {
-            controlParams->Kp[i] = MIN(rdda->motor[i].rosOut.stiffness, controlParams->max_stiffness);
+            filtered_stiffness[i] = MIN(filtered_stiffness[i], controlParams->max_stiffness);
         }
     }
 
     /* cutoff frequency update based on Kp */
     for (int i = 0; i < 4; i ++) {
-        if ((MAX(controlParams->Kp[0], controlParams->Kp[1])) < 28.0) {
-            controlParams->cutoff_frequency_LPF[i] = 20.0 * (1.0 - (MAX(controlParams->Kp[0], controlParams->Kp[1])) / 28.0);
+        if ((MAX(filtered_stiffness[0], filtered_stiffness[1])) < 28.0) {
+            controlParams->cutoff_frequency_LPF[i] = 20.0 * (1.0 - (MAX(filtered_stiffness[0], filtered_stiffness[1])) / 28.0);
         }
         else {
             controlParams->cutoff_frequency_LPF[i] = 0.0;
@@ -217,8 +248,8 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
 
     /* PV gain calculation based on Kp */
     for (int i = 0; i < num; i ++) {
-        controlParams->Vp[i] = 2 * controlParams->zeta * sqrt(controlParams->Kp[i] * controlParams->motor_inertia[i]);
-        controlParams->Pp[i] = sqrt(controlParams->Kp[i] / controlParams->motor_inertia[i]) / (2 * controlParams->zeta);
+        controlParams->Vp[i] = 2 * controlParams->zeta * sqrt(filtered_stiffness[i] * controlParams->motor_inertia[i]);
+        controlParams->Pp[i] = sqrt(filtered_stiffness[i] / controlParams->motor_inertia[i]) / (2 * controlParams->zeta);
     }
 
     /* PV controller */
@@ -296,18 +327,18 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
         output_force[i] = (reference_force[i] + filtered_pressure[i] + filtered_finger_bk_comp_force[i] + hysteresis_force[i] - filtered_nominal_force[i]) + integral_output_force[i];
     }
 
-    /* dob inner loop saturation */
-    /*for (int i = 0; i < num; i ++) {
-        filtered_output_force[i] = firstOrderIIRFilter(output_force[i], previousVariables->output_force[i], previousVariables->filtered_output_force[i], firstOrderLowPassFilterParams->b0[0], firstOrderLowPassFilterParams->b1[0], firstOrderLowPassFilterParams->a1[0]);
-        if ((filtered_output_force[i] + filtered_pressure[i] - filtered_nominal_force[i]) > controlParams->max_inner_loop_torque_Nm) {
-            output_force[i] = controlParams->max_inner_loop_torque_Nm + filtered_reference_force[i] + filtered_finger_bk_comp_force[i] + hysteresis_force[i];
-            filtered_output_force[i] = firstOrderIIRFilter(output_force[i], previousVariables->output_force[i], previousVariables->filtered_output_force[i], firstOrderLowPassFilterParams->b0[0], firstOrderLowPassFilterParams->b1[0], firstOrderLowPassFilterParams->a1[0]);
+    /* motor output with torque saturation */
+    for (int i = 0; i < num; i ++) {
+        tau_sat[i] = rdda->motor[i].rosOut.tau_sat;
+        filtered_tau_sat[i] = secondOrderIIRFilter(tau_sat[i], previousVariables->tau_sat[i], previousVariables->prev_tau_sat[i], previousVariables->filtered_tau_sat[i], previousVariables->prev_filtered_tau_sat[i], secondOrderLowPassFilterParams->b0[2], secondOrderLowPassFilterParams->b1[2], secondOrderLowPassFilterParams->b2[2], secondOrderLowPassFilterParams->a1[2], secondOrderLowPassFilterParams->a2[2]);
+        if (filtered_tau_sat[i] < 0) {
+            filtered_tau_sat[i] = 0.0;
         }
-        else if ((filtered_output_force[i] + filtered_pressure[i] - filtered_nominal_force[i]) < -1.0 * controlParams->max_inner_loop_torque_Nm) {
-            output_force[i] = -1.0 * controlParams->max_inner_loop_torque_Nm + filtered_reference_force[i] + filtered_finger_bk_comp_force[i] + hysteresis_force[i];
-            filtered_output_force[i] = firstOrderIIRFilter(output_force[i], previousVariables->output_force[i], previousVariables->filtered_output_force[i], firstOrderLowPassFilterParams->b0[0], firstOrderLowPassFilterParams->b1[0], firstOrderLowPassFilterParams->a1[0]);
+        else {
+            filtered_tau_sat[i] = MIN(controlParams->max_torque_Nm, filtered_tau_sat[i]);
         }
-    }*/
+        rdda->motor[i].motorOut.tau_off = saturation(filtered_tau_sat[i], output_force[i]);
+    }
 
     /* previous variables update */
     for (int i = 0; i < num; i ++) {
@@ -315,6 +346,18 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
         previousVariables->pos_tar[i] = pos_tar[i];
         previousVariables->prev_filtered_pos_tar[i] = previousVariables->filtered_pos_tar[i];
         previousVariables->filtered_pos_tar[i] = filtered_pos_tar[i];
+        previousVariables->prev_stiffness[i] = previousVariables->stiffness[i];
+        previousVariables->stiffness[i] = stiffness[i];
+        previousVariables->prev_filtered_stiffness[i] = previousVariables->filtered_stiffness[i];
+        previousVariables->filtered_stiffness[i] = filtered_stiffness[i];
+        previousVariables->prev_vel_sat[i] = previousVariables->vel_sat[i];
+        previousVariables->vel_sat[i] = vel_sat[i];
+        previousVariables->prev_filtered_vel_sat[i] = previousVariables->filtered_vel_sat[i];
+        previousVariables->filtered_vel_sat[i] = filtered_vel_sat[i];
+        previousVariables->prev_tau_sat[i] = previousVariables->tau_sat[i];
+        previousVariables->tau_sat[i] = tau_sat[i];
+        previousVariables->prev_filtered_tau_sat[i] = previousVariables->filtered_tau_sat[i];
+        previousVariables->filtered_tau_sat[i] = filtered_tau_sat[i];
         previousVariables->pos_ref[i] = pos_ref[i];
         previousVariables->motor_pos[i] = motor_pos[i];
         previousVariables->motor_vel[i] = motor_vel[i];
@@ -335,24 +378,6 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
         previousVariables->filtered_output_force[i] = filtered_output_force[i];
         previousVariables->reference_force[i] = reference_force[i];
         previousVariables->filtered_reference_force[i] = filtered_reference_force[i];
-    }
-
-    /* motor output with torque saturation */
-    for (int i = 0; i < num; i ++) {
-        if (rdda->motor[i].rosOut.tau_sat < 0) {
-            max_torque_Nm[i] = 0.0;
-        }
-        else {
-            max_torque_Nm[i] = MIN(controlParams->max_torque_Nm, rdda->motor[i].rosOut.tau_sat);
-        }
-        rdda->motor[i].tau_max = max_torque_Nm[i];
-        /*if (output_force[i] > max_torque_Nm[i]) {
-            previousVariables->integral_output_force[i] = max_torque_Nm[i] - (reference_force[i] + filtered_pressure_HPF[i] + filtered_finger_bk_comp_force[i] + hysteresis_force[i] - filtered_nominal_force[i]);
-        }
-        else if (output_force[i] < -max_torque_Nm[i]) {
-            previousVariables->integral_output_force[i] = -max_torque_Nm[i] - (reference_force[i] + filtered_pressure_HPF[i] + filtered_finger_bk_comp_force[i] + hysteresis_force[i] - filtered_nominal_force[i]);
-        }*/
-        rdda->motor[i].motorOut.tau_off = saturation(rdda->motor[i].tau_max, output_force[i]);
     }
 
 }
