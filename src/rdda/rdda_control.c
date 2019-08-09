@@ -82,7 +82,7 @@ void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstO
     controlParams->Vp[1] = 0.0;
     controlParams->zeta = 0.3;
     controlParams->max_inner_loop_torque_Nm = 0.5;
-    controlParams->max_output_torque_integral_part_Nm = 0.5;
+    controlParams->max_output_torque_integral_part_Nm = 0.3;
     controlParams->max_torque_Nm = 5.0;
     controlParams->max_velocity = 10.0; // stable for Kp = 20 and cutoff_frequency_LPF[0] = 14
     controlParams->max_stiffness = 40.0;
