@@ -65,6 +65,18 @@ typedef struct
     double prev_pos_tar[2];
     double filtered_pos_tar[2];
     double prev_filtered_pos_tar[2];
+    double stiffness[2];
+    double prev_stiffness[2];
+    double filtered_stiffness[2];
+    double prev_filtered_stiffness[2];
+    double vel_sat[2];
+    double prev_vel_sat[2];
+    double filtered_vel_sat[2];
+    double prev_filtered_vel_sat[2];
+    double tau_sat[2];
+    double prev_tau_sat[2];
+    double filtered_tau_sat[2];
+    double prev_filtered_tau_sat[2];
     double pos_ref[2];
     double motor_pos[2];
     double motor_vel[2];
