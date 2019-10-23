@@ -118,7 +118,7 @@ void rdda_run (void *ifnameptr) {
         clock_gettime(CLOCK_MONOTONIC, &endTime);
         controlInterval = (endTime.tv_sec-startTime.tv_sec)*usec_per_sec + (endTime.tv_nsec-startTime.tv_nsec)/nsec_per_usec;
 //        controlInterval = controlEnd - controlStart;
-        printf("control_interval: %d us, sleep_time: %d\r", controlInterval, cycletime-controlInterval);
+        printf("control_interval: %d us, sleep_time: %d\n", controlInterval, cycletime-controlInterval);
 //        rdda_sleep(ecatSlaves, cycletime-controlInterval);
 
         mutex_unlock(&rdda->mutex);
