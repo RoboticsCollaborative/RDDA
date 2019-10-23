@@ -48,8 +48,8 @@ void rdda_update(ecat_slaves *ecatSlaves, Rdda *rdda) {
     rdda->ts.sec = ecatSlaves->ts.tv_sec;
 
     /* Outputs */
-    ecatSlaves->bel[0].out_motor->ctrl_wd = 0;
-    ecatSlaves->bel[1].out_motor->ctrl_wd = 0;
+    ecatSlaves->bel[0].out_motor->ctrl_wd = 15;
+    ecatSlaves->bel[1].out_motor->ctrl_wd = 15;
     for (int j = 0; j < 2; j++) {
         //ecatSlaves->bel[j].out_motor->ctrl_wd = 0;
         ecatSlaves->bel[j].out_motor->tg_pos = (int32)saturation(limit_int32, ecatSlaves->bel[j].init_pos_cnts + (int32)saturation(limit_int32, rdda->motor[j].motorOut.tg_pos * ecatSlaves->bel[j].counts_per_rad));
