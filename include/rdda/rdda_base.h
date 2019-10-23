@@ -11,7 +11,6 @@
 void rdda_update(ecat_slaves *ecatSlaves, Rdda *rdda);
 void rddaStop(ecat_slaves *ecatSlaves);
 int rdda_gettime(ecat_slaves *ecatSlaves);
-//int rdda_gettime(struct timespec ts)
 void rdda_sleep(ecat_slaves *ecatSlaves, int cycletime);
 void initRddaStates(ecat_slaves *ecatSlaves, Rdda *rdda);
 double saturation(double max_torque, double raw_torque);

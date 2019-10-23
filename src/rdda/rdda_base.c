@@ -90,12 +90,6 @@ int rdda_gettime(ecat_slaves *ecatSlaves) {
     clock_gettime(CLOCK_MONOTONIC, &ecatSlaves->ts);
     return (int)(ecatSlaves->ts.tv_sec * nsec_per_sec + ecatSlaves->ts.tv_nsec) / 1000 + 1;
 }
-//int rdda_gettime(struct timespec ts) {
-//    int64 nsec_per_sec = 1000000000;
-//    int64 usec_per_nsec = 1000;
-//    clock_gettime(CLOCK_MONOTONIC, &ts);
-//    return (int)(ts.tv_sec * nsec_per_sec + ts.tv_nsec) / usec_per_nsec + 1;
-//}
 
 /** Torque saturation
  *

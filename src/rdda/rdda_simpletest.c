@@ -78,28 +78,17 @@ void rdda_run (void *ifnameptr) {
     int usec_per_sec = 1000000;
     int nsec_per_usec = 1000;
     struct timespec startTime, endTime;
-//    int controlStart, controlEnd;
     int controlInterval;
     rdda_gettime(ecatSlaves);
-//    rdda_gettime(ecatSlaves->ts);
     /* Initialise timestamps */
-    clock_gettime(CLOCK_MONOTONIC, &startTime);
-    clock_gettime(CLOCK_MONOTONIC, &endTime);
     int i = 0;
     while (!done) {
 
         /* Mark start time */
-//        clock_gettime(CLOCK_MONOTONIC, &startTime);
+        clock_gettime(CLOCK_MONOTONIC, &startTime);
 
         //vel_ref = 0.0;//-4.0 * sin(time);
         time += 0.5e-3;
-
-        //start_time = rdda_gettime(ecatSlave);
-
-        /* Implement controller */
-//        rdda_sleep(ecatSlaves, cycletime);
-
-        clock_gettime(CLOCK_MONOTONIC, &startTime);
 
         mutex_lock(&rdda->mutex);
 
@@ -112,21 +101,13 @@ void rdda_run (void *ifnameptr) {
                ecatSlaves->bel[0].out_motor->tg_pos, rdda->motor[0].motorIn.act_pos, rdda->motor[0].motorIn.act_vel, rdda->psensor.analogIn.val1, rdda->motor[0].motorOut.tau_off, rdda->motor[0].motorIn.act_tau,
                ecatSlaves->bel[1].out_motor->tg_pos, rdda->motor[1].motorIn.act_pos, rdda->motor[1].motorIn.act_vel, rdda->psensor.analogIn.val2, rdda->motor[1].motorOut.tau_off
         );
-        
 
-        //end_time = rdda_gettime(ecatSlave);
-        //delta_time = cycletime - (end_time - start_time);
-        //rdda_sleep(ecatSlave, delta_time);
-//        controlInterval = controlEnd - controlStart;
-//        printf("control_interval: %d us, sleep_time: %d\n", controlInterval, cycletime-controlInterval);
-//        rdda_sleep(ecatSlaves, cycletime-controlInterval);
+        mutex_unlock(&rdda->mutex);
 
         clock_gettime(CLOCK_MONOTONIC, &endTime);
         controlInterval = (endTime.tv_sec-startTime.tv_sec)*usec_per_sec + (endTime.tv_nsec-startTime.tv_nsec)/nsec_per_usec;
 
         rdda_sleep(ecatSlaves, cycletime-controlInterval);
-
-        mutex_unlock(&rdda->mutex);
     }
 
     rddaStop(ecatSlaves);
