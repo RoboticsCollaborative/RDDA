@@ -74,10 +74,20 @@ void rdda_run (void *ifnameptr) {
     initRddaStates(ecatSlaves, rdda);
     dobInit(&controlParams, &firstOrderLowPassFilterParams, &firstOrderHighPassFilterParams, &secondOrderLowPassFilterParams, &previousVariables, rdda);
 
-    rdda_gettime(ecatSlaves);
+    /* Measure time interval for sleep */
+    struct timespec startTime, endTime;
+    int controlStart, controlEnd, controlInterval;
+//    rdda_gettime(ecatSlaves);
+    rdda_gettime(ecatSlaves->ts);
+    /* Initialise timestamps */
+    clock_gettime(CLOCK_MONOTONIC, &startTime);
+    clock_gettime(CLOCK_MONOTONIC, &endTime);
     //for (loopnum = 0; loopnum < 120000; loopnum ++) {
     int i = 0;
     while (!done) {
+
+        /* Mark start time */
+        controlStart = rdda_gettime(startTime);
 
         //vel_ref = 0.0;//-4.0 * sin(time);
         time += 0.5e-3;
@@ -94,15 +104,19 @@ void rdda_run (void *ifnameptr) {
         rdda_update(ecatSlaves, rdda);
 
         i++;
-        printf("tg_pos[0]: %+d, pos[0]: %+2.4lf, vel[0]: %+2.4lf, pre[0]: %+2.4lf, tau_off[0]: %+2.4lf, act_tau[0]: %+2.4lf, tg_pos[1]: %+d, pos[1]: %+2.4lf, vel[1]: %+2.4lf, pre[1]: %+2.4lf, tau_off[1]: %+2.4lf\r",
-               ecatSlaves->bel[0].out_motor->tg_pos, rdda->motor[0].motorIn.act_pos, rdda->motor[0].motorIn.act_vel, rdda->psensor.analogIn.val1, rdda->motor[0].motorOut.tau_off, rdda->motor[0].motorIn.act_tau,
-               ecatSlaves->bel[1].out_motor->tg_pos, rdda->motor[1].motorIn.act_pos, rdda->motor[1].motorIn.act_vel, rdda->psensor.analogIn.val2, rdda->motor[1].motorOut.tau_off
-        );
+//        printf("tg_pos[0]: %+d, pos[0]: %+2.4lf, vel[0]: %+2.4lf, pre[0]: %+2.4lf, tau_off[0]: %+2.4lf, act_tau[0]: %+2.4lf, tg_pos[1]: %+d, pos[1]: %+2.4lf, vel[1]: %+2.4lf, pre[1]: %+2.4lf, tau_off[1]: %+2.4lf\r",
+//               ecatSlaves->bel[0].out_motor->tg_pos, rdda->motor[0].motorIn.act_pos, rdda->motor[0].motorIn.act_vel, rdda->psensor.analogIn.val1, rdda->motor[0].motorOut.tau_off, rdda->motor[0].motorIn.act_tau,
+//               ecatSlaves->bel[1].out_motor->tg_pos, rdda->motor[1].motorIn.act_pos, rdda->motor[1].motorIn.act_vel, rdda->psensor.analogIn.val2, rdda->motor[1].motorOut.tau_off
+//        );
         
 
         //end_time = rdda_gettime(ecatSlave);
         //delta_time = cycletime - (end_time - start_time);
         //rdda_sleep(ecatSlave, delta_time);
+        controlEnd = rdda_gettime(endTime);
+        controlInterval = controlEnd - controlStart;
+        printf("control_interval: %d us\r", controlInterval);
+//        rdda_sleep(ecatSlaves, cycletime-controlInterval);
 
         mutex_unlock(&rdda->mutex);
     }
