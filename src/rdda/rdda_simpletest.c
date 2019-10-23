@@ -75,19 +75,18 @@ void rdda_run (void *ifnameptr) {
     dobInit(&controlParams, &firstOrderLowPassFilterParams, &firstOrderHighPassFilterParams, &secondOrderLowPassFilterParams, &previousVariables, rdda);
 
     /* Measure time interval for sleep */
-    struct timespec startTime, endTime;
-    int controlStart, controlEnd, controlInterval;
-//    rdda_gettime(ecatSlaves);
-    rdda_gettime(ecatSlaves->ts);
+//    struct timespec startTime, endTime;
+//    int controlStart, controlEnd, controlInterval;
+    rdda_gettime(ecatSlaves);
+//    rdda_gettime(ecatSlaves->ts);
     /* Initialise timestamps */
-    clock_gettime(CLOCK_MONOTONIC, &startTime);
-    clock_gettime(CLOCK_MONOTONIC, &endTime);
-    //for (loopnum = 0; loopnum < 120000; loopnum ++) {
+//    clock_gettime(CLOCK_MONOTONIC, &startTime);
+//    clock_gettime(CLOCK_MONOTONIC, &endTime);
     int i = 0;
     while (!done) {
 
         /* Mark start time */
-        controlStart = rdda_gettime(startTime);
+//        controlStart = rdda_gettime(startTime);
 
         //vel_ref = 0.0;//-4.0 * sin(time);
         time += 0.5e-3;
@@ -113,9 +112,9 @@ void rdda_run (void *ifnameptr) {
         //end_time = rdda_gettime(ecatSlave);
         //delta_time = cycletime - (end_time - start_time);
         //rdda_sleep(ecatSlave, delta_time);
-        controlEnd = rdda_gettime(endTime);
-        controlInterval = controlEnd - controlStart;
-        printf("control_interval: %d us, sleep_time: %d\r", controlInterval, cycletime-controlInterval);
+//        controlEnd = rdda_gettime(endTime);
+//        controlInterval = controlEnd - controlStart;
+//        printf("control_interval: %d us, sleep_time: %d\r", controlInterval, cycletime-controlInterval);
 //        rdda_sleep(ecatSlaves, cycletime-controlInterval);
 
         mutex_unlock(&rdda->mutex);
