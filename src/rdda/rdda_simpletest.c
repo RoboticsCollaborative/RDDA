@@ -78,7 +78,7 @@ void rdda_run (void *ifnameptr) {
     int usec_per_sec = 1000000;
     int nsec_per_usec = 1000;
     struct timespec startTime, endTime;
-//    int controlStart, controlEnd,
+//    int controlStart, controlEnd;
     int controlInterval;
     rdda_gettime(ecatSlaves);
 //    rdda_gettime(ecatSlaves->ts);
@@ -89,7 +89,7 @@ void rdda_run (void *ifnameptr) {
     while (!done) {
 
         /* Mark start time */
-        clock_gettime(CLOCK_MONOTONIC, &startTime);
+//        clock_gettime(CLOCK_MONOTONIC, &startTime);
 
         //vel_ref = 0.0;//-4.0 * sin(time);
         time += 0.5e-3;
@@ -100,6 +100,8 @@ void rdda_run (void *ifnameptr) {
         rdda_sleep(ecatSlaves, cycletime);
 
         mutex_lock(&rdda->mutex);
+
+        clock_gettime(CLOCK_MONOTONIC, &startTime);
 
         dobController(rdda, &controlParams, &firstOrderLowPassFilterParams, &firstOrderHighPassFilterParams, &secondOrderLowPassFilterParams, &previousVariables);
 
