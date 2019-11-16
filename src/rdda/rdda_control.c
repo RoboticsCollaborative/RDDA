@@ -45,7 +45,6 @@ void lowPassFilterParamsUpdate(ControlParams *controlParams, FirstOrderLowPassFi
     firstOrderLowPassFilterParams->b0[4] = 2.0 / (2.0 * controlParams->hydraulic_damping + controlParams->hydraulic_stiffness * controlParams->sample_time);
     firstOrderLowPassFilterParams->b1[4] = -2.0 / (2.0 * controlParams->hydraulic_damping + controlParams->hydraulic_stiffness * controlParams->sample_time);
     /* second order filter update */
-
     for (int i = 0; i < 2; i ++) {
         secondOrderLowPassFilterParams->a1[i] = -1.0 * ((firstOrderLowPassFilterParams->lambda[2] * controlParams->sample_time - 2.0) * (2.0 * controlParams->hydraulic_damping + controlParams->hydraulic_stiffness * controlParams->sample_time) + (2.0 + firstOrderLowPassFilterParams->lambda[2] * controlParams->sample_time) * (controlParams->hydraulic_stiffness * controlParams->sample_time - 2.0 * controlParams->hydraulic_damping)) / ((firstOrderLowPassFilterParams->lambda[2] * controlParams->sample_time + 2.0) * (2.0 * controlParams->hydraulic_damping + controlParams->hydraulic_stiffness * controlParams->sample_time));
         secondOrderLowPassFilterParams->a2[i] = -1.0 * (firstOrderLowPassFilterParams->lambda[2] * controlParams->sample_time - 2.0) * (controlParams->hydraulic_stiffness * controlParams->sample_time - 2.0 * controlParams->hydraulic_damping) / ((firstOrderLowPassFilterParams->lambda[2] * controlParams->sample_time + 2.0) * (2.0 * controlParams->hydraulic_damping + controlParams->hydraulic_stiffness * controlParams->sample_time));
@@ -74,7 +73,7 @@ void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstO
     controlParams->cutoff_frequency_LPF[4] = 10.0; // target position filter
     controlParams->cutoff_frequency_HPF[0] = 0.1; // for pressure
     controlParams->cutoff_frequency_HPF[1] = 0.1; // for nominal plant
-    controlParams->Kp[0] = 0.0; // max stable value 40 with zeta = 0.3 and max_velocity <= 5.0 when DOB turned off
+    controlParams->Kp[0] = 0.0; // max stable value 60 (40) with zeta = 0.3 and max_velocity <= 5.0 when DOB turned off
     controlParams->Pp[0] = 0.0;
     controlParams->Vp[0] = 0.0;
     controlParams->Kp[1] = controlParams->Kp[0];
@@ -231,6 +230,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
         else {
             filtered_stiffness[i] = MIN(filtered_stiffness[i], controlParams->max_stiffness);
         }
+        //filtered_stiffness[i] = controlParams->Kp[i]; // max stiffness test
     }
 
     /* cutoff frequency update based on Kp */
