@@ -325,6 +325,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
         integral_output_force[i] = previousVariables->integral_output_force[i] + firstOrderLowPassFilterParams->lambda[0] * controlParams->sample_time * (reference_force[i] + filtered_pressure[i] + filtered_finger_bk_comp_force[i] + hysteresis_force[i] - filtered_nominal_force[i]);
         integral_output_force[i] = saturation(controlParams->max_output_torque_integral_part_Nm, integral_output_force[i]);
         output_force[i] = (reference_force[i] + filtered_pressure[i] + filtered_finger_bk_comp_force[i] + hysteresis_force[i] - filtered_nominal_force[i]) + integral_output_force[i];
+        //output_force[i] = 0.7 * filtered_pressure[i]; // proportional force feedback test
     }
 
     /* motor output with torque saturation */
