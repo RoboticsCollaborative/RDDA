@@ -33,7 +33,7 @@ double stepFunction(double dmax, double dmin, double current_time)
     double dtw = 6.0; // wait time
     double dto = 0.3; // open time
     double dth = 2.0; // hold time
-    double dtc = 1.0; // close time
+    double dtc = 0.2; // close time
 
     double T = 0.0;
     T = dtw + dto + dth + dtc;
@@ -118,9 +118,9 @@ void rdda_run (void *ifnameptr) {
     /* Gripper open and close test parameters */
     double dmax = 0.0;
     double dmin = 0.0;
-    double stiffness = 2.0;
-    dmax = rdda->motor[0].motorIn.act_pos - rdda->motor[0].init_pos;
-    dmin = dmax - 0.4;
+    double stiffness = 0.0;
+    dmax = rdda->motor[0].motorIn.act_pos - rdda->motor[0].init_pos + 0.25;
+    dmin = dmax - 0.7;
 
     while (!done) {
 
