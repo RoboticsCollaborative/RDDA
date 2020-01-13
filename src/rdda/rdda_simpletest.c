@@ -30,9 +30,9 @@ double stepFunction(double dmax, double dmin, double current_time)
 {
     /* function parameters */
     double t0 = 2.0; // time to begin cycles
-    double dtw = 6.0; // wait time
+    double dtw = 4.0; // wait time
     double dto = 0.3; // open time
-    double dth = 2.0; // hold time
+    double dth = 4.0; // hold time
     double dtc = 0.2; // close time
 
     double T = 0.0;
