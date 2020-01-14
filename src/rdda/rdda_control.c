@@ -254,7 +254,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
 
     /* PV controller */
     for (int i = 0; i < num; i ++) {
-        vel_ref[i] = controlParams->Pp[i] * ((pos_ref[i]) - (motor_pos[i] - rdda->motor[i].init_pos));
+        vel_ref[i] = controlParams->Pp[i] * ((pos_ref[i] - rdda->motor[i].init_pos) - (motor_pos[i] - rdda->motor[i].init_pos));
     }
 
     /* reference force */
