@@ -27,7 +27,9 @@ include_directories(/usr/include/soem)
 
 # Add the headers from the <include> directory
 include_directories(include/${PROJECT_NAME}/ include/shm)
+include_directories(include/${PROJECT_NAME}/ include/toolbox)
 include_directories(src/${PROJECT_NAME}/ src/shm)
+include_directories(src/${PROJECT_NAME}/ src/toolbox)
 
 # Add the source files from the <src> directory
 add_library(${PROJECT_NAME}_src
@@ -35,6 +37,7 @@ add_library(${PROJECT_NAME}_src
         src/${PROJECT_NAME}/init_BEL.c
         src/${PROJECT_NAME}/rdda_base.c
         src/${PROJECT_NAME}/rdda_control.c
+        src/toolbox/contact_detect.c
         src/shm/shm.c
         )
 
