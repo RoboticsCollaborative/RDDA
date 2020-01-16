@@ -15,6 +15,7 @@
 #include "rdda_ecat.h"
 #include "rdda_base.h"
 #include "rdda_control.h"
+#include "contact_detect.h"
 #include "shm_data.h"
 #include "shm.h"
 

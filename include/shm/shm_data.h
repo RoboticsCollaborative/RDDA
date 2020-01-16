@@ -18,6 +18,11 @@ typedef struct {
     double tau_off;
 } MotorOut;
 
+/* Information sent to ROS interface */
+typedef  struct {
+    int contact_flag;
+} RosIn;
+
 /* Reference signals from ROS interface */
 typedef struct {
     double pos_ref;
@@ -36,6 +41,7 @@ typedef struct {
 typedef struct {
     MotorIn motorIn;
     MotorOut motorOut;
+    RosIn rosIn;
     RosOut rosOut;
     /* Constant */
     double tau_max;
