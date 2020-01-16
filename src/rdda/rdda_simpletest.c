@@ -72,6 +72,10 @@ void rdda_run (void *ifnameptr) {
     FirstOrderHighPassFilterParams firstOrderHighPassFilterParams;
     SecondOrderLowPassFilterParams secondOrderLowPassFilterParams;
     PreviousVariables previousVariables;
+
+    ContactDetectionParams contactDetectionParams;
+    ContactDetectionHighPassFilterParams contactDetectionHighPassFilterParams;
+    ContactDetectionPreviousVariable contactDetectionPreviousVariable;
     int cycletime;
     //int start_time, end_time;
     //int delta_time;
@@ -107,6 +111,7 @@ void rdda_run (void *ifnameptr) {
 
     initRddaStates(ecatSlaves, rdda);
     dobInit(&controlParams, &firstOrderLowPassFilterParams, &firstOrderHighPassFilterParams, &secondOrderLowPassFilterParams, &previousVariables, rdda);
+    contactDetectionInit(&contactDetectionParams, &contactDetectionHighPassFilterParams, &contactDetectionPreviousVariable, rdda);
 
     /* Measure time interval for sleep */
     int usec_per_sec = 1000000;
@@ -117,11 +122,11 @@ void rdda_run (void *ifnameptr) {
     /* Initialise timestamps */
     int i = 0;
     /* Gripper open and close test parameters */
-    double dmax = 0.0;
-    double dmin = 0.0;
-    double stiffness = 0.0;
+    //double dmax = 0.0;
+    //double dmin = 0.0;
+    double stiffness = 1.0;
     // dmax = rdda->motor[0].motorIn.act_pos - rdda->motor[0].init_pos; // + 0.25;
-    dmin = dmax - 0.4;
+    //dmin = dmax - 0.4;
 
     while (!done) {
 
@@ -133,18 +138,19 @@ void rdda_run (void *ifnameptr) {
         mutex_lock(&rdda->mutex);
 
         /* Gripper open and close test */
-        rdda->motor[0].rosOut.pos_ref = stepFunction(dmax, dmin, time);
-        rdda->motor[1].rosOut.pos_ref = stepFunction(dmax, dmin, time);
+        //rdda->motor[0].rosOut.pos_ref = stepFunction(dmax, dmin, time);
+        //rdda->motor[1].rosOut.pos_ref = stepFunction(dmax, dmin, time);
         rdda->motor[0].rosOut.stiffness = stiffness;
         rdda->motor[1].rosOut.stiffness = stiffness;
 
+        contactDetection(&contactDetectionParams, &contactDetectionHighPassFilterParams, &contactDetectionPreviousVariable, rdda);
         dobController(rdda, &controlParams, &firstOrderLowPassFilterParams, &firstOrderHighPassFilterParams, &secondOrderLowPassFilterParams, &previousVariables);
 
         rdda_update(ecatSlaves, rdda);
 
         i++;
         printf("tg_pos[0]: %+d, pos[0]: %+2.4lf, vel[0]: %+2.4lf, pre[0]: %+2.4lf, tau_off[0]: %+2.4lf, act_tau[0]: %+2.4lf, tg_pos[1]: %+d, pos[1]: %+2.4lf, vel[1]: %+2.4lf, pre[1]: %+2.4lf, tau_off[1]: %+2.4lf\r",
-               ecatSlaves->bel[0].out_motor->tg_pos, rdda->motor[0].motorIn.act_pos, rdda->motor[0].motorIn.act_vel, rdda->psensor.analogIn.val1, rdda->motor[0].motorOut.tau_off, rdda->motor[0].motorIn.act_tau,
+               rdda->motor[0].rosIn.contact_flag, rdda->motor[0].motorIn.act_pos, rdda->motor[0].motorIn.act_vel, rdda->psensor.analogIn.val1, rdda->motor[0].motorOut.tau_off, rdda->motor[0].motorIn.act_tau,
                ecatSlaves->bel[1].out_motor->tg_pos, rdda->motor[1].motorIn.act_pos, rdda->motor[1].motorIn.act_vel, rdda->psensor.analogIn.val2, rdda->motor[1].motorOut.tau_off
         );
 

@@ -56,7 +56,7 @@ void lowPassFilterParamsUpdate(ControlParams *controlParams, FirstOrderLowPassFi
 
 void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstOrderLowPassFilterParams, FirstOrderHighPassFilterParams *firstOrderHighPassFilterParams, SecondOrderLowPassFilterParams *secondOrderLowPassFilterParams, PreviousVariables *previousVariables, Rdda *rdda) {
     /* control parameters initialization */
-    controlParams->motor_inertia[0] = 0.3*1.11e-3;//1.1144e-3;
+    controlParams->motor_inertia[0] = 1.0*1.11e-3;//1.1144e-3;
     controlParams->motor_inertia[1] = 1.0*1.11e-3;//1.1144e-3;
     controlParams->motor_damping[0] = 0.0;
     controlParams->motor_damping[1] = 0.0;

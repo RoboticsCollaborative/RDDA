@@ -102,7 +102,7 @@ typedef struct
 } PreviousVariables;
 
 void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstOrderLowPassFilterParams, FirstOrderHighPassFilterParams *firstOrderHighPassFilterParams, SecondOrderLowPassFilterParams *secondOrderLowPassFilterParams, PreviousVariables *previousVariables, Rdda *rdda);
-double firstOrderIIRFilter(double input, double input_prev, double output_prev, double b0, double b1, double a1);
+//double firstOrderIIRFilter(double input, double input_prev, double output_prev, double b0, double b1, double a1);
 void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFilterParams *firstOrderLowPassFilterParams, FirstOrderHighPassFilterParams *firstOrderHighPassFilterParams, SecondOrderLowPassFilterParams *secondOrderLowPassFilterParams, PreviousVariables *previousVariables);
 
 #endif //RDDA_CONTROL_H
