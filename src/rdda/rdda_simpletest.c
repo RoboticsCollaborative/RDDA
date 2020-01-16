@@ -31,9 +31,9 @@ double stepFunction(double dmax, double dmin, double current_time)
     /* function parameters */
     double t0 = 2.0; // time to begin cycles
     double dtw = 4.0; // wait time
-    double dto = 0.3; // open time
+    double dto = 1.0; // open time
     double dth = 4.0; // hold time
-    double dtc = 0.2; // close time
+    double dtc = 1.0; // close time
 
     double T = 0.0;
     T = dtw + dto + dth + dtc;
@@ -119,8 +119,8 @@ void rdda_run (void *ifnameptr) {
     double dmax = 0.0;
     double dmin = 0.0;
     double stiffness = 0.0;
-    dmax = rdda->motor[0].motorIn.act_pos - rdda->motor[0].init_pos + 0.25;
-    dmin = dmax - 0.7;
+    // dmax = rdda->motor[0].motorIn.act_pos - rdda->motor[0].init_pos; // + 0.25;
+    dmin = dmax - 0.4;
 
     while (!done) {
 
