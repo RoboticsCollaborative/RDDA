@@ -149,10 +149,12 @@ void rdda_run (void *ifnameptr) {
         rdda_update(ecatSlaves, rdda);
 
         i++;
-        printf("tg_pos[0]: %+d, pos[0]: %+2.4lf, vel[0]: %+2.4lf, pre[0]: %+2.4lf, tau_off[0]: %+2.4lf, act_tau[0]: %+2.4lf, tg_pos[1]: %+d, pos[1]: %+2.4lf, vel[1]: %+2.4lf, pre[1]: %+2.4lf, tau_off[1]: %+2.4lf\r",
-               rdda->motor[0].rosIn.contact_flag, rdda->motor[0].motorIn.act_pos, rdda->motor[0].motorIn.act_vel, rdda->psensor.analogIn.val1, rdda->motor[0].motorOut.tau_off, rdda->motor[0].motorIn.act_tau,
-               ecatSlaves->bel[1].out_motor->tg_pos, rdda->motor[1].motorIn.act_pos, rdda->motor[1].motorIn.act_vel, rdda->psensor.analogIn.val2, rdda->motor[1].motorOut.tau_off
-        );
+        //printf("tg_pos[0]: %+d, pos[0]: %+2.4lf, vel[0]: %+2.4lf, pre[0]: %+2.4lf, tau_off[0]: %+2.4lf, act_tau[0]: %+2.4lf, tg_pos[1]: %+d, pos[1]: %+2.4lf, vel[1]: %+2.4lf, pre[1]: %+2.4lf, tau_off[1]: %+2.4lf\r",
+        //       ecatSlaves->bel[0].out_motor->tg_pos, rdda->motor[0].motorIn.act_pos, rdda->motor[0].motorIn.act_vel, rdda->psensor.analogIn.val1, rdda->motor[0].motorOut.tau_off, rdda->motor[0].motorIn.act_tau,
+        //       ecatSlaves->bel[1].out_motor->tg_pos, rdda->motor[1].motorIn.act_pos, rdda->motor[1].motorIn.act_vel, rdda->psensor.analogIn.val2, rdda->motor[1].motorOut.tau_off
+        //);
+        printf("ref: %+d, pre: %+2.4lf, pre_avg: %+2.4lf, pre_dif: %+2.6lf, pos_dif: %2.6lf, flag1: %1d, flag2: %1d, vel: %2.6lf\r",
+                rdda->motor[0].rosIn.contact_flag, rdda->psensor.analogIn.val1 - contactDetectionPreviousVariable.pressure_average[0], rdda->psensor.analogIn.val1, contactDetectionPreviousVariable.pressure_deviation[0], rdda->motor[0].motorIn.act_pos - rdda->motor[0].init_pos - rdda->motor[0].rosOut.pos_ref, contactDetectionParams.reflect_back_flag[0], contactDetectionParams.reflect_flag[0], rdda->motor[0].motorIn.act_vel);
 
         mutex_unlock(&rdda->mutex);
 
