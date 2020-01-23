@@ -26,6 +26,41 @@ void intHandler (int sig) {
     }
 }
 
+/* step function */
+double stepFunction(double dmax, double dmin, double current_time)
+{
+    /* function parameters */
+    double t0 = 2.0; // time to begin cycles
+    double dtw = 4.0; // wait time
+    double dto = 1.0; // open time
+    double dth = 4.0; // hold time
+    double dtc = 1.0; // close time
+
+    double T = 0.0;
+    T = dtw + dto + dth + dtc;
+
+    double local_time = 0.0;
+
+    if (current_time < t0) {
+        return dmax;
+    }
+    else {
+        local_time = fmod(current_time - t0, T);
+        if(local_time < dtw) {
+            return dmax;
+        }
+        else if(local_time < (dtw + dto)) {
+            return (dmax - dmin) / 2.0 * cos((local_time - dtw) * M_PI / dto) + (dmax + dmin) / 2.0;
+        }
+        else if(local_time < (dtw + dto + dth)) {
+            return dmin;
+        }
+        else {
+            return -1.0 * (dmax - dmin) / 2.0 * cos((local_time - (dtw + dto + dth)) * M_PI / dtc) + (dmax + dmin) / 2.0;
+        }
+    }
+}
+
 void rdda_run (void *ifnameptr) {
     char *ifname = ifnameptr;
     /* EtherCAT struct */
@@ -42,8 +77,6 @@ void rdda_run (void *ifnameptr) {
     //int delta_time;
     //int loopnum;
     double time = 0.0;
-
-    //double vel_ref = 0.0;
 
     /* Configure ethercat network and slaves. */
     ecatSlaves = initEcatConfig(ifname);
@@ -83,15 +116,27 @@ void rdda_run (void *ifnameptr) {
     rdda_gettime(ecatSlaves);
     /* Initialise timestamps */
     int i = 0;
+    /* Gripper open and close test parameters */
+    double dmax = 0.0;
+    double dmin = 0.0;
+    double stiffness = 0.0;
+    // dmax = rdda->motor[0].motorIn.act_pos - rdda->motor[0].init_pos; // + 0.25;
+    dmin = dmax - 0.4;
+
     while (!done) {
 
         /* Mark start time */
         clock_gettime(CLOCK_MONOTONIC, &startTime);
 
-        //vel_ref = 0.0;//-4.0 * sin(time);
         time += 0.5e-3;
 
         mutex_lock(&rdda->mutex);
+
+        /* Gripper open and close test */
+        rdda->motor[0].rosOut.pos_ref = stepFunction(dmax, dmin, time);
+        rdda->motor[1].rosOut.pos_ref = stepFunction(dmax, dmin, time);
+        rdda->motor[0].rosOut.stiffness = stiffness;
+        rdda->motor[1].rosOut.stiffness = stiffness;
 
         dobController(rdda, &controlParams, &firstOrderLowPassFilterParams, &firstOrderHighPassFilterParams, &secondOrderLowPassFilterParams, &previousVariables);
 
