@@ -17,11 +17,12 @@ typedef struct
     double pressure_threshold[2];
     double reflect_stiffness[2];
     double reflect_distance[2];
-    int intersection[2];
+    int contact_detection_time[2];
     int pressure_buffer_size[2];
     double pressure_deviation_threshold[2];
     int location[2];
     double pos_deviation[2];
+    int contact_flag_local[2];
     int reflect_flag[2];
     int reflect_back_flag[2];
     double time[2];
@@ -46,6 +47,7 @@ typedef struct
     double pressure_summation[2];
     double pressure_average[2];
     double pressure_deviation[2];
+    int contact_detection_count[2];
 } ContactDetectionPreviousVariable;
 
 void contactDetectionInit(ContactDetectionParams *contactDetectionParams, ContactDetectionHighPassFilterParams *contactDetectionHighPassFilterParams, ContactDetectionPreviousVariable *contactDetectionPreviousVariable, Rdda *rdda);

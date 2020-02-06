@@ -32,9 +32,9 @@ double stepFunction(double dmax, double dmin, double current_time)
     /* function parameters */
     double t0 = 2.0; // time to begin cycles
     double dtw = 4.0; // wait time
-    double dto = 1.0; // open time
+    double dto = 2.0; // open time
     double dth = 4.0; // hold time
-    double dtc = 1.0; // close time
+    double dtc = 0.0; // close time
 
     double T = 0.0;
     T = dtw + dto + dth + dtc;
@@ -82,6 +82,12 @@ void rdda_run (void *ifnameptr) {
     //int loopnum;
     double time = 0.0;
 
+    /* create a data file */
+    FILE *fptr;
+    char filename[] = "/home/ethercat/rdda.dat";
+    remove(filename);
+    fptr = fopen(filename, "w");
+
     /* Configure ethercat network and slaves. */
     ecatSlaves = initEcatConfig(ifname);
     if (ecatSlaves == NULL) {
@@ -122,11 +128,12 @@ void rdda_run (void *ifnameptr) {
     /* Initialise timestamps */
     int i = 0;
     /* Gripper open and close test parameters */
-    //double dmax = 0.0;
-    //double dmin = 0.0;
-    double stiffness = 1.0;
-    // dmax = rdda->motor[0].motorIn.act_pos - rdda->motor[0].init_pos; // + 0.25;
-    //dmin = dmax - 0.4;
+    double dmax = 0.0;
+    double dmin = 0.0;
+    //double stiffness = 0.0;
+    //dmax = rdda->motor[0].motorIn.act_pos - rdda->motor[0].init_pos; // + 0.25;
+    dmax = rdda->motor[0].motorIn.act_pos;
+    dmin = dmax - 0.6;
 
     while (!done) {
 
@@ -140,11 +147,15 @@ void rdda_run (void *ifnameptr) {
         /* Gripper open and close test */
         //rdda->motor[0].rosOut.pos_ref = stepFunction(dmax, dmin, time);
         //rdda->motor[1].rosOut.pos_ref = stepFunction(dmax, dmin, time);
-        rdda->motor[0].rosOut.stiffness = stiffness;
-        rdda->motor[1].rosOut.stiffness = stiffness;
+        //rdda->motor[0].rosOut.stiffness = stiffness;
+        //rdda->motor[1].rosOut.stiffness = stiffness;
 
-        contactDetection(&contactDetectionParams, &contactDetectionHighPassFilterParams, &contactDetectionPreviousVariable, rdda);
-        dobController(rdda, &controlParams, &firstOrderLowPassFilterParams, &firstOrderHighPassFilterParams, &secondOrderLowPassFilterParams, &previousVariables);
+        /* PV control target position */
+        rdda->motor[0].motorOut.tg_pos = stepFunction(dmax, dmin, time);
+        rdda->motor[1].motorOut.tg_pos = stepFunction(dmax, dmin, time);
+
+        //contactDetection(&contactDetectionParams, &contactDetectionHighPassFilterParams, &contactDetectionPreviousVariable, rdda);
+        //dobController(rdda, &controlParams, &firstOrderLowPassFilterParams, &firstOrderHighPassFilterParams, &secondOrderLowPassFilterParams, &previousVariables);
 
         rdda_update(ecatSlaves, rdda);
 
@@ -153,8 +164,11 @@ void rdda_run (void *ifnameptr) {
         //       ecatSlaves->bel[0].out_motor->tg_pos, rdda->motor[0].motorIn.act_pos, rdda->motor[0].motorIn.act_vel, rdda->psensor.analogIn.val1, rdda->motor[0].motorOut.tau_off, rdda->motor[0].motorIn.act_tau,
         //       ecatSlaves->bel[1].out_motor->tg_pos, rdda->motor[1].motorIn.act_pos, rdda->motor[1].motorIn.act_vel, rdda->psensor.analogIn.val2, rdda->motor[1].motorOut.tau_off
         //);
-        printf("ref: %+d, pre: %+2.4lf, pre_avg: %+2.4lf, pre_dif: %+2.6lf, pos_dif: %2.6lf, flag1: %1d, flag2: %1d, vel: %2.6lf\r",
-                rdda->motor[0].rosIn.contact_flag, rdda->psensor.analogIn.val1 - contactDetectionPreviousVariable.pressure_average[0], rdda->psensor.analogIn.val1, contactDetectionPreviousVariable.pressure_deviation[0], rdda->motor[0].motorIn.act_pos - rdda->motor[0].init_pos - rdda->motor[0].rosOut.pos_ref, contactDetectionParams.reflect_back_flag[0], contactDetectionParams.reflect_flag[0], rdda->motor[0].motorIn.act_vel);
+        printf("tg_pos: %+2.4lf, tg_pos_cnt: %+10d\r",
+                rdda->motor[0].motorOut.tg_pos, ecatSlaves->bel[0].init_pos_cnts);
+
+        /* save data to file */
+        fprintf(fptr, "%lf, %lf, %lf, %lf, %lf, %lf %lf\n", rdda->motor[0].motorIn.act_pos, rdda->motor[1].motorIn.act_pos, rdda->motor[0].motorIn.act_vel, rdda->motor[1].motorIn.act_vel, rdda->psensor.analogIn.val1, rdda->psensor.analogIn.val2, time);
 
         mutex_unlock(&rdda->mutex);
 
@@ -165,6 +179,9 @@ void rdda_run (void *ifnameptr) {
     }
 
     rddaStop(ecatSlaves);
+
+    /* close file */
+    fclose(fptr);
 }
 
 int main(int argc, char **argv) {
