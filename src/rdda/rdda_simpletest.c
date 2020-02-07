@@ -111,8 +111,8 @@ void rdda_run (void *ifnameptr) {
     /* These two lines are to initialize master to position mode while re-initializing piv gains,
      * comment out them when running DoB
      */
-    pivGainSDOwrite(ecatSlaves->bel[0].slave_id, 0, 0);
-    pivGainSDOwrite(ecatSlaves->bel[1].slave_id, 0, 0);
+    pivGainSDOwrite(ecatSlaves->bel[0].slave_id, 2000, 200);
+    pivGainSDOwrite(ecatSlaves->bel[1].slave_id, 2000, 200);
     /**/
 
     initRddaStates(ecatSlaves, rdda);
@@ -128,12 +128,14 @@ void rdda_run (void *ifnameptr) {
     /* Initialise timestamps */
     int i = 0;
     /* Gripper open and close test parameters */
-    double dmax = 0.0;
-    double dmin = 0.0;
+    double dmax[2];
+    double dmin[2];
     //double stiffness = 0.0;
     //dmax = rdda->motor[0].motorIn.act_pos - rdda->motor[0].init_pos; // + 0.25;
-    dmax = rdda->motor[0].motorIn.act_pos;
-    dmin = dmax - 0.6;
+    dmax[0] = rdda->motor[0].motorIn.act_pos;
+    dmax[1] = rdda->motor[1].motorIn.act_pos;
+    dmin[0] = dmax[0] - 0.8;
+    dmin[1] = dmax[1] - 0.6;
 
     while (!done) {
 
@@ -151,8 +153,8 @@ void rdda_run (void *ifnameptr) {
         //rdda->motor[1].rosOut.stiffness = stiffness;
 
         /* PV control target position */
-        rdda->motor[0].motorOut.tg_pos = stepFunction(dmax, dmin, time);
-        rdda->motor[1].motorOut.tg_pos = stepFunction(dmax, dmin, time);
+        rdda->motor[0].motorOut.tg_pos = stepFunction(dmax[0], dmin[0], time);
+        rdda->motor[1].motorOut.tg_pos = dmax[1];
 
         //contactDetection(&contactDetectionParams, &contactDetectionHighPassFilterParams, &contactDetectionPreviousVariable, rdda);
         //dobController(rdda, &controlParams, &firstOrderLowPassFilterParams, &firstOrderHighPassFilterParams, &secondOrderLowPassFilterParams, &previousVariables);
