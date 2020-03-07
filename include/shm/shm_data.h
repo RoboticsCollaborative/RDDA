@@ -64,7 +64,7 @@ typedef struct {
 
 /** EtherCAT slave class */
 typedef struct {
-    BEL_slave motor[2];
+    BEL_slave motor[3];
     EL3102_slave psensor;
     double freq_anti_alias;
     Timestamp ts;

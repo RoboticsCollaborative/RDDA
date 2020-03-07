@@ -88,7 +88,7 @@ int mapMotorPDOs_callback(uint16 slaveIdx)
 }
 
 
-/** Initialize BEL/motor parameters via SDO
+/** Initialize BEL/motor(ACD120-80-D) parameters via SDO
  *
  * @param slaveIdx      = Slave index.
  * @return 0.
@@ -110,6 +110,32 @@ int initMotor(uint16 slaveIdx)
     /* Motor limits */
     SDO_write16(slaveIdx, 0x2110, 0, 1400);     /* peak current limit */
     SDO_write16(slaveIdx, 0x2111, 0, 700);      /* continuous current limit (units of 0.01A) */
+
+    return 0;
+}
+
+/** Initialize BEL/motor(ADR110-P-22-P) parameters via SDO
+ *
+ * @param slaveIdx      = Slave index.
+ * @return 0.
+ */
+int initNewMotor(uint16 slaveIdx)
+{
+    printf("Motor drive %d init\n", slaveIdx);
+
+    /* Motor params */
+    SDO_write32(slaveIdx, 0x2383, 12, 22627);   /* motor torque constant */
+    SDO_write32(slaveIdx, 0x2383, 13, 580000);  /* motor peak torque */
+    SDO_write32(slaveIdx, 0x2383, 14, 19000);   /* motor continuous torque */
+    SDO_write32(slaveIdx, 0x6076, 0, 200);      /* motor rated torque */
+
+    /* Loop gains */
+    SDO_write16(slaveIdx, 0x2382, 1, 0);        /* position loop gain (Pp) */
+    SDO_write16(slaveIdx, 0x2381, 1, 0);        /* velocity loop gain (Vp) */
+
+    /* Motor limits */
+    SDO_write16(slaveIdx, 0x2110, 0, 2563);     /* peak current limit */
+    SDO_write16(slaveIdx, 0x2111, 0, 840);      /* continuous current limit (units of 0.01A) */
 
     return 0;
 }

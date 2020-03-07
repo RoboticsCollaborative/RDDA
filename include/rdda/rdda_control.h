@@ -99,6 +99,7 @@ typedef struct
     double filtered_output_force[2];
     double reference_force[2];
     double filtered_reference_force[2];
+    double current_reference_force[2];
 } PreviousVariables;
 
 void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstOrderLowPassFilterParams, FirstOrderHighPassFilterParams *firstOrderHighPassFilterParams, SecondOrderLowPassFilterParams *secondOrderLowPassFilterParams, PreviousVariables *previousVariables, Rdda *rdda);

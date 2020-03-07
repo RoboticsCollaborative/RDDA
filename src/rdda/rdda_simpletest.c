@@ -113,6 +113,7 @@ void rdda_run (void *ifnameptr) {
      */
     pivGainSDOwrite(ecatSlaves->bel[0].slave_id, 0, 0);
     pivGainSDOwrite(ecatSlaves->bel[1].slave_id, 0, 0);
+    pivGainSDOwrite(ecatSlaves->bel[2].slave_id, 0, 0);
     /**/
 
     initRddaStates(ecatSlaves, rdda);
@@ -130,12 +131,14 @@ void rdda_run (void *ifnameptr) {
     /* Gripper open and close test parameters */
     //double dmax[2];
     //double dmin[2];
-    double stiffness = 0.0;
-    //dmax = rdda->motor[0].motorIn.act_pos - rdda->motor[0].init_pos; // + 0.25;
-    //dmax[0] = rdda->motor[0].motorIn.act_pos;
-    //dmax[1] = rdda->motor[1].motorIn.act_pos;
-    //dmin[0] = dmax[0] - 0.8;
+    double stiffness = 0.5;
+    //dmax[0] = rdda->motor[0].motorIn.act_pos - rdda->motor[0].init_pos;
+    //dmax[1] = rdda->motor[1].motorIn.act_pos - rdda->motor[1].init_pos;
+    //dmin[0] = dmax[0] - 0.6;
     //dmin[1] = dmax[1] - 0.6;
+    /* PV controller dmax and dmin */
+    //dmax[0] = rdda->motor[0].motorIn.act_pos;
+    //dmax[1] = rdda->motor[1].motorIn.act_pos
 
     while (!done) {
 
@@ -156,18 +159,22 @@ void rdda_run (void *ifnameptr) {
         //rdda->motor[0].motorOut.tg_pos = stepFunction(dmax[0], dmin[0], time);
         //rdda->motor[1].motorOut.tg_pos = dmax[1];
 
+        /* teleoperation */
+        rdda->motor[0].rosOut.pos_ref = rdda->motor[2].motorIn.act_pos - rdda->motor[2].init_pos;
+        rdda->motor[2].motorOut.tau_off = -1.0 * previousVariables.current_reference_force[0] - 0.01 * rdda->motor[2].motorIn.act_vel;
+
         //contactDetection(&contactDetectionParams, &contactDetectionHighPassFilterParams, &contactDetectionPreviousVariable, rdda);
         dobController(rdda, &controlParams, &firstOrderLowPassFilterParams, &firstOrderHighPassFilterParams, &secondOrderLowPassFilterParams, &previousVariables);
 
         rdda_update(ecatSlaves, rdda);
 
         i++;
-        printf("tg_pos[0]: %+d, pos[0]: %+2.4lf, vel[0]: %+2.4lf, pre[0]: %+2.4lf, tau_off[0]: %+2.4lf, act_tau[0]: %+2.4lf, tg_pos[1]: %+d, pos[1]: %+2.4lf, vel[1]: %+2.4lf, pre[1]: %+2.4lf, tau_off[1]: %+2.4lf\r",
-               ecatSlaves->bel[0].out_motor->tg_pos, rdda->motor[0].motorIn.act_pos, rdda->motor[0].motorIn.act_vel, rdda->psensor.analogIn.val1, rdda->motor[0].motorOut.tau_off, rdda->motor[0].motorIn.act_tau,
-               ecatSlaves->bel[1].out_motor->tg_pos, rdda->motor[1].motorIn.act_pos, rdda->motor[1].motorIn.act_vel, rdda->psensor.analogIn.val2, rdda->motor[1].motorOut.tau_off
-        );
-        //printf("tg_pos: %+2.4lf, tg_pos_cnt: %+10d\r",
-        //        rdda->motor[0].motorOut.tg_pos, ecatSlaves->bel[0].init_pos_cnts);
+        //printf("tg_pos[0]: %+d, pos[0]: %+2.4lf, vel[0]: %+2.4lf, pre[0]: %+2.4lf, tau_off[0]: %+2.4lf, act_tau[0]: %+2.4lf, tg_pos[1]: %+d, pos[1]: %+2.4lf, vel[1]: %+2.4lf, pre[1]: %+2.4lf, tau_off[1]: %+2.4lf\r",
+        //       ecatSlaves->bel[0].out_motor->tg_pos, rdda->motor[0].motorIn.act_pos, rdda->motor[0].motorIn.act_vel, rdda->psensor.analogIn.val1, rdda->motor[0].motorOut.tau_off, rdda->motor[0].motorIn.act_tau,
+        //       ecatSlaves->bel[1].out_motor->tg_pos, rdda->motor[1].motorIn.act_pos, rdda->motor[1].motorIn.act_vel, rdda->psensor.analogIn.val2, rdda->motor[1].motorOut.tau_off
+        //);
+        printf("act_tau: %+2.4lf, cpl_tau: %+2.4lf, ref_pos: %+2.4lf, sla_pos: %+2.4lf, act_pos_cnt: %+10d\r",
+               (rdda->motor[0].motorIn.act_tau - rdda->motor[2].motorIn.act_tau)*100, previousVariables.current_reference_force[0], rdda->motor[2].motorIn.act_pos - rdda->motor[2].init_pos, rdda->motor[0].motorIn.act_pos - rdda->motor[0].init_pos, ecatSlaves->bel[1].in_motor->act_tau);
 
         /* save data to file */
         //fprintf(fptr, "%lf, %lf, %lf, %lf, %lf, %lf %lf\n", rdda->motor[0].motorIn.act_pos, rdda->motor[1].motorIn.act_pos, rdda->motor[0].motorIn.act_vel, rdda->motor[1].motorIn.act_vel, rdda->psensor.analogIn.val1, rdda->psensor.analogIn.val2, time);

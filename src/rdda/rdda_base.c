@@ -36,7 +36,7 @@ void rdda_update(ecat_slaves *ecatSlaves, Rdda *rdda) {
     //ec_send_processdata();
 
     /* Inputs */
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < 3; i++) {
         rdda->motor[i].motorIn.act_pos = (double)(ecatSlaves->bel[i].in_motor->act_pos) / ecatSlaves->bel[i].counts_per_rad;
         rdda->motor[i].motorIn.act_vel = (double)(ecatSlaves->bel[i].in_motor->act_vel) / ecatSlaves->bel[i].counts_per_rad_sec;
         rdda->motor[i].motorIn.act_tau = (double)(ecatSlaves->bel[i].in_motor->act_tau) / ecatSlaves->bel[i].units_per_nm;
@@ -48,9 +48,10 @@ void rdda_update(ecat_slaves *ecatSlaves, Rdda *rdda) {
     rdda->ts.sec = ecatSlaves->ts.tv_sec;
 
     /* Outputs */
-    ecatSlaves->bel[0].out_motor->ctrl_wd = 15;
+    ecatSlaves->bel[0].out_motor->ctrl_wd = 15;//15;
     ecatSlaves->bel[1].out_motor->ctrl_wd = 15;
-    for (int j = 0; j < 2; j++) {
+    ecatSlaves->bel[2].out_motor->ctrl_wd = 15;
+    for (int j = 0; j < 3; j++) {
         //ecatSlaves->bel[j].out_motor->ctrl_wd = 0;
         ecatSlaves->bel[j].out_motor->tg_pos = (int32)saturation(limit_int32, ecatSlaves->bel[j].init_pos_cnts + (int32)saturation(limit_int32, rdda->motor[j].motorOut.tg_pos * ecatSlaves->bel[j].counts_per_rad));
         ecatSlaves->bel[j].out_motor->vel_off = (int32)saturation(limit_int32, rdda->motor[j].motorOut.vel_off * ecatSlaves->bel[j].counts_per_rad_sec);
@@ -112,10 +113,10 @@ double saturation(double max_value, double raw_value) {
  * @param rddaSlave     =   RDDA structure (user-friendly).
  */
 void initRddaStates(ecat_slaves *ecatSlaves, Rdda *rdda) {
-    uint16  mot_id[2];
+    uint16  mot_id[3];
 
     /* Request initial data via SDO */
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < 3; i++) {
         mot_id[i] = ecatSlaves->bel[i].slave_id;
         ecatSlaves->bel[i].init_pos_cnts = positionSDOread(mot_id[i]);
         rdda->motor[i].init_pos = (double)(ecatSlaves->bel[i].init_pos_cnts) / ecatSlaves->bel[i].counts_per_rad;
@@ -126,7 +127,7 @@ void initRddaStates(ecat_slaves *ecatSlaves, Rdda *rdda) {
         rdda->motor[i].rosIn.contact_flag = 0;
         /* Init ROS outputs */
         rdda->motor[i].rosOut.pos_ref = 0.0;
-        rdda->motor[i].rosOut.vel_sat = 5.0;
+        rdda->motor[i].rosOut.vel_sat = 10.0;
         rdda->motor[i].rosOut.tau_sat = 5.0;
         rdda->motor[i].rosOut.stiffness = 0.0;
     }

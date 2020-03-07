@@ -58,7 +58,7 @@ slaveIdentify(ecat_slaves *slave) {
                 /* Set PDO mapping */
                 printf("Found %s at position %d\n", ec_slave[idx].name, idx);
                 if (1 == mapMotorPDOs_callback(idx)) {
-                    fprintf(stderr, "Motor2 mapping failed!\n");
+                    fprintf(stderr, "Motor3 mapping failed!\n");
                     exit(1);
                 }
             }
@@ -78,7 +78,7 @@ slaveIdentify(ecat_slaves *slave) {
  */
 static void
 initEcatSlaves(ecat_slaves *ecatSlave) {
-    for (int mot_id = 0; mot_id < 2; mot_id ++) {
+    for (int mot_id = 0; mot_id < 3; mot_id ++) {
         /* Input/output memory allocation */
         ecatSlave->bel[mot_id].in_motor = (motor_input *)ec_slave[ecatSlave->bel[mot_id].slave_id].inputs;
         ecatSlave->bel[mot_id].out_motor = (motor_output *)ec_slave[ecatSlave->bel[mot_id].slave_id].outputs;
@@ -90,6 +90,8 @@ initEcatSlaves(ecat_slaves *ecatSlave) {
         ecatSlave->bel[mot_id].units_per_nm = 5000.0;
     }
     ecatSlave->el3102.in_analog = (analog_input *)ec_slave[ecatSlave->el3102.slave_id].inputs;
+    ecatSlave->bel[2].counts_per_rad = 83443.0268;
+    ecatSlave->bel[2].counts_per_rad_sec = 83443.0268*10.0;
 }
 
 /** Set up EtherCAT NIC and state machine to request all slaves to work properly.
@@ -156,7 +158,7 @@ ecat_slaves *initEcatConfig(void *ifnameptr) {
 
     initMotor(ecatSlaves->bel[0].slave_id);
     initMotor(ecatSlaves->bel[1].slave_id);
-    initMotor(ecatSlaves->bel[2].slave_id);
+    initNewMotor(ecatSlaves->bel[2].slave_id);
     printf("Slaves initialized, state to OP\n");
 
     /* Check if all slaves are working properly */
