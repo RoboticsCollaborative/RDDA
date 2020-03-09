@@ -261,7 +261,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
     /* reference force */
     for (int i = 0; i < num; i ++) {
         reference_force[i] = controlParams->Vp[i] * (vel_ref[i] - motor_vel[i]);
-        previousVariables->current_reference_force[i] = reference_force[i];
+        previousVariables->current_reference_force[i] = controlParams->Vp[i] * vel_ref[i];
         filtered_reference_force[i] = firstOrderIIRFilter(reference_force[i], previousVariables->reference_force[i], previousVariables->filtered_reference_force[i], firstOrderLowPassFilterParams->b0[3], firstOrderLowPassFilterParams->b1[3], firstOrderLowPassFilterParams->a1[3]);
     }
 

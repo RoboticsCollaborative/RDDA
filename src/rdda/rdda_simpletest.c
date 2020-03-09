@@ -131,7 +131,7 @@ void rdda_run (void *ifnameptr) {
     /* Gripper open and close test parameters */
     //double dmax[2];
     //double dmin[2];
-    double stiffness = 0.5;
+    double stiffness = 2.0;
     //dmax[0] = rdda->motor[0].motorIn.act_pos - rdda->motor[0].init_pos;
     //dmax[1] = rdda->motor[1].motorIn.act_pos - rdda->motor[1].init_pos;
     //dmin[0] = dmax[0] - 0.6;
@@ -160,8 +160,10 @@ void rdda_run (void *ifnameptr) {
         //rdda->motor[1].motorOut.tg_pos = dmax[1];
 
         /* teleoperation */
-        rdda->motor[0].rosOut.pos_ref = rdda->motor[2].motorIn.act_pos - rdda->motor[2].init_pos;
-        rdda->motor[2].motorOut.tau_off = -1.0 * previousVariables.current_reference_force[0] - 0.01 * rdda->motor[2].motorIn.act_vel;
+        if (time > 0.1) {
+            rdda->motor[0].rosOut.pos_ref = rdda->motor[2].motorIn.act_pos - rdda->motor[2].init_pos;
+            rdda->motor[2].motorOut.tau_off = -1.0 * previousVariables.current_reference_force[0] - 2 * 0.3 * sqrt(stiffness * 1.0e-3) * rdda->motor[2].motorIn.act_vel;
+        }
 
         //contactDetection(&contactDetectionParams, &contactDetectionHighPassFilterParams, &contactDetectionPreviousVariable, rdda);
         dobController(rdda, &controlParams, &firstOrderLowPassFilterParams, &firstOrderHighPassFilterParams, &secondOrderLowPassFilterParams, &previousVariables);
