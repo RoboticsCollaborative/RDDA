@@ -131,8 +131,8 @@ void rdda_run (void *ifnameptr) {
     /* Gripper open and close test parameters */
     //double dmax[2];
     //double dmin[2];
-    double stiffness = 8.0;
-    double zeta = 0.15;
+    double stiffness = 10.0;
+    double zeta = 0.4;//0.15;
     //dmax[0] = rdda->motor[0].motorIn.act_pos - rdda->motor[0].init_pos;
     //dmax[1] = rdda->motor[1].motorIn.act_pos - rdda->motor[1].init_pos;
     //dmin[0] = dmax[0] - 0.6;
@@ -164,8 +164,9 @@ void rdda_run (void *ifnameptr) {
         if (time > 0.1) {
             //rdda->motor[0].rosOut.pos_ref = rdda->motor[2].motorIn.act_pos - rdda->motor[2].init_pos;
             //rdda->motor[2].motorOut.tau_off = -1.0 * previousVariables.current_reference_force[0] - 2 * 0.55 * sqrt(stiffness * 2.0e-4) * rdda->motor[2].motorIn.act_vel;
-            rdda->motor[0].motorOut.tau_off = stiffness * ((rdda->motor[2].motorIn.act_pos - rdda->motor[2].init_pos) - (rdda->motor[0].motorIn.act_pos - rdda->motor[0].init_pos)) + 2 * zeta * sqrt(stiffness * 1.0e-3) * (rdda->motor[2].motorIn.act_vel - rdda->motor[0].motorIn.act_vel);
-            rdda->motor[2].motorOut.tau_off = -1.0 * rdda->motor[0].motorOut.tau_off;
+            //rdda->motor[0].motorOut.tau_off = stiffness * ((rdda->motor[2].motorIn.act_pos - rdda->motor[2].init_pos) - (rdda->motor[0].motorIn.act_pos - rdda->motor[0].init_pos)) + 2 * zeta * sqrt(stiffness * 1.0e-3) * (rdda->motor[2].motorIn.act_vel - rdda->motor[0].motorIn.act_vel);
+            //rdda->motor[2].motorOut.tau_off = -1.0 * rdda->motor[0].motorOut.tau_off;
+            rdda->motor[2].motorOut.tau_off = -1.0 * stiffness * (rdda->motor[2].motorIn.act_pos - rdda->motor[2].init_pos) -  2 * zeta * sqrt(stiffness * 1.5e-4) * rdda->motor[2].motorIn.act_vel;
         }
 
         //contactDetection(&contactDetectionParams, &contactDetectionHighPassFilterParams, &contactDetectionPreviousVariable, rdda);
@@ -178,8 +179,8 @@ void rdda_run (void *ifnameptr) {
         //       ecatSlaves->bel[0].out_motor->tg_pos, rdda->motor[0].motorIn.act_pos, rdda->motor[0].motorIn.act_vel, rdda->psensor.analogIn.val1, rdda->motor[0].motorOut.tau_off, rdda->motor[0].motorIn.act_tau,
         //       ecatSlaves->bel[1].out_motor->tg_pos, rdda->motor[1].motorIn.act_pos, rdda->motor[1].motorIn.act_vel, rdda->psensor.analogIn.val2, rdda->motor[1].motorOut.tau_off
         //);
-        printf("act_vel: %+2.4lf, cpl_tau: %+2.4lf, ref_pos: %+2.4lf, sla_pos: %+2.4lf, act_pos_cnt: %+10d\r",
-               rdda->motor[2].motorIn.act_vel, rdda->motor[0].motorOut.tau_off, rdda->motor[2].motorIn.act_pos - rdda->motor[2].init_pos, rdda->motor[0].motorIn.act_pos - rdda->motor[0].init_pos, ecatSlaves->bel[1].in_motor->act_tau);
+        printf("act_tau: %+2.4lf, cpl_tau: %+2.4lf, ref_pos: %+2.4lf, sla_pos: %+2.4lf, act_pos_cnt: %+10d\r",
+               rdda->motor[2].motorIn.act_tau, rdda->motor[0].motorOut.tau_off, rdda->motor[2].motorIn.act_pos - rdda->motor[2].init_pos, rdda->motor[0].motorIn.act_pos - rdda->motor[0].init_pos, ecatSlaves->bel[1].in_motor->act_tau);
 
         /* save data to file */
         //fprintf(fptr, "%lf, %lf, %lf, %lf, %lf, %lf %lf\n", rdda->motor[0].motorIn.act_pos, rdda->motor[1].motorIn.act_pos, rdda->motor[0].motorIn.act_vel, rdda->motor[1].motorIn.act_vel, rdda->psensor.analogIn.val1, rdda->psensor.analogIn.val2, time);
