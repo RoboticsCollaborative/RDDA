@@ -9,6 +9,8 @@ typedef struct {
     double act_pos;
     double act_vel;
     double act_tau;
+    double load_pos;
+    double load_vel;
 } MotorIn;
 
 /** BEL drive CSP Mode outputs from master */
