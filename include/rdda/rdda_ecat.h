@@ -57,6 +57,8 @@ typedef struct
     int32 init_pos_cnts;
     double counts_per_rad;
     double counts_per_rad_sec;
+    double load_counts_per_rad;
+    doulbe load_counts_per_rad_sec;
     double pascal_per_count;
     double nm_per_pascal;
     double units_per_nm;
