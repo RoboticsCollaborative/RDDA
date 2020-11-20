@@ -113,7 +113,7 @@ void rdda_run (void *ifnameptr) {
      */
     pivGainSDOwrite(ecatSlaves->bel[0].slave_id, 0, 0);
     pivGainSDOwrite(ecatSlaves->bel[1].slave_id, 0, 0);
-    pivGainSDOwrite(ecatSlaves->bel[2].slave_id, 0, 0);
+    //pivGainSDOwrite(ecatSlaves->bel[2].slave_id, 0, 0);
     /**/
 
     initRddaStates(ecatSlaves, rdda);
@@ -132,7 +132,7 @@ void rdda_run (void *ifnameptr) {
     double dmax[2];
     double dmin[2];
     double stiffness = 1.0;
-    double zeta = 0.4;//0.15;
+    //double zeta = 0.4;//0.15;
     dmax[0] = rdda->motor[0].motorIn.act_pos - rdda->motor[0].init_pos;
     dmax[1] = rdda->motor[1].motorIn.act_pos - rdda->motor[1].init_pos;
     dmin[0] = dmax[0] - 0.6;
@@ -166,7 +166,7 @@ void rdda_run (void *ifnameptr) {
             //rdda->motor[2].motorOut.tau_off = -1.0 * previousVariables.current_reference_force[0] - 2 * 0.55 * sqrt(stiffness * 2.0e-4) * rdda->motor[2].motorIn.act_vel;
             //rdda->motor[0].motorOut.tau_off = stiffness * ((rdda->motor[2].motorIn.act_pos - rdda->motor[2].init_pos) - (rdda->motor[0].motorIn.act_pos - rdda->motor[0].init_pos)) + 2 * zeta * sqrt(stiffness * 1.0e-3) * (rdda->motor[2].motorIn.act_vel - rdda->motor[0].motorIn.act_vel);
             //rdda->motor[2].motorOut.tau_off = -1.0 * rdda->motor[0].motorOut.tau_off;
-            rdda->motor[2].motorOut.tau_off = -1.0 * stiffness * (rdda->motor[2].motorIn.act_pos - rdda->motor[2].init_pos) -  2 * zeta * sqrt(stiffness * 1.5e-4) * rdda->motor[2].motorIn.act_vel;
+            //rdda->motor[2].motorOut.tau_off = -1.0 * stiffness * (rdda->motor[2].motorIn.act_pos - rdda->motor[2].init_pos) -  2 * zeta * sqrt(stiffness * 1.5e-4) * rdda->motor[2].motorIn.act_vel;
         }
 
         //contactDetection(&contactDetectionParams, &contactDetectionHighPassFilterParams, &contactDetectionPreviousVariable, rdda);
