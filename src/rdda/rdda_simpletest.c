@@ -129,14 +129,14 @@ void rdda_run (void *ifnameptr) {
     /* Initialise timestamps */
     int i = 0;
     /* Gripper open and close test parameters */
-    //double dmax[2];
-    //double dmin[2];
-    double stiffness = 10.0;
+    double dmax[2];
+    double dmin[2];
+    double stiffness = 1.0;
     double zeta = 0.4;//0.15;
-    //dmax[0] = rdda->motor[0].motorIn.act_pos - rdda->motor[0].init_pos;
-    //dmax[1] = rdda->motor[1].motorIn.act_pos - rdda->motor[1].init_pos;
-    //dmin[0] = dmax[0] - 0.6;
-    //dmin[1] = dmax[1] - 0.6;
+    dmax[0] = rdda->motor[0].motorIn.act_pos - rdda->motor[0].init_pos;
+    dmax[1] = rdda->motor[1].motorIn.act_pos - rdda->motor[1].init_pos;
+    dmin[0] = dmax[0] - 0.6;
+    dmin[1] = dmax[1] - 0.6;
     /* PV controller dmax and dmin */
     //dmax[0] = rdda->motor[0].motorIn.act_pos;
     //dmax[1] = rdda->motor[1].motorIn.act_pos
@@ -151,8 +151,8 @@ void rdda_run (void *ifnameptr) {
         mutex_lock(&rdda->mutex);
 
         /* Gripper open and close test */
-        //rdda->motor[0].rosOut.pos_ref = stepFunction(dmax, dmin, time);
-        //rdda->motor[1].rosOut.pos_ref = stepFunction(dmax, dmin, time);
+        rdda->motor[0].rosOut.pos_ref = stepFunction(dmax[0], dmin[0], time);
+        rdda->motor[1].rosOut.pos_ref = stepFunction(dmax[1], dmin[1], time);
         rdda->motor[0].rosOut.stiffness = stiffness;
         rdda->motor[1].rosOut.stiffness = stiffness;
 
