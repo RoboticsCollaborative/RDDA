@@ -74,7 +74,11 @@ typedef struct
 /** EtherCAT slave class */
 typedef struct
 {
+<<<<<<< HEAD
     bel_slave bel[4];
+=======
+    bel_slave bel[2];
+>>>>>>> 0011060c1c3303e2bb591cfccd03be1254ee8379
     el3102_slave el3102;
     struct timespec ts;
 } ecat_slaves;
