@@ -26,44 +26,6 @@ void intHandler (int sig) {
     }
 }
 
-<<<<<<< HEAD
-=======
-/* step function */
-double stepFunction(double dmax, double dmin, double current_time)
-{
-    /* function parameters */
-    double t0 = 2.0; // time to begin cycles
-    double dtw = 4.0; // wait time
-    double dto = 2.0; // open time
-    double dth = 4.0; // hold time
-    double dtc = 1.0; // close time
-
-    double T = 0.0;
-    T = dtw + dto + dth + dtc;
-
-    double local_time = 0.0;
-
-    if (current_time < t0) {
-        return dmax;
-    }
-    else {
-        local_time = fmod(current_time - t0, T);
-        if(local_time < dtw) {
-            return dmax;
-        }
-        else if(local_time < (dtw + dto)) {
-            return (dmax - dmin) / 2.0 * cos((local_time - dtw) * M_PI / dto) + (dmax + dmin) / 2.0;
-        }
-        else if(local_time < (dtw + dto + dth)) {
-            return dmin;
-        }
-        else {
-            return -1.0 * (dmax - dmin) / 2.0 * cos((local_time - (dtw + dto + dth)) * M_PI / dtc) + (dmax + dmin) / 2.0;
-        }
-    }
-}
-
->>>>>>> 0011060c1c3303e2bb591cfccd03be1254ee8379
 void rdda_run (void *ifnameptr) {
     char *ifname = ifnameptr;
     /* EtherCAT struct */
@@ -116,12 +78,8 @@ void rdda_run (void *ifnameptr) {
      */
     pivGainSDOwrite(ecatSlaves->bel[0].slave_id, 0, 0);
     pivGainSDOwrite(ecatSlaves->bel[1].slave_id, 0, 0);
-<<<<<<< HEAD
     pivGainSDOwrite(ecatSlaves->bel[2].slave_id, 0, 0);
     pivGainSDOwrite(ecatSlaves->bel[3].slave_id, 0, 0);
-=======
-    //pivGainSDOwrite(ecatSlaves->bel[2].slave_id, 0, 0);
->>>>>>> 0011060c1c3303e2bb591cfccd03be1254ee8379
     /**/
 
     initRddaStates(ecatSlaves, rdda);
@@ -136,24 +94,8 @@ void rdda_run (void *ifnameptr) {
     rdda_gettime(ecatSlaves);
     /* Initialise timestamps */
     int i = 0;
-<<<<<<< HEAD
-
     double stiffness = 10.0;
     double zeta = 0.4;//0.15;
-=======
-    /* Gripper open and close test parameters */
-    double dmax[2];
-    double dmin[2];
-    double stiffness = 1.0;
-    //double zeta = 0.4;//0.15;
-    dmax[0] = rdda->motor[0].motorIn.act_pos - rdda->motor[0].init_pos;
-    dmax[1] = rdda->motor[1].motorIn.act_pos - rdda->motor[1].init_pos;
-    dmin[0] = dmax[0] - 0.6;
-    dmin[1] = dmax[1] - 0.6;
-    /* PV controller dmax and dmin */
-    //dmax[0] = rdda->motor[0].motorIn.act_pos;
-    //dmax[1] = rdda->motor[1].motorIn.act_pos
->>>>>>> 0011060c1c3303e2bb591cfccd03be1254ee8379
 
     while (!done) {
 
@@ -164,31 +106,13 @@ void rdda_run (void *ifnameptr) {
 
         mutex_lock(&rdda->mutex);
 
-        /* Gripper open and close test */
-<<<<<<< HEAD
-=======
-        rdda->motor[0].rosOut.pos_ref = stepFunction(dmax[0], dmin[0], time);
-        rdda->motor[1].rosOut.pos_ref = stepFunction(dmax[1], dmin[1], time);
->>>>>>> 0011060c1c3303e2bb591cfccd03be1254ee8379
-        rdda->motor[0].rosOut.stiffness = stiffness;
-        rdda->motor[1].rosOut.stiffness = stiffness;
-
         /* teleoperation */
-        //if (time > 0.1) {
-            //rdda->motor[0].rosOut.pos_ref = rdda->motor[2].motorIn.act_pos - rdda->motor[2].init_pos;
-            //rdda->motor[2].motorOut.tau_off = -1.0 * previousVariables.current_reference_force[0] - 2 * 0.55 * sqrt(stiffness * 2.0e-4) * rdda->motor[2].motorIn.act_vel;
-<<<<<<< HEAD
+        if (time > 0.1) {
             rdda->motor[0].motorOut.tau_off = stiffness * ((rdda->motor[2].motorIn.act_pos - rdda->motor[2].init_pos) - (rdda->motor[0].motorIn.act_pos - rdda->motor[0].init_pos)) + 2 * zeta * sqrt(stiffness * 1.0e-3) * (rdda->motor[2].motorIn.act_vel - rdda->motor[0].motorIn.act_vel);
             rdda->motor[1].motorOut.tau_off = stiffness * ((rdda->motor[3].motorIn.act_pos - rdda->motor[3].init_pos) - (rdda->motor[1].motorIn.act_pos - rdda->motor[1].init_pos)) + 2 * zeta * sqrt(stiffness * 1.0e-3) * (rdda->motor[3].motorIn.act_vel - rdda->motor[1].motorIn.act_vel);
             rdda->motor[2].motorOut.tau_off = -1.0 * rdda->motor[0].motorOut.tau_off;
             rdda->motor[3].motorOut.tau_off = -1.0 * rdda->motor[1].motorOut.tau_off;
         }
-=======
-            //rdda->motor[0].motorOut.tau_off = stiffness * ((rdda->motor[2].motorIn.act_pos - rdda->motor[2].init_pos) - (rdda->motor[0].motorIn.act_pos - rdda->motor[0].init_pos)) + 2 * zeta * sqrt(stiffness * 1.0e-3) * (rdda->motor[2].motorIn.act_vel - rdda->motor[0].motorIn.act_vel);
-            //rdda->motor[2].motorOut.tau_off = -1.0 * rdda->motor[0].motorOut.tau_off;
-            //rdda->motor[2].motorOut.tau_off = -1.0 * stiffness * (rdda->motor[2].motorIn.act_pos - rdda->motor[2].init_pos) -  2 * zeta * sqrt(stiffness * 1.5e-4) * rdda->motor[2].motorIn.act_vel;
-        //}
->>>>>>> 0011060c1c3303e2bb591cfccd03be1254ee8379
 
         //contactDetection(&contactDetectionParams, &contactDetectionHighPassFilterParams, &contactDetectionPreviousVariable, rdda);
         dobController(rdda, &controlParams, &firstOrderLowPassFilterParams, &firstOrderHighPassFilterParams, &secondOrderLowPassFilterParams, &previousVariables);
