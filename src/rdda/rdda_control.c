@@ -56,8 +56,8 @@ void lowPassFilterParamsUpdate(ControlParams *controlParams, FirstOrderLowPassFi
 
 void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstOrderLowPassFilterParams, FirstOrderHighPassFilterParams *firstOrderHighPassFilterParams, SecondOrderLowPassFilterParams *secondOrderLowPassFilterParams, PreviousVariables *previousVariables, Rdda *rdda) {
     /* control parameters initialization */
-    controlParams->motor_inertia[0] = 0.66*1.11e-3;//1.1144e-3;
-    controlParams->motor_inertia[1] = 1.0*1.11e-3;//1.1144e-3;
+    controlParams->motor_inertia[0] = 0.6*1.11e-3;//1.1144e-3;
+    controlParams->motor_inertia[1] = 0.6*1.11e-3;//1.1144e-3;
     controlParams->motor_damping[0] = 0.0;
     controlParams->motor_damping[1] = 0.0;
     controlParams->finger_damping[0] = 0.0;//1.0933e-2;//1.6933e-2;
@@ -80,7 +80,7 @@ void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstO
     controlParams->Pp[1] = 0.0;
     controlParams->Vp[1] = 0.0;
     controlParams->zeta = 0.3;
-    controlParams->max_inner_loop_torque_Nm = 0.3;
+    controlParams->max_inner_loop_torque_Nm = 0.2;
     controlParams->max_torque_Nm = 5.0;
     controlParams->max_velocity = 10.0; // stable for Kp = 20 and cutoff_frequency_LPF[0] = 14
     controlParams->max_stiffness = 40.0;
@@ -330,9 +330,10 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
         //output_force[i] += filtered_reference_force[i] + 0.0 * pressure[i];
         //output_force[i] = 1.0 * filtered_pressure[i]; // proportional force feedback test
         /* direct equation */
-        integral_output_force[i] = previousVariables->integral_output_force[i] + 2.0 * M_PI * 10.0 * controlParams->sample_time * (filtered_reference_force[i] + pressure[i] - nominal_force[i]);
-        integral_output_force[i] = saturation(controlParams->max_inner_loop_torque_Nm, integral_output_force[i]);
-        output_force[i] = filtered_reference_force[i] + integral_output_force[i] + 0.5 * pressure[i];
+        integral_output_force[i] = previousVariables->integral_output_force[i] + firstOrderLowPassFilterParams->lambda[0] * controlParams->sample_time * (reference_force[i] + pressure[i]);
+        output_force[i] = integral_output_force[i] - firstOrderLowPassFilterParams->lambda[0] * controlParams->motor_inertia[i] * motor_vel[i];
+        output_force[i] = saturation(controlParams->max_inner_loop_torque_Nm, output_force[i]);
+        output_force[i] += reference_force[i] + 0.5 * pressure[i];
     }
 
     /* motor output with torque saturation */
