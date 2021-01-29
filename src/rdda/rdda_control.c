@@ -89,6 +89,8 @@ void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstO
     controlParams->hysteresis_friction = 0.016;
     controlParams->sample_time = 0.5e-3;
     controlParams->gear_ratio = 1.33;
+    controlParams->target_torque[0] = 0.0;
+    controlParams->target_torque[1] = 0.0;
 
     /* low-pass filter parameters initialization */
     lowPassFilterParamsUpdate(controlParams, firstOrderLowPassFilterParams, secondOrderLowPassFilterParams);
@@ -324,9 +326,9 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
 
     /* output force */
     for (int i = 0; i < num; i ++) {
-        integral_output_force[i] = previousVariables->integral_output_force[i] + firstOrderLowPassFilterParams->lambda[0] * controlParams->sample_time * (reference_force[i] + filtered_pressure[i] + filtered_finger_bk_comp_force[i] + hysteresis_force[i] - filtered_nominal_force[i]);
+        integral_output_force[i] = previousVariables->integral_output_force[i] + firstOrderLowPassFilterParams->lambda[0] * controlParams->sample_time * (controlParams->target_torque[i] + reference_force[i] + filtered_pressure[i] + filtered_finger_bk_comp_force[i] + hysteresis_force[i] - filtered_nominal_force[i]);
         integral_output_force[i] = saturation(controlParams->max_output_torque_integral_part_Nm, integral_output_force[i]);
-        output_force[i] = (reference_force[i] + filtered_pressure[i] + filtered_finger_bk_comp_force[i] + hysteresis_force[i] - filtered_nominal_force[i]) + integral_output_force[i];
+        output_force[i] = (controlParams->target_torque[i] + reference_force[i] + filtered_pressure[i] + filtered_finger_bk_comp_force[i] + hysteresis_force[i] - filtered_nominal_force[i]) + integral_output_force[i];
         //output_force[i] = 0.7 * filtered_pressure[i]; // proportional force feedback test
     }
 

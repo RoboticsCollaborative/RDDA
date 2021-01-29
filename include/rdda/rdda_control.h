@@ -32,6 +32,7 @@ typedef struct
     double hysteresis_friction;
     double sample_time;
     double gear_ratio;
+    double target_torque[2];
 } ControlParams;
 
 typedef struct
