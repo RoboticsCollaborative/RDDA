@@ -52,7 +52,7 @@ slaveIdentify(ecat_slaves *slave) {
             /* motor3 */
             // new motor as tele-operator master
             if (serial_num == 0x256145e) {
-                slave->bel[2].slave_id = idx;
+                slave->bel[3].slave_id = idx;
                 /* CompleteAccess disabled for BEL drive */
                 //ec_slave[slaveIdx].CoEdetails ^= ECT_COEDET_SDOCA;
                 /* Set PDO mapping */
@@ -65,7 +65,7 @@ slaveIdentify(ecat_slaves *slave) {
             /* motor4 */
             // new motor as tele-operator master
             if (serial_num == 0x2561457) {
-                slave->bel[3].slave_id = idx;
+                slave->bel[2].slave_id = idx;
                 /* CompleteAccess disabled for BEL drive */
                 //ec_slave[slaveIdx].CoEdetails ^= ECT_COEDET_SDOCA;
                 /* Set PDO mapping */
