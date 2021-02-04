@@ -94,7 +94,8 @@ void rdda_run (void *ifnameptr) {
     rdda_gettime(ecatSlaves);
     /* Initialise timestamps */
     int i = 0;
-    double stiffness = 3.0;
+    double stiffness = 5.0;//5.0;
+    double stiffness2 = 5.0;
     double zeta = 0.15;//0.15;
 
     while (!done) {
@@ -108,10 +109,14 @@ void rdda_run (void *ifnameptr) {
 
         /* teleoperation */
         if (time > 0.1) {
-            rdda->motor[2].motorOut.tau_off = stiffness * ((rdda->motor[0].motorIn.act_pos - rdda->motor[0].init_pos) - (rdda->motor[2].motorIn.act_pos - rdda->motor[2].init_pos)) + 2 * zeta * sqrt(stiffness * 1.0e-3) * (rdda->motor[0].motorIn.act_vel - rdda->motor[2].motorIn.act_vel);
+            rdda->motor[2].motorOut.tau_off = stiffness2 * ((rdda->motor[0].motorIn.act_pos - rdda->motor[0].init_pos) - (rdda->motor[2].motorIn.act_pos - rdda->motor[2].init_pos)) + 2 * zeta * sqrt(stiffness2 * 1.0e-3) * (rdda->motor[0].motorIn.act_vel - rdda->motor[2].motorIn.act_vel);
             rdda->motor[3].motorOut.tau_off = stiffness * (-1.0 * (rdda->motor[1].motorIn.act_pos - rdda->motor[1].init_pos) - (rdda->motor[3].motorIn.act_pos - rdda->motor[3].init_pos)) + 2 * zeta * sqrt(stiffness * 1.0e-3) * (-1.0 * rdda->motor[1].motorIn.act_vel - rdda->motor[3].motorIn.act_vel);
+            /* DOB enabled */
             controlParams.target_torque[0] = -1.0 * rdda->motor[2].motorOut.tau_off;
             controlParams.target_torque[1] = rdda->motor[3].motorOut.tau_off;
+            /* simple spring-damper connection */
+            //rdda->motor[0].motorOut.tau_off = -1.0 * rdda->motor[2].motorOut.tau_off;
+            //rdda->motor[1].motorOut.tau_off = rdda->motor[3].motorOut.tau_off;
         }
 
         //contactDetection(&contactDetectionParams, &contactDetectionHighPassFilterParams, &contactDetectionPreviousVariable, rdda);
@@ -127,6 +132,7 @@ void rdda_run (void *ifnameptr) {
 
         /* save data to file */
         //fprintf(fptr, "%lf, %lf, %lf, %lf, %lf, %lf %lf\n", rdda->motor[0].motorIn.act_pos, rdda->motor[1].motorIn.act_pos, rdda->motor[0].motorIn.act_vel, rdda->motor[1].motorIn.act_vel, rdda->psensor.analogIn.val1, rdda->psensor.analogIn.val2, time);
+        //fprintf(fptr, "%lf, %lf, %lf, %lf, %lf, %lf, %lf\n", rdda->motor[0].motorIn.act_pos, rdda->motor[0].motorIn.act_vel, rdda->motor[0].motorIn.act_tau, rdda->motor[2].motorIn.act_pos, rdda->motor[2].motorIn.act_vel, rdda->motor[2].motorIn.act_tau, time);
 
         mutex_unlock(&rdda->mutex);
 
