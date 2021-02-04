@@ -60,8 +60,8 @@ void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstO
     controlParams->motor_inertia[1] = 0.9*1.11e-3;//1.1144e-3;
     controlParams->motor_damping[0] = 0.0;
     controlParams->motor_damping[1] = 0.0;
-    controlParams->finger_damping[0] = 0.0;//1.0933e-2;//1.6933e-2;
-    controlParams->finger_damping[1] = 0.0;//1.0933e-2;//1.6933e-2;
+    controlParams->finger_damping[0] = 1.0933e-2;//1.6933e-2;
+    controlParams->finger_damping[1] = 1.0933e-2;//1.6933e-2;
     controlParams->finger_stiffness[0] = 0.0;//0.0235;
     controlParams->finger_stiffness[1] = 0.0;//0.0235;
     controlParams->hydraulic_damping = 0.009257;
@@ -311,7 +311,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
         filtered_finger_bk_comp_force_pressure_part[i] = secondOrderLowPassFilterParams->b0[i] * pressure[i] + secondOrderLowPassFilterParams->b1[i] * previousVariables->pressure[i] + secondOrderLowPassFilterParams->b2[i] * previousVariables->prev_pressure[i] + secondOrderLowPassFilterParams->a1[i] * previousVariables->filtered_finger_bk_comp_force_pressure_part[i] + secondOrderLowPassFilterParams->a2[i] * previousVariables->prev_filtered_finger_bk_comp_force_pressure_part[i];
         /* total */
         filtered_finger_bk_comp_force[i] = filtered_finger_bk_comp_force_position_part[i] + filtered_finger_bk_comp_force_pressure_part[i];
-        filtered_finger_bk_comp_force[i] = 0.0;
+        //filtered_finger_bk_comp_force[i] = 0.0;
     }
 
     /* hysteresis compensation */
