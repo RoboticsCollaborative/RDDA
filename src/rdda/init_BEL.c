@@ -22,9 +22,15 @@ int SDO_write16(uint16 slave, uint16 index, uint8 subindex, uint16 value) {
     return wkc;
 }
 
-int SDO_write32 (uint16 slave, uint16 index, uint8 subindex, uint32 value) {
+int SDO_write32(uint16 slave, uint16 index, uint8 subindex, uint32 value) {
     int wkc;
     wkc = ec_SDOwrite (slave, index, subindex, FALSE, sizeof(value), &value, EC_TIMEOUTRXM);
+    return wkc;
+}
+
+int SDO_read32(uint16 slave, uint16 index, uint8 subindex, uint32 value) {
+    int wkc;
+    wkc = ec_SDOread (slave, index, subindex, FALSE, sizeof(value), &value, EC_TIMEOUTRXM);
     return wkc;
 }
 

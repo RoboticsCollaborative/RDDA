@@ -286,6 +286,17 @@ void pivGainSDOwrite(uint16 slave_id, uint16 Pp, uint16 Vp) {
     SDO_write16(slave_id, 0x2381, 1, Vp);        /* velocity loop gain (Vp) */
 }
 
+int rddaDriverErrorCheck(uint16 slave_id) {
+    uint32 status;
+    SDO_read(slave_id, 0x1002, 1, status)
+    printf("%d\n", status)
+    if (status == 0x0016) {
+        printf("Latching falut detected.\n")
+        return 1;
+    }
+    else return 0;
+}
+
 //#define EC_TIMEOUTMON 500
 
 /** Error handling in OP mode.
