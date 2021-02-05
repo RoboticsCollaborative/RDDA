@@ -28,12 +28,6 @@ int SDO_write32(uint16 slave, uint16 index, uint8 subindex, uint32 value) {
     return wkc;
 }
 
-int SDO_read32(uint16 slave, uint16 index, uint8 subindex, uint32 value) {
-    int wkc;
-    wkc = ec_SDOread (slave, index, subindex, FALSE, sizeof(value), &value, EC_TIMEOUTRXM);
-    return wkc;
-}
-
 /** Map BEL motor drive PDOs in CSP mode.
  *
  * @param[in] slaveIdx    = Slave index.

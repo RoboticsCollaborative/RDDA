@@ -128,7 +128,14 @@ void rdda_run (void *ifnameptr) {
         //       ecatSlaves->bel[0].out_motor->tg_pos, rdda->motor[0].motorIn.act_pos, rdda->motor[0].motorIn.act_vel, rdda->psensor.analogIn.val1, rdda->motor[0].motorOut.tau_off,
         //       ecatSlaves->bel[2].out_motor->tg_pos, rdda->motor[2].motorIn.act_pos, rdda->motor[2].motorIn.act_vel, rdda->psensor.analogIn.val2, rdda->motor[2].motorOut.tau_off
         //);
-        rddaDriverErrorCheck(ecatSlaves->bel[0].slave_id);
+
+        /* latching fault detection */ // ec_SDOread costs too much time, put it in another thread in the future
+        //if (i % 200 == 1) {
+            //done += rddaDriverErrorSDOcheck(ecatSlaves->bel[0].slave_id);
+            //done += rddaDriverErrorSDOcheck(ecatSlaves->bel[1].slave_id);
+            //done += rddaDriverErrorSDOcheck(ecatSlaves->bel[2].slave_id);
+            //done += rddaDriverErrorSDOcheck(ecatSlaves->bel[3].slave_id);
+        //}
 
         /* save data to file */
         //fprintf(fptr, "%lf, %lf, %lf, %lf, %lf, %lf %lf\n", rdda->motor[0].motorIn.act_pos, rdda->motor[1].motorIn.act_pos, rdda->motor[0].motorIn.act_vel, rdda->motor[1].motorIn.act_vel, rdda->psensor.analogIn.val1, rdda->psensor.analogIn.val2, time);
@@ -138,7 +145,7 @@ void rdda_run (void *ifnameptr) {
 
         clock_gettime(CLOCK_MONOTONIC, &endTime);
         controlInterval = (endTime.tv_sec-startTime.tv_sec)*usec_per_sec + (endTime.tv_nsec-startTime.tv_nsec)/nsec_per_usec;
-
+        //printf("%d\r", controlInterval);
         rdda_sleep(ecatSlaves, cycletime-controlInterval);
     }
 
