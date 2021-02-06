@@ -69,7 +69,6 @@ void rdda_run (void *ifnameptr) {
     Rdda *rdda;
     ControlParams controlParams;
     FirstOrderLowPassFilterParams firstOrderLowPassFilterParams;
-    FirstOrderHighPassFilterParams firstOrderHighPassFilterParams;
     SecondOrderLowPassFilterParams secondOrderLowPassFilterParams;
     PreviousVariables previousVariables;
 
@@ -117,7 +116,7 @@ void rdda_run (void *ifnameptr) {
     /**/
 
     initRddaStates(ecatSlaves, rdda);
-    dobInit(&controlParams, &firstOrderLowPassFilterParams, &firstOrderHighPassFilterParams, &secondOrderLowPassFilterParams, &previousVariables, rdda);
+    dobInit(&controlParams, &firstOrderLowPassFilterParams, &secondOrderLowPassFilterParams, &previousVariables, rdda);
     contactDetectionInit(&contactDetectionParams, &contactDetectionHighPassFilterParams, &contactDetectionPreviousVariable, rdda);
 
     /* Measure time interval for sleep */
@@ -170,7 +169,7 @@ void rdda_run (void *ifnameptr) {
         //}
 
         //contactDetection(&contactDetectionParams, &contactDetectionHighPassFilterParams, &contactDetectionPreviousVariable, rdda);
-        dobController(rdda, &controlParams, &firstOrderLowPassFilterParams, &firstOrderHighPassFilterParams, &secondOrderLowPassFilterParams, &previousVariables);
+        dobController(rdda, &controlParams, &firstOrderLowPassFilterParams, &secondOrderLowPassFilterParams, &previousVariables);
 
         rdda_update(ecatSlaves, rdda);
 
