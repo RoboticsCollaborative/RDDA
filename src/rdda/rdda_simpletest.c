@@ -34,7 +34,6 @@ void rdda_run (void *ifnameptr) {
     Rdda *rdda;
     ControlParams controlParams;
     FirstOrderLowPassFilterParams firstOrderLowPassFilterParams;
-    FirstOrderHighPassFilterParams firstOrderHighPassFilterParams;
     SecondOrderLowPassFilterParams secondOrderLowPassFilterParams;
     PreviousVariables previousVariables;
 
@@ -83,7 +82,7 @@ void rdda_run (void *ifnameptr) {
     /**/
 
     initRddaStates(ecatSlaves, rdda);
-    dobInit(&controlParams, &firstOrderLowPassFilterParams, &firstOrderHighPassFilterParams, &secondOrderLowPassFilterParams, &previousVariables, rdda);
+    dobInit(&controlParams, &firstOrderLowPassFilterParams, &secondOrderLowPassFilterParams, &previousVariables, rdda);
     contactDetectionInit(&contactDetectionParams, &contactDetectionHighPassFilterParams, &contactDetectionPreviousVariable, rdda);
 
     /* Measure time interval for sleep */
@@ -94,8 +93,8 @@ void rdda_run (void *ifnameptr) {
     rdda_gettime(ecatSlaves);
     /* Initialise timestamps */
     int i = 0;
-    double stiffness = 6.0;//5.0;
-    double zeta = 0.15;//0.15;
+    double zeta = 0.1;//0.15;
+    controlParams.link_stiffness = 12.0;
 
     while (!done) {
 
@@ -108,18 +107,18 @@ void rdda_run (void *ifnameptr) {
 
         /* teleoperation */
         if (time > 0.1) {
-            rdda->motor[2].motorOut.tau_off = stiffness * ((rdda->motor[0].motorIn.act_pos - rdda->motor[0].init_pos) - (rdda->motor[2].motorIn.act_pos - rdda->motor[2].init_pos)) + 2 * zeta * sqrt(stiffness * 1.0e-3) * (rdda->motor[0].motorIn.act_vel - rdda->motor[2].motorIn.act_vel);
-            rdda->motor[3].motorOut.tau_off = stiffness * (-1.0 * (rdda->motor[1].motorIn.act_pos - rdda->motor[1].init_pos) - (rdda->motor[3].motorIn.act_pos - rdda->motor[3].init_pos)) + 2 * zeta * sqrt(stiffness * 1.0e-3) * (-1.0 * rdda->motor[1].motorIn.act_vel - rdda->motor[3].motorIn.act_vel);
+            rdda->motor[2].motorOut.tau_off = controlParams.link_stiffness * ((rdda->motor[0].motorIn.act_pos - rdda->motor[0].init_pos) - (rdda->motor[2].motorIn.act_pos - rdda->motor[2].init_pos)) + 2 * zeta * sqrt(controlParams.link_stiffness * 1.0e-3) * (rdda->motor[0].motorIn.act_vel - rdda->motor[2].motorIn.act_vel);
+            rdda->motor[3].motorOut.tau_off = controlParams.link_stiffness * (-1.0 * (rdda->motor[1].motorIn.act_pos - rdda->motor[1].init_pos) - (rdda->motor[3].motorIn.act_pos - rdda->motor[3].init_pos)) + 2 * zeta * sqrt(controlParams.link_stiffness * 1.0e-3) * (-1.0 * rdda->motor[1].motorIn.act_vel - rdda->motor[3].motorIn.act_vel);
             /* DOB enabled */
-            controlParams.target_torque[0] = -1.0 * rdda->motor[2].motorOut.tau_off;
-            controlParams.target_torque[1] = rdda->motor[3].motorOut.tau_off;
+            controlParams.external_force[0] = -1.0 * rdda->motor[2].motorOut.tau_off;
+            controlParams.external_force[1] = rdda->motor[3].motorOut.tau_off;
             /* simple spring-damper connection */
             //rdda->motor[0].motorOut.tau_off = -1.0 * rdda->motor[2].motorOut.tau_off;
             //rdda->motor[1].motorOut.tau_off = rdda->motor[3].motorOut.tau_off;
         }
 
         //contactDetection(&contactDetectionParams, &contactDetectionHighPassFilterParams, &contactDetectionPreviousVariable, rdda);
-        dobController(rdda, &controlParams, &firstOrderLowPassFilterParams, &firstOrderHighPassFilterParams, &secondOrderLowPassFilterParams, &previousVariables);
+        dobController(rdda, &controlParams, &firstOrderLowPassFilterParams, &secondOrderLowPassFilterParams, &previousVariables);
 
         rdda_update(ecatSlaves, rdda);
 
