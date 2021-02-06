@@ -236,7 +236,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
         filtered_finger_bk_comp_force_pressure_part[i] = firstOrderIIRFilter(pressure[i], previousVariables->pressure[i], previousVariables->filtered_finger_bk_comp_force_pressure_part[i], firstOrderLowPassFilterParams->friction_cmp_b0[i], firstOrderLowPassFilterParams->friction_cmp_b1[i], firstOrderLowPassFilterParams->friction_cmp_a1[i]);
         /* total */
         finger_bk_comp_force[i] = finger_bk_comp_force_position_part[i] + filtered_finger_bk_comp_force_pressure_part[i];
-        finger_bk_comp_force[i] = 0.0;
+        //finger_bk_comp_force[i] = 0.0;
     }
 
     /* hysteresis compensation */
