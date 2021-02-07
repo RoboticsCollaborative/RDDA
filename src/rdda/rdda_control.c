@@ -35,8 +35,8 @@ double trajectoryGenerator(double input, double pre_output, double max_vel, doub
 
 void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstOrderLowPassFilterParams, SecondOrderLowPassFilterParams *secondOrderLowPassFilterParams, PreviousVariables *previousVariables, Rdda *rdda) {
     /* control parameters initialization */
-    controlParams->motor_inertia[0] = 0.9*1.11e-3;//1.1144e-3;
-    controlParams->motor_inertia[1] = 0.9*1.11e-3;//1.1144e-3;
+    controlParams->motor_inertia[0] = 0.6*1.11e-3;//1.1144e-3;
+    controlParams->motor_inertia[1] = 0.6*1.11e-3;//1.1144e-3;
     controlParams->motor_damping[0] = 0.0;
     controlParams->motor_damping[1] = 0.0;
     controlParams->finger_damping[0] = 1.0933e-2;//1.6933e-2;
@@ -255,7 +255,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
         integral_control_force[i] = previousVariables->integral_control_force[i] + controlParams->lambda[0] * controlParams->sample_time * (reference_force[i] + pressure[i] + finger_bk_comp_force[i] + hysteresis_force[i]);
         saturated_feedback_force[i] = integral_control_force[i] - nominal_force_integration[i];
         saturated_feedback_force[i] = saturation(controlParams->max_inner_loop_torque_Nm, saturated_feedback_force[i]);
-        output_force[i] = saturated_feedback_force[i] + reference_force[i] + finger_bk_comp_force[i] + hysteresis_force[i]; //+ 0.5 * pressure[i];
+        output_force[i] = saturated_feedback_force[i] + reference_force[i] + finger_bk_comp_force[i] + hysteresis_force[i] + 0.5 * pressure[i];
     }
 
     /* motor output with torque saturation */
