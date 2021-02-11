@@ -43,17 +43,20 @@ void rdda_update(ecat_slaves *ecatSlaves, Rdda *rdda) {
         rdda->motor[i].motorIn.load_pos = (double)(ecatSlaves->bel[i].in_motor->load_pos) / ecatSlaves->bel[i].load_counts_per_rad;
         rdda->motor[i].motorIn.load_vel = (double)(ecatSlaves->bel[i].in_motor->load_vel) / ecatSlaves->bel[i].load_counts_per_rad_sec;
     }
-    rdda->psensor.analogIn.val1 = (double)(ecatSlaves->el3102.in_analog->val1 - pressure_offset) * ecatSlaves->bel[0].pascal_per_count * ecatSlaves->bel[0].nm_per_pascal;
+    //rdda->psensor.analogIn.val1 = (double)(ecatSlaves->el3102.in_analog->val1 - pressure_offset) * ecatSlaves->bel[0].pascal_per_count * ecatSlaves->bel[0].nm_per_pascal;
+    rdda->psensor.analogIn.val1 = (double)(ecatSlaves->el3702.in_analog->val1 - pressure_offset) * ecatSlaves->bel[0].pascal_per_count * ecatSlaves->bel[0].nm_per_pascal;
+    //printf("%+5d, %+5d \r", ecatSlaves->el3702.in_analog->val1, ecatSlaves->el3702.in_analog->val2);
+    printf("%+d, %+d\r", ecatSlaves->bel[2].in_motor->act_vel, ecatSlaves->bel[3].in_motor->act_vel);
     rdda->psensor.analogIn.val2 = (double)(ecatSlaves->el3102.in_analog->val2 - pressure_offset) * ecatSlaves->bel[1].pascal_per_count * ecatSlaves->bel[1].nm_per_pascal;
 
     rdda->ts.nsec = ecatSlaves->ts.tv_nsec;
     rdda->ts.sec = ecatSlaves->ts.tv_sec;
 
     /* Outputs */
-    ecatSlaves->bel[0].out_motor->ctrl_wd = 15;//15;
-    ecatSlaves->bel[1].out_motor->ctrl_wd = 15;
-    ecatSlaves->bel[2].out_motor->ctrl_wd = 15;
-    ecatSlaves->bel[3].out_motor->ctrl_wd = 15;
+    ecatSlaves->bel[0].out_motor->ctrl_wd = 0;//15;
+    ecatSlaves->bel[1].out_motor->ctrl_wd = 0;
+    ecatSlaves->bel[2].out_motor->ctrl_wd = 0;
+    ecatSlaves->bel[3].out_motor->ctrl_wd = 0;
     for (int j = 0; j < 4; j++) {
         //ecatSlaves->bel[j].out_motor->ctrl_wd = 0;
         ecatSlaves->bel[j].out_motor->tg_pos = (int32)saturation(limit_int32, ecatSlaves->bel[j].init_pos_cnts + (int32)saturation(limit_int32, rdda->motor[j].motorOut.tg_pos * ecatSlaves->bel[j].counts_per_rad));

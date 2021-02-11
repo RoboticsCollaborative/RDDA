@@ -80,6 +80,10 @@ slaveIdentify(ecat_slaves *slave) {
         if ((ec_slave[idx].eep_man == 0x00000002) && (ec_slave[idx].eep_id == 0x0c1e3052)) {
             slave->el3102.slave_id = idx;
         }
+        /* pressure sensor */
+        if ((ec_slave[idx].eep_man == 0x00000002) && (ec_slave[idx].eep_id == 0x0e763052)) {
+            slave->el3702.slave_id = idx;
+        }
     }
 
     return 0;
@@ -106,6 +110,7 @@ initEcatSlaves(ecat_slaves *ecatSlave) {
         ecatSlave->bel[mot_id].units_per_nm = 5000.0;
     }
     ecatSlave->el3102.in_analog = (analog_input *)ec_slave[ecatSlave->el3102.slave_id].inputs;
+    ecatSlave->el3702.in_analog = (analog_el3702_input *)ec_slave[ecatSlave->el3702.slave_id].inputs;
 
     /* new motor setup */
     for (int mot_id = 2; mot_id < 4; mot_id ++) {
@@ -170,16 +175,22 @@ ecat_slaves *initEcatConfig(void *ifnameptr) {
     /* Locate slaves */
     slaveIdentify(ecatSlaves);
     printf("psensor_id: %d\n", ecatSlaves->el3102.slave_id);
-    if (ecatSlaves->bel[0].slave_id == 0 || ecatSlaves->bel[1].slave_id == 0 || ecatSlaves->bel[2].slave_id == 0 || ecatSlaves->bel[3].slave_id == 0 || ecatSlaves->el3102.slave_id == 0) {
+    printf("psensor_id: %d\n", ecatSlaves->el3702.slave_id);
+    if (ecatSlaves->bel[0].slave_id == 0 || ecatSlaves->bel[1].slave_id == 0 || ecatSlaves->bel[2].slave_id == 0 || ecatSlaves->bel[3].slave_id == 0 || ecatSlaves->el3102.slave_id == 0 || ecatSlaves->el3702.slave_id == 0) {
         fprintf(stderr, "Slaves identification failure!");
         exit(1);
     }
+
+    ec_configdc();
+    //printf("%d\n", ecatSlaves->el3702.slave_id);
+
+    ec_dcsync01(ecatSlaves->el3702.slave_id, TRUE,100000, 100000,0);
 
     /* If Complete Access (CA) disabled => auto-mapping work */
     ec_config_map(&IOmap);
 
     /* Let DC off for the time being */
-    ec_configdc(); // DC should be launched for each identified slave
+    //ec_configdc(); // DC should be launched for each identified slave
 
     printf("Slaves mapped, state to SAFE_OP\n");
     /* Wait for all salves to reach SAFE_OP state */
@@ -200,16 +211,18 @@ ecat_slaves *initEcatConfig(void *ifnameptr) {
     /* Send one valid process data to make outputs in slave happy */
     ec_send_processdata();
     wkc = ec_receive_processdata(EC_TIMEOUTRET);
-    if (wkc < expectedWKC) {
+
+    /* el3702's second reading is not working */
+    if (wkc < expectedWKC - 1) {
         fprintf(stderr, "WKC failure.\n");
         exit(1);
     }
 
     /* Request OP state for all slaves */
     ec_writestate(0);
+
     /* Wait for all slaves to reach OP state */
     ec_statecheck(0, EC_STATE_OPERATIONAL, EC_TIMEOUTSTATE);
-
     /* Initialize slaves before use */
     initEcatSlaves(ecatSlaves);
 
