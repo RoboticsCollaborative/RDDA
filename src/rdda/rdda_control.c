@@ -37,15 +37,23 @@ void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstO
     /* control parameters initialization */
     controlParams->motor_inertia[0] = 0.9*1.11e-3;//1.1144e-3;
     controlParams->motor_inertia[1] = 0.9*1.11e-3;//1.1144e-3;
+    controlParams->motor_inertia[2] = 1.6*1.463e-4;//1.1144e-3;
+    controlParams->motor_inertia[3] = 1.6*1.463e-4;//1.1144e-3;
     controlParams->motor_damping[0] = 0.0;
     controlParams->motor_damping[1] = 0.0;
+    controlParams->motor_damping[2] = 0.0;
+    controlParams->motor_damping[3] = 0.0;
     controlParams->finger_damping[0] = 1.0933e-2;//1.6933e-2;
     controlParams->finger_damping[1] = 1.0933e-2;//1.6933e-2;
+    controlParams->finger_damping[2] = 1.0933e-2;//1.6933e-2;
+    controlParams->finger_damping[3] = 1.0933e-2;//1.6933e-2;
     controlParams->finger_stiffness[0] = 0.0;//0.0235;
     controlParams->finger_stiffness[1] = 0.0;//0.0235;
+    controlParams->finger_stiffness[2] = 0.0;//0.0235;
+    controlParams->finger_stiffness[3] = 0.0;//0.0235;
     controlParams->hydraulic_damping = 0.009257;
     controlParams->hydraulic_stiffness = 13.0948;
-    controlParams->cutoff_frequency_LPF[0] = 20.0; // Q for overall DOB
+    controlParams->cutoff_frequency_LPF[0] = 10.0; // Q for overall DOB
     controlParams->cutoff_frequency_LPF[1] = 10.0; // target position filter
     controlParams->lambda[0] = 2.0 * M_PI * controlParams->cutoff_frequency_LPF[0];
     controlParams->lambda[1] = 2.0 * M_PI * controlParams->cutoff_frequency_LPF[1];
@@ -55,6 +63,12 @@ void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstO
     controlParams->Kp[1] = controlParams->Kp[0];
     controlParams->Pp[1] = 0.0;
     controlParams->Vp[1] = 0.0;
+    controlParams->Kp[2] = controlParams->Kp[0];
+    controlParams->Pp[2] = 0.0;
+    controlParams->Vp[2] = 0.0;
+    controlParams->Kp[3] = controlParams->Kp[0];
+    controlParams->Pp[3] = 0.0;
+    controlParams->Vp[3] = 0.0;
     controlParams->zeta = 0.3;
     controlParams->max_inner_loop_torque_Nm = 0.2;
     controlParams->max_torque_Nm = 5.0;
@@ -66,11 +80,12 @@ void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstO
     controlParams->gear_ratio = 1.33;
     controlParams->external_force[0] = 0.0;
     controlParams->external_force[1] = 0.0;
-
+    controlParams->external_force[2] = 0.0;
+    controlParams->external_force[3] = 0.0;
     controlParams->link_stiffness = 0.0;
 
     /* friction compensation and hysteresis filter parameters initialization */
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < 4; i++) {
         firstOrderLowPassFilterParams->friction_cmp_a1[i] = (2.0 * controlParams->hydraulic_damping - controlParams->hydraulic_stiffness * controlParams->sample_time) / (2.0 * controlParams->hydraulic_damping + controlParams->hydraulic_stiffness * controlParams->sample_time);
         firstOrderLowPassFilterParams->friction_cmp_b0[i] = (controlParams->finger_stiffness[i] * controlParams->sample_time + 2.0 * controlParams->finger_damping[i]) / (2.0 * controlParams->hydraulic_damping + controlParams->hydraulic_stiffness * controlParams->sample_time);
         firstOrderLowPassFilterParams->friction_cmp_b1[i] = (controlParams->finger_stiffness[i] * controlParams->sample_time - 2.0 * controlParams->finger_damping[i]) / (2.0 * controlParams->hydraulic_damping + controlParams->hydraulic_stiffness * controlParams->sample_time);
@@ -89,10 +104,14 @@ void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstO
     /* previous variables initialization */
     previousVariables->pressure[0] = rdda->psensor.analogIn.val1;
     previousVariables->pressure[1] = rdda->psensor.analogIn.val2;
+    previousVariables->pressure[2] = rdda->psensor.analogIn.val3;
+    previousVariables->pressure[3] = rdda->psensor.analogIn.val4;
     previousVariables->filtered_finger_bk_comp_force_pressure_part[0] = rdda->psensor.analogIn.val1 * controlParams->finger_stiffness[0] / controlParams->hydraulic_stiffness;
     previousVariables->filtered_finger_bk_comp_force_pressure_part[1] = rdda->psensor.analogIn.val2 * controlParams->finger_stiffness[1] / controlParams->hydraulic_stiffness;
+    previousVariables->filtered_finger_bk_comp_force_pressure_part[2] = rdda->psensor.analogIn.val1 * controlParams->finger_stiffness[2] / controlParams->hydraulic_stiffness;
+    previousVariables->filtered_finger_bk_comp_force_pressure_part[3] = rdda->psensor.analogIn.val2 * controlParams->finger_stiffness[3] / controlParams->hydraulic_stiffness;
 
-    for (int i = 0; i < 2; i ++) {
+    for (int i = 0; i < 4; i ++) {
         previousVariables->pos_tar[i] = rdda->motor[i].rosOut.pos_ref;
         previousVariables->prev_pos_tar[i] = rdda->motor[i].rosOut.pos_ref;
         previousVariables->filtered_pos_tar[i] = rdda->motor[i].rosOut.pos_ref;
@@ -118,7 +137,7 @@ void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstO
 
 void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFilterParams *firstOrderLowPassFilterParams, SecondOrderLowPassFilterParams *secondOrderLowPassFilterParams, PreviousVariables *previousVariables) {
     /* dob parameters */
-    int num = 2;
+    int num = 4;
     double motor_pos[num];
     double motor_vel[num];
     double finger_vel[num];
@@ -166,6 +185,8 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
     /* sensor reading */
     pressure[0] = rdda->psensor.analogIn.val1;
     pressure[1] = rdda->psensor.analogIn.val2;
+    pressure[2] = rdda->psensor.analogIn.val3;
+    pressure[3] = rdda->psensor.analogIn.val4;
     for (int i = 0; i < num; i ++) {
         motor_pos[i] = rdda->motor[i].motorIn.act_pos;
         motor_vel[i] = rdda->motor[i].motorIn.act_vel;
@@ -192,7 +213,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
         controlParams->cutoff_frequency_LPF[0] = 0.0;
     }
 
-    /* cutoff frequency update based on Kp */
+    /* cutoff frequency update based on coupling stiffness */
     if ( controlParams->link_stiffness < 28.0) {
         controlParams->cutoff_frequency_LPF[0] = 20.0 * (1.0 - controlParams->link_stiffness / 28.0);
     }
@@ -271,7 +292,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
     }
 
     /* motor output with torque saturation */
-    for (int i = 0; i < num; i ++) {
+    for (int i = 0; i < 2; i ++) {
         tau_sat[i] = rdda->motor[i].rosOut.tau_sat;
         filtered_tau_sat[i] = secondOrderIIRFilter(tau_sat[i], previousVariables->tau_sat[i], previousVariables->prev_tau_sat[i], previousVariables->filtered_tau_sat[i], previousVariables->prev_filtered_tau_sat[i], secondOrderLowPassFilterParams->b0, secondOrderLowPassFilterParams->b1, secondOrderLowPassFilterParams->b2, secondOrderLowPassFilterParams->a1, secondOrderLowPassFilterParams->a2);
         if (filtered_tau_sat[i] < 0) {

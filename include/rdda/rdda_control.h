@@ -11,17 +11,17 @@
 
 typedef struct
 {
-    double motor_inertia[2];
-    double motor_damping[2];
-    double finger_damping[2];
-    double finger_stiffness[2];
+    double motor_inertia[4];
+    double motor_damping[4];
+    double finger_damping[4];
+    double finger_stiffness[4];
     double hydraulic_stiffness;
     double hydraulic_damping;
     double cutoff_frequency_LPF[2];
     double lambda[2]; // cut-off frequency(rad/s)
-    double Kp[2];
-    double Pp[2];
-    double Vp[2];
+    double Kp[4];
+    double Pp[4];
+    double Vp[4];
     double zeta;
     double max_inner_loop_torque_Nm;
     double max_torque_Nm;
@@ -31,15 +31,15 @@ typedef struct
     double hysteresis_friction;
     double sample_time;
     double gear_ratio;
-    double external_force[2];
+    double external_force[4];
     double link_stiffness;
 } ControlParams;
 
 typedef struct
 {
-    double friction_cmp_a1[2];
-    double friction_cmp_b0[2];
-    double friction_cmp_b1[2];
+    double friction_cmp_a1[4];
+    double friction_cmp_b0[4];
+    double friction_cmp_b1[4];
     double hysteresis_a1;
     double hysteresis_b0;
     double hysteresis_b1;
@@ -56,28 +56,28 @@ typedef struct
 
 typedef struct
 {
-    double pos_tar[2];
-    double prev_pos_tar[2];
-    double filtered_pos_tar[2];
-    double prev_filtered_pos_tar[2];
-    double stiffness[2];
-    double prev_stiffness[2];
-    double filtered_stiffness[2];
-    double prev_filtered_stiffness[2];
-    double vel_sat[2];
-    double prev_vel_sat[2];
-    double filtered_vel_sat[2];
-    double prev_filtered_vel_sat[2];
-    double tau_sat[2];
-    double prev_tau_sat[2];
-    double filtered_tau_sat[2];
-    double pos_ref[2];
-    double pressure[2];
-    double prev_filtered_tau_sat[2];
-    double finger_vel_pressure_part[2];
-    double hysteresis_force[2];
-    double filtered_finger_bk_comp_force_pressure_part[2];
-    double integral_control_force[2];
+    double pos_tar[4];
+    double prev_pos_tar[4];
+    double filtered_pos_tar[4];
+    double prev_filtered_pos_tar[4];
+    double stiffness[4];
+    double prev_stiffness[4];
+    double filtered_stiffness[4];
+    double prev_filtered_stiffness[4];
+    double vel_sat[4];
+    double prev_vel_sat[4];
+    double filtered_vel_sat[4];
+    double prev_filtered_vel_sat[4];
+    double tau_sat[4];
+    double prev_tau_sat[4];
+    double filtered_tau_sat[4];
+    double pos_ref[4];
+    double pressure[4];
+    double prev_filtered_tau_sat[4];
+    double finger_vel_pressure_part[4];
+    double hysteresis_force[4];
+    double filtered_finger_bk_comp_force_pressure_part[4];
+    double integral_control_force[4];
 } PreviousVariables;
 
 void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstOrderLowPassFilterParams, SecondOrderLowPassFilterParams *secondOrderLowPassFilterParams, PreviousVariables *previousVariables, Rdda *rdda);

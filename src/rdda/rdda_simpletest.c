@@ -93,8 +93,8 @@ void rdda_run (void *ifnameptr) {
     rdda_gettime(ecatSlaves);
     /* Initialise timestamps */
     int i = 0;
-    double zeta = 0.1;//0.15;
-    controlParams.link_stiffness = 12.0;
+    double zeta = 0.14;//0.1;
+    controlParams.link_stiffness = 12.0; //12.0;
 
     while (!done) {
 
@@ -110,6 +110,8 @@ void rdda_run (void *ifnameptr) {
             rdda->motor[2].motorOut.tau_off = controlParams.link_stiffness * ((rdda->motor[0].motorIn.act_pos - rdda->motor[0].init_pos) - (rdda->motor[2].motorIn.act_pos - rdda->motor[2].init_pos)) + 2 * zeta * sqrt(controlParams.link_stiffness * 1.0e-3) * (rdda->motor[0].motorIn.act_vel - rdda->motor[2].motorIn.act_vel);
             rdda->motor[3].motorOut.tau_off = controlParams.link_stiffness * (-1.0 * (rdda->motor[1].motorIn.act_pos - rdda->motor[1].init_pos) - (rdda->motor[3].motorIn.act_pos - rdda->motor[3].init_pos)) + 2 * zeta * sqrt(controlParams.link_stiffness * 1.0e-3) * (-1.0 * rdda->motor[1].motorIn.act_vel - rdda->motor[3].motorIn.act_vel);
             /* DOB enabled */
+            //controlParams.external_force[2] = controlParams.link_stiffness * ((rdda->motor[0].motorIn.act_pos - rdda->motor[0].init_pos) - (rdda->motor[2].motorIn.act_pos - rdda->motor[2].init_pos)) + 2 * zeta * sqrt(controlParams.link_stiffness * 1.0e-3) * (rdda->motor[0].motorIn.act_vel - rdda->motor[2].motorIn.act_vel);
+            //controlParams.external_force[3] = controlParams.link_stiffness * (-1.0 * (rdda->motor[1].motorIn.act_pos - rdda->motor[1].init_pos) - (rdda->motor[3].motorIn.act_pos - rdda->motor[3].init_pos)) + 2 * zeta * sqrt(controlParams.link_stiffness * 1.0e-3) * (-1.0 * rdda->motor[1].motorIn.act_vel - rdda->motor[3].motorIn.act_vel);
             controlParams.external_force[0] = -1.0 * rdda->motor[2].motorOut.tau_off;
             controlParams.external_force[1] = rdda->motor[3].motorOut.tau_off;
             /* simple spring-damper connection */
@@ -126,6 +128,10 @@ void rdda_run (void *ifnameptr) {
         //printf("tg_pos[0]: %+d, pos[0]: %+2.4lf, vel[0]: %+2.4lf, pre[0]: %+2.4lf, tau_off[0]: %+2.4lf, tg_pos[1]: %+d, pos[1]: %+2.4lf, vel[1]: %+2.4lf, pre[1]: %+2.4lf, tau_off[1]: %+2.4lf\r",
         //       ecatSlaves->bel[0].out_motor->tg_pos, rdda->motor[0].motorIn.act_pos, rdda->motor[0].motorIn.act_vel, rdda->psensor.analogIn.val1, rdda->motor[0].motorOut.tau_off,
         //       ecatSlaves->bel[2].out_motor->tg_pos, rdda->motor[2].motorIn.act_pos, rdda->motor[2].motorIn.act_vel, rdda->psensor.analogIn.val2, rdda->motor[2].motorOut.tau_off
+        //);
+        //printf("tg_pos[0]: %+d, pos[0]: %+2.4lf, vel[0]: %+2.4lf, pre[0]: %+2.4lf, tau_off[0]: %+2.4lf, tg_pos[1]: %+d, pos[1]: %+2.4lf, vel[1]: %+2.4lf, pre[1]: %+2.4lf, tau_off[1]: %+2.4lf\r",
+        //       ecatSlaves->bel[3].out_motor->tg_pos, rdda->motor[3].motorIn.act_pos, rdda->motor[3].motorIn.act_vel, rdda->psensor.analogIn.val4, rdda->motor[3].motorOut.tau_off,
+        //       ecatSlaves->bel[2].out_motor->tg_pos, rdda->motor[2].motorIn.act_pos, rdda->motor[2].motorIn.act_vel, rdda->psensor.analogIn.val3, rdda->motor[2].motorOut.tau_off
         //);
 
         /* latching fault detection */ // ec_SDOread costs too much time, put it in another thread in the future

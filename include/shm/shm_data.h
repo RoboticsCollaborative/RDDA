@@ -33,10 +33,12 @@ typedef struct {
     double stiffness;
 } RosOut;
 
-/** EL3102 pressure sensor inputs to master */
+/** EL3102 and EL3702 pressure sensor inputs to master */
 typedef struct {
     double val1;
     double val2;
+    double val3;
+    double val4;
 } AnalogIn;
 
 /** BEL slave class */
