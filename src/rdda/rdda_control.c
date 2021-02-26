@@ -56,7 +56,7 @@ void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstO
     controlParams->Pp[1] = 0.0;
     controlParams->Vp[1] = 0.0;
     controlParams->zeta = 0.3;
-    controlParams->max_inner_loop_torque_Nm = 0.2;
+    controlParams->max_inner_loop_torque_Nm = 0.5;
     controlParams->max_torque_Nm = 5.0;
     controlParams->max_velocity = 10.0; // stable for Kp = 20 and cutoff_frequency_LPF[0] = 14
     controlParams->max_stiffness = 40.0;
@@ -255,6 +255,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
         integral_control_force[i] = previousVariables->integral_control_force[i] + controlParams->lambda[0] * controlParams->sample_time * (reference_force[i] + pressure[i] + finger_bk_comp_force[i] + hysteresis_force[i]);
         saturated_feedback_force[i] = integral_control_force[i] - nominal_force_integration[i];
         saturated_feedback_force[i] = saturation(controlParams->max_inner_loop_torque_Nm, saturated_feedback_force[i]);
+        integral_control_force[i] = saturated_feedback_force[i] + nominal_force_integration[i];
         output_force[i] = saturated_feedback_force[i] + reference_force[i] + finger_bk_comp_force[i] + hysteresis_force[i] + 0.5 * pressure[i];
     }
 
