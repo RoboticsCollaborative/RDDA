@@ -35,16 +35,16 @@ double trajectoryGenerator(double input, double pre_output, double max_vel, doub
 
 void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstOrderLowPassFilterParams, SecondOrderLowPassFilterParams *secondOrderLowPassFilterParams, PreviousVariables *previousVariables, Rdda *rdda) {
     /* control parameters initialization */
-    controlParams->motor_inertia[0] = 0.9*1.11e-3;//1.1144e-3;
-    controlParams->motor_inertia[1] = 0.9*1.11e-3;//1.1144e-3;
+    controlParams->motor_inertia[0] = 1.0*1.11e-3;//1.1144e-3;
+    controlParams->motor_inertia[1] = 1.0*1.11e-3;//1.1144e-3;
     controlParams->motor_inertia[2] = 1.6*1.463e-4;//1.1144e-3;
     controlParams->motor_inertia[3] = 1.6*1.463e-4;//1.1144e-3;
     controlParams->motor_damping[0] = 0.0;
     controlParams->motor_damping[1] = 0.0;
     controlParams->motor_damping[2] = 0.0;
     controlParams->motor_damping[3] = 0.0;
-    controlParams->finger_damping[0] = 1.0933e-2;//1.6933e-2;
-    controlParams->finger_damping[1] = 1.0933e-2;//1.6933e-2;
+    controlParams->finger_damping[0] = 0.8*1.0933e-2;//1.6933e-2;
+    controlParams->finger_damping[1] = 0.8*1.0933e-2;//1.6933e-2;
     controlParams->finger_damping[2] = 1.0933e-2;//1.6933e-2;
     controlParams->finger_damping[3] = 1.0933e-2;//1.6933e-2;
     controlParams->finger_stiffness[0] = 0.0;//0.0235;
@@ -70,7 +70,7 @@ void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstO
     controlParams->Pp[3] = 0.0;
     controlParams->Vp[3] = 0.0;
     controlParams->zeta = 0.3;
-    controlParams->max_inner_loop_torque_Nm = 0.2;
+    controlParams->max_inner_loop_torque_Nm = 0.5;
     controlParams->max_torque_Nm = 5.0;
     controlParams->max_velocity = 10.0; // stable for Kp = 20 and cutoff_frequency_LPF[0] = 14
     controlParams->max_stiffness = 40.0;
@@ -213,14 +213,6 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
         controlParams->cutoff_frequency_LPF[0] = 0.0;
     }
 
-    /* cutoff frequency update based on coupling stiffness */
-    if ( controlParams->link_stiffness < 28.0) {
-        controlParams->cutoff_frequency_LPF[0] = 20.0 * (1.0 - controlParams->link_stiffness / 28.0);
-    }
-    else {
-        controlParams->cutoff_frequency_LPF[0] = 0.0;
-    }
-
     /* integral gain update*/
     controlParams->lambda[0] = 2.0 * M_PI * controlParams->cutoff_frequency_LPF[0];
 
@@ -288,8 +280,10 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
         integral_control_force[i] = previousVariables->integral_control_force[i] + controlParams->lambda[0] * controlParams->sample_time * (reference_force[i] + pressure[i] + finger_bk_comp_force[i] + hysteresis_force[i] + controlParams->external_force[i]);
         saturated_feedback_force[i] = integral_control_force[i] - nominal_force_integration[i];
         saturated_feedback_force[i] = saturation(controlParams->max_inner_loop_torque_Nm, saturated_feedback_force[i]);
-        output_force[i] = saturated_feedback_force[i] + reference_force[i] + finger_bk_comp_force[i] + hysteresis_force[i] + controlParams->external_force[i]; //+ 0.5 * pressure[i];
+        integral_control_force[i] = saturated_feedback_force[i] + nominal_force_integration[i];
+        output_force[i] = saturated_feedback_force[i] + reference_force[i] + finger_bk_comp_force[i] + hysteresis_force[i] + controlParams->external_force[i];// + 0.5 * pressure[i];
     }
+    //printf(" %+2.4lf, %+2.4lf \r", integral_control_force[0], saturated_feedback_force[0]);
 
     /* motor output with torque saturation */
     for (int i = 0; i < 2; i ++) {

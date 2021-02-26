@@ -93,8 +93,8 @@ void rdda_run (void *ifnameptr) {
     rdda_gettime(ecatSlaves);
     /* Initialise timestamps */
     int i = 0;
-    double zeta = 0.14;//0.1;
-    controlParams.link_stiffness = 12.0; //12.0;
+    double zeta = 0.1;//0.05;
+    controlParams.link_stiffness = 12.0; //16.0;
 
     while (!done) {
 
@@ -125,14 +125,10 @@ void rdda_run (void *ifnameptr) {
         rdda_update(ecatSlaves, rdda);
 
         i++;
-        //printf("tg_pos[0]: %+d, pos[0]: %+2.4lf, vel[0]: %+2.4lf, pre[0]: %+2.4lf, tau_off[0]: %+2.4lf, tg_pos[1]: %+d, pos[1]: %+2.4lf, vel[1]: %+2.4lf, pre[1]: %+2.4lf, tau_off[1]: %+2.4lf\r",
-        //       ecatSlaves->bel[0].out_motor->tg_pos, rdda->motor[0].motorIn.act_pos, rdda->motor[0].motorIn.act_vel, rdda->psensor.analogIn.val1, rdda->motor[0].motorOut.tau_off,
-        //       ecatSlaves->bel[2].out_motor->tg_pos, rdda->motor[2].motorIn.act_pos, rdda->motor[2].motorIn.act_vel, rdda->psensor.analogIn.val2, rdda->motor[2].motorOut.tau_off
-        //);
-        //printf("tg_pos[0]: %+d, pos[0]: %+2.4lf, vel[0]: %+2.4lf, pre[0]: %+2.4lf, tau_off[0]: %+2.4lf, tg_pos[1]: %+d, pos[1]: %+2.4lf, vel[1]: %+2.4lf, pre[1]: %+2.4lf, tau_off[1]: %+2.4lf\r",
-        //       ecatSlaves->bel[3].out_motor->tg_pos, rdda->motor[3].motorIn.act_pos, rdda->motor[3].motorIn.act_vel, rdda->psensor.analogIn.val4, rdda->motor[3].motorOut.tau_off,
-        //       ecatSlaves->bel[2].out_motor->tg_pos, rdda->motor[2].motorIn.act_pos, rdda->motor[2].motorIn.act_vel, rdda->psensor.analogIn.val3, rdda->motor[2].motorOut.tau_off
-        //);
+        printf("tg_pos[0]: %+d, pos[0]: %+2.4lf, vel[0]: %+2.4lf, pre[0]: %+2.4lf, tau_off[0]: %+2.4lf, tg_pos[1]: %+d, pos[1]: %+2.4lf, vel[1]: %+2.4lf, pre[1]: %+2.4lf, tau_off[1]: %+2.4lf, ",
+               ecatSlaves->bel[0].out_motor->tg_pos, rdda->motor[0].motorIn.act_pos, rdda->motor[0].motorIn.act_vel, rdda->psensor.analogIn.val1, rdda->motor[0].motorOut.tau_off,
+               ecatSlaves->bel[2].out_motor->tg_pos, rdda->motor[2].motorIn.act_pos, rdda->motor[2].motorIn.act_vel, rdda->psensor.analogIn.val2, rdda->motor[2].motorOut.tau_off
+        );
 
         /* latching fault detection */ // ec_SDOread costs too much time, put it in another thread in the future
         //if (i % 200 == 1) {
@@ -143,14 +139,14 @@ void rdda_run (void *ifnameptr) {
         //}
 
         /* save data to file */
-        //fprintf(fptr, "%lf, %lf, %lf, %lf, %lf, %lf %lf\n", rdda->motor[0].motorIn.act_pos, rdda->motor[1].motorIn.act_pos, rdda->motor[0].motorIn.act_vel, rdda->motor[1].motorIn.act_vel, rdda->psensor.analogIn.val1, rdda->psensor.analogIn.val2, time);
+        //fprintf(fptr, "%lf, %lf, %lf, %lf, %lf, %lf, %lf\n", rdda->motor[0].motorIn.act_pos, rdda->motor[2].motorIn.act_pos, rdda->motor[0].motorIn.act_vel, rdda->motor[2].motorIn.act_vel, rdda->psensor.analogIn.val1, rdda->psensor.analogIn.val3, time);
         //fprintf(fptr, "%lf, %lf, %lf, %lf\n", rdda->motor[0].motorIn.act_pos, rdda->motor[0].motorIn.act_vel, rdda->psensor.analogIn.val1, time);
 
         mutex_unlock(&rdda->mutex);
 
         clock_gettime(CLOCK_MONOTONIC, &endTime);
         controlInterval = (endTime.tv_sec-startTime.tv_sec)*usec_per_sec + (endTime.tv_nsec-startTime.tv_nsec)/nsec_per_usec;
-        //printf("%d\r", controlInterval);
+        printf("CT: %4d\r", controlInterval);
         rdda_sleep(ecatSlaves, cycletime-controlInterval);
     }
 
