@@ -107,7 +107,7 @@ initEcatSlaves(ecat_slaves *ecatSlave) {
         ecatSlave->bel[mot_id].load_counts_per_rad_sec = 52151.8917/327680*40000*10;
         ecatSlave->bel[mot_id].pascal_per_count = 21.04178;
         ecatSlave->bel[mot_id].nm_per_pascal = 2.822e-6;
-        ecatSlave->bel[mot_id].units_per_nm = 5000.0;
+        ecatSlave->bel[mot_id].units_per_nm = 500.0;
     }
     ecatSlave->el3102.in_analog = (analog_input *)ec_slave[ecatSlave->el3102.slave_id].inputs;
     ecatSlave->el3702.in_analog = (analog_el3702_input *)ec_slave[ecatSlave->el3702.slave_id].inputs;
@@ -124,7 +124,7 @@ initEcatSlaves(ecat_slaves *ecatSlave) {
         ecatSlave->bel[mot_id].load_counts_per_rad_sec = 52151.8917/327680*40000*10;
         ecatSlave->bel[mot_id].pascal_per_count = 21.04178;
         ecatSlave->bel[mot_id].nm_per_pascal = 2.822e-6;
-        ecatSlave->bel[mot_id].units_per_nm = 5000.0;
+        ecatSlave->bel[mot_id].units_per_nm = 500.0;
     }
 }
 

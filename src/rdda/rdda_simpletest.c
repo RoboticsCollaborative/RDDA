@@ -93,7 +93,7 @@ void rdda_run (void *ifnameptr) {
     rdda_gettime(ecatSlaves);
     /* Initialise timestamps */
     int i = 0;
-    double zeta = 0.1;//0.05;
+    double zeta = 0.14;//0.05;
     controlParams.link_stiffness = 12.0; //16.0;
 
     while (!done) {
