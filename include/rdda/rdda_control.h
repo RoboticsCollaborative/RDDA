@@ -17,8 +17,8 @@ typedef struct
     double finger_stiffness[4];
     double hydraulic_stiffness;
     double hydraulic_damping;
-    double cutoff_frequency_LPF[2];
-    double lambda[2]; // cut-off frequency(rad/s)
+    double cutoff_frequency_LPF[3];
+    double lambda[3]; // cut-off frequency(rad/s)
     double Kp[4];
     double Pp[4];
     double Vp[4];
@@ -32,7 +32,8 @@ typedef struct
     double sample_time;
     double gear_ratio;
     double external_force[4];
-    double link_stiffness;
+    double filtered_pos[4];
+    double filtered_vel[4];
 } ControlParams;
 
 typedef struct
@@ -43,6 +44,9 @@ typedef struct
     double hysteresis_a1;
     double hysteresis_b0;
     double hysteresis_b1;
+    double a1;
+    double b0;
+    double b1;
 } FirstOrderLowPassFilterParams;
 
 typedef struct
@@ -78,6 +82,10 @@ typedef struct
     double hysteresis_force[4];
     double filtered_finger_bk_comp_force_pressure_part[4];
     double integral_control_force[4];
+    double pos[4];
+    double vel[4];
+    double filtered_pos[4];
+    double filtered_vel[4];
 } PreviousVariables;
 
 void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstOrderLowPassFilterParams, SecondOrderLowPassFilterParams *secondOrderLowPassFilterParams, PreviousVariables *previousVariables, Rdda *rdda);
