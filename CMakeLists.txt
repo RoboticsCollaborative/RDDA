@@ -39,7 +39,7 @@ add_library(${PROJECT_NAME}_src
         src/${PROJECT_NAME}/rdda_control.c
         src/toolbox/contact_detect.c
         src/shm/shm.c
-        )
+        src/toolbox/tele_control.c)
 
 target_link_libraries(${PROJECT_NAME}_src soem ${OS_LIBS})
 
