@@ -53,7 +53,7 @@ void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstO
     controlParams->finger_stiffness[3] = 0.0;//0.0235;
     controlParams->hydraulic_damping = 0.009257;
     controlParams->hydraulic_stiffness = 13.0948;
-    controlParams->cutoff_frequency_LPF[0] = 20.0; // Q for overall DOB
+    controlParams->cutoff_frequency_LPF[0] = 10.0; // Q for overall DOB
     controlParams->cutoff_frequency_LPF[1] = 10.0; // target position filter
     controlParams->lambda[0] = 2.0 * M_PI * controlParams->cutoff_frequency_LPF[0];
     controlParams->lambda[1] = 2.0 * M_PI * controlParams->cutoff_frequency_LPF[1];
