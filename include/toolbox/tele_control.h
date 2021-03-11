@@ -13,6 +13,7 @@
 
 typedef struct
 {
+    int num;
     double sample_time;
     double resonant_frequency;
     double zeta;
