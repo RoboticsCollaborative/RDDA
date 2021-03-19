@@ -176,7 +176,7 @@ ecat_slaves *initEcatConfig(void *ifnameptr) {
     slaveIdentify(ecatSlaves);
     printf("psensor_id: %d\n", ecatSlaves->el3102.slave_id);
     printf("psensor_id: %d\n", ecatSlaves->el3702.slave_id);
-    if (ecatSlaves->bel[0].slave_id == 0 || ecatSlaves->bel[1].slave_id == 0 || ecatSlaves->bel[2].slave_id == 0 || ecatSlaves->bel[3].slave_id == 0 || ecatSlaves->el3102.slave_id == 0 || ecatSlaves->el3702.slave_id == 0) {
+    if (ecatSlaves->bel[0].slave_id == 0 || ecatSlaves->bel[1].slave_id == 0 || ecatSlaves->bel[2].slave_id == 0 || ecatSlaves->bel[3].slave_id == 0 || ecatSlaves->el3102.slave_id == 0) {
         fprintf(stderr, "Slaves identification failure!");
         exit(1);
     }
@@ -297,19 +297,6 @@ int32 positionSDOread(uint16 slave_id) {
 void pivGainSDOwrite(uint16 slave_id, uint16 Pp, uint16 Vp) {
     SDO_write16(slave_id, 0x2382, 1, Pp);        /* position loop gain (Pp) */
     SDO_write16(slave_id, 0x2381, 1, Vp);        /* velocity loop gain (Vp) */
-}
-
-int rddaDriverErrorSDOcheck(uint16 slave_id) {
-    {
-        uint32_t status = 0;
-        int size = sizeof(status);
-        ec_SDOread(slave_id, 0x1002, 0, FALSE, &size, &status, EC_TIMEOUTRXM);
-        if ((status >> 22) & 0x01) {
-            printf("Latching falut detected.\n");
-            return 1;
-        }
-        else return 0;
-    }
 }
 
 //#define EC_TIMEOUTMON 500

@@ -24,7 +24,7 @@ void teleInit(TeleParam *teleParam, TeleFilterVariable *teleFilterVariable, Tele
     /* symmetric stiffness */
     for (int i = 0; i < teleParam->num; i++) {
         teleParam->stiffness[i] = 10.0;
-        teleParam->damping[i] = 2.0 * teleParam->zeta * sqrt(teleParam->stiffness[i] * 1.0e-3);
+        teleParam->damping[i] = 2.0 * teleParam->zeta * sqrt(teleParam->stiffness[i] * 1.1e-3);
     }
 
     /* asymmetric stiffness based on same resonant frequency*/ /*
@@ -86,9 +86,12 @@ void teleController(TeleParam *teleParam, TeleFilterVariable *teleFilterVariable
 
     /* PV based asymmetric teleoperation */ /*
     rdda->motor[0].motorOut.tg_pos = (rdda->motor[2].motorIn.act_pos - rdda->motor[2].init_pos);
+    //rdda->motor[0].motorOut.vel_off = rdda->motor[2].motorIn.act_vel; // add velocity offset to make PV as PD
     rdda->motor[1].motorOut.tg_pos = -1.0 * (rdda->motor[3].motorIn.act_pos - rdda->motor[3].init_pos);
     rdda->motor[2].motorOut.tau_off = rdda->psensor.analogIn.val1;
+    //rdda->motor[2].motorOut.tau_off = -1.0 * rdda->motor[0].motorIn.act_tau; // not a good way, too much impedance feeling
     rdda->motor[3].motorOut.tau_off = -1.0 * rdda->psensor.analogIn.val2; */
+    //printf(" %+2.4lf, %+2.4lf, %+2.4lf", rdda->motor[2].motorIn.act_tau, rdda->motor[2].motorIn.act_pos, rdda->motor[2].motorIn.act_vel);
 
 
     /* previous variable update */

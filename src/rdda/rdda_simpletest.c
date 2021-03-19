@@ -82,7 +82,7 @@ void rdda_run (void *ifnameptr) {
     /* These two lines are to initialize master to position mode while re-initializing piv gains,
      * comment out them when running DoB
      */
-    pivGainSDOwrite(ecatSlaves->bel[0].slave_id, 0, 0); // Pp 500, Vp 50, Kp 11.625
+    pivGainSDOwrite(ecatSlaves->bel[0].slave_id, 0, 0); // Pp 400, Vp 100, Kp 18.6
     pivGainSDOwrite(ecatSlaves->bel[1].slave_id, 0, 0);
     pivGainSDOwrite(ecatSlaves->bel[2].slave_id, 0, 0);
     pivGainSDOwrite(ecatSlaves->bel[3].slave_id, 0, 0);
@@ -120,18 +120,13 @@ void rdda_run (void *ifnameptr) {
         rdda_update(ecatSlaves, rdda);
 
         i++;
-        //printf("tg_pos[0]: %+d, pos[0]: %+2.4lf, vel[0]: %+2.4lf, pre[0]: %+2.4lf, tau_off[0]: %+2.4lf, tg_pos[1]: %+d, pos[1]: %+2.4lf, vel[1]: %+2.4lf, pre[1]: %+2.4lf, tau_off[1]: %+2.4lf, ",
-        //       ecatSlaves->bel[0].out_motor->tg_pos, rdda->motor[0].motorIn.act_pos, rdda->motor[0].motorIn.act_vel, rdda->psensor.analogIn.val1, rdda->motor[0].motorOut.tau_off,
-        //       ecatSlaves->bel[2].out_motor->tg_pos, rdda->motor[2].motorIn.act_pos, rdda->motor[2].motorIn.act_vel, rdda->psensor.analogIn.val3, rdda->motor[2].motorOut.tau_off
-        //);
+        printf("tg_pos[0]: %+d, pos[0]: %+2.4lf, vel[0]: %+2.4lf, pre[0]: %+2.4lf, tau_off[0]: %+2.4lf, tg_pos[1]: %+d, pos[1]: %+2.4lf, vel[1]: %+2.4lf, pre[1]: %+2.4lf, tau_off[1]: %+2.4lf, ",
+               ecatSlaves->bel[0].out_motor->tg_pos, rdda->motor[0].motorIn.act_pos, rdda->motor[0].motorIn.act_vel, rdda->psensor.analogIn.val1, rdda->motor[0].motorOut.tau_off,
+               ecatSlaves->bel[2].out_motor->tg_pos, rdda->motor[2].motorIn.act_pos, rdda->motor[2].motorIn.act_vel, rdda->psensor.analogIn.val3, rdda->motor[2].motorOut.tau_off
+        );
 
-        /* latching fault detection */ // ec_SDOread costs too much time, put it in another thread in the future
-        //if (i % 200 == 1) {
-            //done += rddaDriverErrorSDOcheck(ecatSlaves->bel[0].slave_id);
-            //done += rddaDriverErrorSDOcheck(ecatSlaves->bel[1].slave_id);
-            //done += rddaDriverErrorSDOcheck(ecatSlaves->bel[2].slave_id);
-            //done += rddaDriverErrorSDOcheck(ecatSlaves->bel[3].slave_id);
-        //}
+        /* Error code detection */
+        done = errorCheck(ecatSlaves);
 
         /* save data to file */
         //fprintf(fptr, "%lf, %lf, %lf, %lf, %lf, %lf, %lf\n", rdda->motor[0].motorIn.act_pos, rdda->motor[2].motorIn.act_pos, rdda->motor[0].motorIn.act_vel, rdda->motor[2].motorIn.act_vel, rdda->psensor.analogIn.val1, rdda->psensor.analogIn.val3, time);
