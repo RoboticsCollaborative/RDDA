@@ -47,16 +47,6 @@ typedef struct PACKED
     int16 val2;
 } analog_input;
 
-/** EL3702 pressure sensor inputs to master */
-typedef struct PACKED
-{
-    uint16 ch1_cnt;
-    int16 val1;
-    uint16 ch2_cnt;
-    int16 val2;
-    uint32 stnl;
-} analog_el3702_input;
-
 /** BEL slave class */
 typedef struct
 {
@@ -86,15 +76,15 @@ typedef struct
 typedef struct
 {
     uint16 slave_id;
-    analog_el3702_input *in_analog;
-} el3702_slave;
+    analog_input *in_analog;
+} el3102_da_slave;
 
 /** EtherCAT slave class */
 typedef struct
 {
     bel_slave bel[4];
     el3102_slave el3102;
-    el3702_slave el3702;
+    el3102_da_slave el3102_da;
     struct timespec ts;
 } ecat_slaves;
 

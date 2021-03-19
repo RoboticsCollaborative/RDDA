@@ -77,12 +77,12 @@ slaveIdentify(ecat_slaves *slave) {
             }
         }
         /* pressure sensor */
-        if ((ec_slave[idx].eep_man == 0x00000002) && (ec_slave[idx].eep_id == 0x0c1e3052)) {
+        if ((ec_slave[idx].eep_man == 0x00000002) && (ec_slave[idx].eep_id == 0x0c1e3052) && (ec_slave[idx].configadr == 0x1008)) {
             slave->el3102.slave_id = idx;
         }
         /* pressure sensor */
-        if ((ec_slave[idx].eep_man == 0x00000002) && (ec_slave[idx].eep_id == 0x0e763052)) {
-            slave->el3702.slave_id = idx;
+        if ((ec_slave[idx].eep_man == 0x00000002) && (ec_slave[idx].eep_id == 0x0c1e3052) && (ec_slave[idx].configadr == 0x1004)) {
+            slave->el3102_da.slave_id = idx;
         }
     }
 
@@ -110,7 +110,7 @@ initEcatSlaves(ecat_slaves *ecatSlave) {
         ecatSlave->bel[mot_id].units_per_nm = 500.0;
     }
     ecatSlave->el3102.in_analog = (analog_input *)ec_slave[ecatSlave->el3102.slave_id].inputs;
-    ecatSlave->el3702.in_analog = (analog_el3702_input *)ec_slave[ecatSlave->el3702.slave_id].inputs;
+    ecatSlave->el3102_da.in_analog = (analog_input *)ec_slave[ecatSlave->el3102_da.slave_id].inputs;
 
     /* new motor setup */
     for (int mot_id = 2; mot_id < 4; mot_id ++) {
@@ -175,22 +175,20 @@ ecat_slaves *initEcatConfig(void *ifnameptr) {
     /* Locate slaves */
     slaveIdentify(ecatSlaves);
     printf("psensor_id: %d\n", ecatSlaves->el3102.slave_id);
-    printf("psensor_id: %d\n", ecatSlaves->el3702.slave_id);
-    if (ecatSlaves->bel[0].slave_id == 0 || ecatSlaves->bel[1].slave_id == 0 || ecatSlaves->bel[2].slave_id == 0 || ecatSlaves->bel[3].slave_id == 0 || ecatSlaves->el3102.slave_id == 0) {
+    printf("psensor_id: %d\n", ecatSlaves->el3102_da.slave_id);
+    if (ecatSlaves->bel[0].slave_id == 0 || ecatSlaves->bel[1].slave_id == 0 || ecatSlaves->bel[2].slave_id == 0 || ecatSlaves->bel[3].slave_id == 0 || ecatSlaves->el3102.slave_id == 0 || ecatSlaves->el3102_da.slave_id == 0) {
         fprintf(stderr, "Slaves identification failure!");
         exit(1);
     }
 
-    ec_configdc();
-    //printf("%d\n", ecatSlaves->el3702.slave_id);
-
-    ec_dcsync01(ecatSlaves->el3702.slave_id, TRUE,100000, 100000,0);
+    //ec_configdc();
+    //ec_dcsync01(ecatSlaves->el3702.slave_id, TRUE,100000, 100000,0); // for el3702
 
     /* If Complete Access (CA) disabled => auto-mapping work */
     ec_config_map(&IOmap);
 
     /* Let DC off for the time being */
-    //ec_configdc(); // DC should be launched for each identified slave
+    ec_configdc(); // DC should be launched for each identified slave
 
     printf("Slaves mapped, state to SAFE_OP\n");
     /* Wait for all salves to reach SAFE_OP state */
@@ -213,7 +211,7 @@ ecat_slaves *initEcatConfig(void *ifnameptr) {
     wkc = ec_receive_processdata(EC_TIMEOUTRET);
 
     /* el3702's second reading is not working */
-    if (wkc < expectedWKC - 1) {
+    if (wkc < expectedWKC) {
         fprintf(stderr, "WKC failure.\n");
         exit(1);
     }
