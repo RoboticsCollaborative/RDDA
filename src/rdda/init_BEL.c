@@ -57,14 +57,19 @@ int mapMotorPDOs(uint16 slaveIdx)
     wkc += SDO_write8(slaveIdx, 0x1A00, 0, 0);           /* clear the PDO first */
     wkc += SDO_write32(slaveIdx, 0x1A00, 1, 0x22310020); /* Load encoder velocity */
     wkc += SDO_write32(slaveIdx, 0x1A00, 2, 0x22420020); /* Load encoder position */
-    wkc += SDO_write32(slaveIdx, 0x1A00, 3, 0x603F0010); /* Load error code */
-    wkc += SDO_write8(slaveIdx, 0x1A00, 0, 3);           /* set number of objects mapped by PDO */
+    wkc += SDO_write8(slaveIdx, 0x1A00, 0, 2);           /* set number of objects mapped by PDO */
+
+    wkc += SDO_write8(slaveIdx, 0x1A01, 0, 0);           /* clear the PDO first */
+    wkc += SDO_write32(slaveIdx, 0x1A01, 1, 0x603F0010); /* Load error code */
+    wkc += SDO_write32(slaveIdx, 0x1A01, 2, 0x22000010); /* analog input */
+    wkc += SDO_write8(slaveIdx, 0x1A01, 0, 2);           /* set number of objects mapped by PDO */
 
     /* pre-mapped PDOs that the slave sends to the master */
     wkc += SDO_write8(slaveIdx, 0x1C13, 0, 0);           /* clear SM3 (slave TxPDOs) */
     wkc += SDO_write16(slaveIdx, 0x1C13, 1, 0x1B00);     /* pre-mapped PDO */
     wkc += SDO_write16(slaveIdx, 0x1C13, 2, 0x1A00);     /* user-PDO */
-    wkc += SDO_write8(slaveIdx, 0x1C13, 0, 2);           /* set # of mapped PDOs */
+    wkc += SDO_write16(slaveIdx, 0x1C13, 3, 0x1A01);     /* user-PDO */
+    wkc += SDO_write8(slaveIdx, 0x1C13, 0, 3);           /* set # of mapped PDOs */
 
     /* as specified in ESI file, set control word during PRE->SAFE transition */
     SDO_write16(slaveIdx, 0x6060, 0, 8);                 /* BEL set to CSP mode */

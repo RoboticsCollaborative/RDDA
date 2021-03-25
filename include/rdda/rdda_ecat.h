@@ -27,6 +27,7 @@ typedef struct PACKED
     int32 load_vel;   /* load encoder velocity (0x2231) */
     int32 load_pos;   /* load encoder position (0x2242) */
     int16 error_code; /* load error code (0x603F)*/
+    int16 analog_in;  /* general analog input (0x2200) */
 } motor_input;
 
 /** BEL drive CSP Mode outputs from master */
@@ -72,19 +73,11 @@ typedef struct
     analog_input *in_analog;
 } el3102_slave;
 
-/** EL3702 slave class */
-typedef struct
-{
-    uint16 slave_id;
-    analog_input *in_analog;
-} el3102_da_slave;
-
 /** EtherCAT slave class */
 typedef struct
 {
     bel_slave bel[4];
     el3102_slave el3102;
-    el3102_da_slave el3102_da;
     struct timespec ts;
 } ecat_slaves;
 

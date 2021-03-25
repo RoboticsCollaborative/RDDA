@@ -77,12 +77,8 @@ slaveIdentify(ecat_slaves *slave) {
             }
         }
         /* pressure sensor */
-        if ((ec_slave[idx].eep_man == 0x00000002) && (ec_slave[idx].eep_id == 0x0c1e3052) && (ec_slave[idx].configadr == 0x1008)) {
+        if ((ec_slave[idx].eep_man == 0x00000002) && (ec_slave[idx].eep_id == 0x0c1e3052)) {
             slave->el3102.slave_id = idx;
-        }
-        /* pressure sensor */
-        if ((ec_slave[idx].eep_man == 0x00000002) && (ec_slave[idx].eep_id == 0x0c1e3052) && (ec_slave[idx].configadr == 0x1004)) {
-            slave->el3102_da.slave_id = idx;
         }
     }
 
@@ -110,7 +106,6 @@ initEcatSlaves(ecat_slaves *ecatSlave) {
         ecatSlave->bel[mot_id].units_per_nm = 500.0;
     }
     ecatSlave->el3102.in_analog = (analog_input *)ec_slave[ecatSlave->el3102.slave_id].inputs;
-    ecatSlave->el3102_da.in_analog = (analog_input *)ec_slave[ecatSlave->el3102_da.slave_id].inputs;
 
     /* new motor setup */
     for (int mot_id = 2; mot_id < 4; mot_id ++) {
@@ -175,8 +170,7 @@ ecat_slaves *initEcatConfig(void *ifnameptr) {
     /* Locate slaves */
     slaveIdentify(ecatSlaves);
     printf("psensor_id: %d\n", ecatSlaves->el3102.slave_id);
-    printf("psensor_id: %d\n", ecatSlaves->el3102_da.slave_id);
-    if (ecatSlaves->bel[0].slave_id == 0 || ecatSlaves->bel[1].slave_id == 0 || ecatSlaves->bel[2].slave_id == 0 || ecatSlaves->bel[3].slave_id == 0 || ecatSlaves->el3102.slave_id == 0 || ecatSlaves->el3102_da.slave_id == 0) {
+    if (ecatSlaves->bel[0].slave_id == 0 || ecatSlaves->bel[1].slave_id == 0 || ecatSlaves->bel[2].slave_id == 0 || ecatSlaves->bel[3].slave_id == 0 || ecatSlaves->el3102.slave_id == 0) {
         fprintf(stderr, "Slaves identification failure!");
         exit(1);
     }
