@@ -26,8 +26,10 @@ typedef struct
 {
     double pre_pos[4];
     double pre_vel[4];
+    double pre_pressure[4];
     double pre_filtered_pos[4];
     double pre_filtered_vel[4];
+    double pre_filtered_pressure[4];
 } TeleFilterVariable;
 
 typedef struct

@@ -43,6 +43,15 @@ void teleInit(TeleParam *teleParam, TeleFilterVariable *teleFilterVariable, Tele
         teleFilterVariable->pre_filtered_vel[i] = rdda->motor[i].motorIn.act_vel;
     }
 
+    teleFilterVariable->pre_pressure[0] = rdda->psensor.analogIn.val1;
+    teleFilterVariable->pre_filtered_pressure[0] = rdda->psensor.analogIn.val1;
+    teleFilterVariable->pre_pressure[1] = rdda->psensor.analogIn.val2;
+    teleFilterVariable->pre_filtered_pressure[1] = rdda->psensor.analogIn.val2;
+    teleFilterVariable->pre_pressure[2] = rdda->psensor.analogIn.val3;
+    teleFilterVariable->pre_filtered_pressure[2] = rdda->psensor.analogIn.val3;
+    teleFilterVariable->pre_pressure[3] = rdda->psensor.analogIn.val4;
+    teleFilterVariable->pre_filtered_pressure[3] = rdda->psensor.analogIn.val4;
+
     teleFirstOrderLowPassFilterParams->a1 = -1.0 * (teleFirstOrderLowPassFilterParams->lambda * teleParam->sample_time - 2.0) / (teleFirstOrderLowPassFilterParams->lambda * teleParam->sample_time + 2.0);
     teleFirstOrderLowPassFilterParams->b0 = teleFirstOrderLowPassFilterParams->lambda * teleParam->sample_time / (teleFirstOrderLowPassFilterParams->lambda * teleParam->sample_time + 2.0);
     teleFirstOrderLowPassFilterParams->b1 = teleFirstOrderLowPassFilterParams->lambda * teleParam->sample_time / (teleFirstOrderLowPassFilterParams->lambda * teleParam->sample_time + 2.0);
@@ -53,17 +62,25 @@ void teleInit(TeleParam *teleParam, TeleFilterVariable *teleFilterVariable, Tele
 void teleController(TeleParam *teleParam, TeleFilterVariable *teleFilterVariable, TeleFirstOrderLowPassFilterParams *teleFirstOrderLowPassFilterParams, ControlParams *controlParams, Rdda *rdda) {
     int num;
     num = teleParam->num;
+
     double pos[num];
     double vel[num];
+    double pressure[num];
     double filtered_pos[num];
     double filtered_vel[num];
+    double filtered_pressure[num];
 
-    /* pos & vel filtering */
+    /* pos, vel & pressure filtering */
+    pressure[0] = rdda->psensor.analogIn.val1;
+    pressure[1] = rdda->psensor.analogIn.val2;
+    pressure[2] = rdda->psensor.analogIn.val3;
+    pressure[3] = rdda->psensor.analogIn.val4;
     for (int i = 0; i < num; i ++) {
         pos[i] = rdda->motor[i].motorIn.act_pos;
         vel[i] = rdda->motor[i].motorIn.act_vel;
         filtered_pos[i] = teleFirstOrderIIRFilter(pos[i], teleFilterVariable->pre_pos[i], teleFilterVariable->pre_filtered_pos[i], teleFirstOrderLowPassFilterParams->b0, teleFirstOrderLowPassFilterParams->b1, teleFirstOrderLowPassFilterParams->a1);
         filtered_vel[i] = teleFirstOrderIIRFilter(vel[i], teleFilterVariable->pre_vel[i],  teleFilterVariable->pre_filtered_vel[i], teleFirstOrderLowPassFilterParams->b0, teleFirstOrderLowPassFilterParams->b1, teleFirstOrderLowPassFilterParams->a1);
+        filtered_pressure[i] = teleFirstOrderIIRFilter(pressure[i], teleFilterVariable->pre_pressure[i], teleFilterVariable->pre_filtered_pressure[i], teleFirstOrderLowPassFilterParams->b0, teleFirstOrderLowPassFilterParams->b1, teleFirstOrderLowPassFilterParams->a1);
     }
 
     /* virtual coupling */
@@ -87,10 +104,10 @@ void teleController(TeleParam *teleParam, TeleFilterVariable *teleFilterVariable
     /* PV based asymmetric teleoperation */ /*
     rdda->motor[0].motorOut.tg_pos = (rdda->motor[2].motorIn.act_pos - rdda->motor[2].init_pos);
     //rdda->motor[0].motorOut.vel_off = rdda->motor[2].motorIn.act_vel; // add velocity offset to make PV as PD
-    rdda->motor[1].motorOut.tg_pos = -1.0 * (rdda->motor[3].motorIn.act_pos - rdda->motor[3].init_pos);
-    rdda->motor[2].motorOut.tau_off = rdda->psensor.analogIn.val1;
+    //rdda->motor[1].motorOut.tg_pos = -1.0 * (rdda->motor[3].motorIn.act_pos - rdda->motor[3].init_pos);
+    rdda->motor[2].motorOut.tau_off = 0.3 * rdda->psensor.analogIn.val1;
     //rdda->motor[2].motorOut.tau_off = -1.0 * rdda->motor[0].motorIn.act_tau; // not a good way, too much impedance feeling
-    rdda->motor[3].motorOut.tau_off = -1.0 * rdda->psensor.analogIn.val2; */
+    //rdda->motor[3].motorOut.tau_off = -1.0 * rdda->psensor.analogIn.val2; */
     //printf(" %+2.4lf, %+2.4lf, %+2.4lf", rdda->motor[2].motorIn.act_tau, rdda->motor[2].motorIn.act_pos, rdda->motor[2].motorIn.act_vel);
 
 
@@ -98,8 +115,10 @@ void teleController(TeleParam *teleParam, TeleFilterVariable *teleFilterVariable
     for (int i = 0; i < num; i++) {
         teleFilterVariable->pre_pos[i] = pos[i];
         teleFilterVariable->pre_vel[i] = vel[i];
+        teleFilterVariable->pre_pressure[i] = pressure[i];
         teleFilterVariable->pre_filtered_pos[i] = filtered_pos[i];
         teleFilterVariable->pre_filtered_vel[i] = filtered_vel[i];
+        teleFilterVariable->pre_filtered_pressure[i] = filtered_pressure[i];
     }
 
 }
