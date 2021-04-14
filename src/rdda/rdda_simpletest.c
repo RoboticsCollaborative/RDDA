@@ -113,14 +113,14 @@ void rdda_run (void *ifnameptr) {
 
         mutex_lock(&rdda->mutex);
 
-        teleController(&teleParam, &teleFilterVariable, &teleFirstOrderLowPassFilterParams, &controlParams, rdda);
+        //teleController(&teleParam, &teleFilterVariable, &teleFirstOrderLowPassFilterParams, &controlParams, rdda);
         //contactDetection(&contactDetectionParams, &contactDetectionHighPassFilterParams, &contactDetectionPreviousVariable, rdda);
         dobController(rdda, &controlParams, &firstOrderLowPassFilterParams, &secondOrderLowPassFilterParams, &previousVariables);
 
         rdda_update(ecatSlaves, rdda);
 
         i++;
-        printf("tg_pos[0]: %+d, pos[0]: %+2.4lf, vel[0]: %+2.4lf, pre[0]: %+2.4lf, tau_off[0]: %+2.4lf, tg_pos[1]: %+d, pos[1]: %+2.4lf, vel[1]: %+2.4lf, pre[1]: %+2.4lf, tau_off[1]: %+2.4lf, ",
+        printf("tg_pos[0]: %+d, pos[0]: %+2.4lf, vel[0]: %+2.4lf, pre[0]: %+2.4lf, tau_off[0]: %+2.4lf, tg_pos[2]: %+d, pos[2]: %+2.4lf, vel[2]: %+2.4lf, pre[2]: %+2.4lf, tau_off[2]: %+2.4lf, ",
                ecatSlaves->bel[0].out_motor->tg_pos, rdda->motor[0].motorIn.act_pos, rdda->motor[0].motorIn.act_vel, rdda->psensor.analogIn.val1, rdda->motor[0].motorOut.tau_off,
                ecatSlaves->bel[2].out_motor->tg_pos, rdda->motor[2].motorIn.act_pos, rdda->motor[2].motorIn.act_vel, rdda->psensor.analogIn.val3, rdda->motor[2].motorOut.tau_off
         );

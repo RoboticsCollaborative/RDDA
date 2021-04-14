@@ -285,7 +285,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
     }
 
     /* motor output with torque saturation */
-    for (int i = 0; i < 2; i ++) {
+    for (int i = 0; i < num; i ++) {
         tau_sat[i] = rdda->motor[i].rosOut.tau_sat;
         filtered_tau_sat[i] = secondOrderIIRFilter(tau_sat[i], previousVariables->tau_sat[i], previousVariables->prev_tau_sat[i], previousVariables->filtered_tau_sat[i], previousVariables->prev_filtered_tau_sat[i], secondOrderLowPassFilterParams->b0, secondOrderLowPassFilterParams->b1, secondOrderLowPassFilterParams->b2, secondOrderLowPassFilterParams->a1, secondOrderLowPassFilterParams->a2);
         if (filtered_tau_sat[i] < 0) {
