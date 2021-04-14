@@ -23,7 +23,7 @@ typedef struct
     double Pp[4];
     double Vp[4];
     double zeta;
-    double max_inner_loop_torque_Nm;
+    double max_inner_loop_torque_Nm[4];
     double max_torque_Nm;
     double max_velocity;
     double max_stiffness;
