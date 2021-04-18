@@ -74,7 +74,7 @@ void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstO
     controlParams->max_inner_loop_torque_Nm[1] = 0.2;
     controlParams->max_inner_loop_torque_Nm[2] = 0.1; // ADR motor
     controlParams->max_inner_loop_torque_Nm[3] = 0.1;
-    controlParams->max_torque_Nm = 5.0;
+    controlParams->max_torque_Nm = 2.0; // max continuous torque limit
     controlParams->max_velocity = 10.0; // stable for Kp = 20 and cutoff_frequency_LPF[0] = 14
     controlParams->max_stiffness = 40.0;
     controlParams->hysteresis_sigma = 400;
@@ -287,8 +287,12 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
         output_force[i] = saturated_feedback_force[i] + reference_force[i] + finger_bk_comp_force[i] + hysteresis_force[i] + controlParams->external_force[i];// + 0.5 * pressure[i];
     }
 
+    /* Disable DOB on new motors */
+    output_force[2] = controlParams->external_force[2];
+    output_force[3] = controlParams->external_force[3];
+
     /* motor output with torque saturation */
-    for (int i = 0; i < 2; i ++) {
+    for (int i = 0; i < num; i ++) {
         tau_sat[i] = rdda->motor[i].rosOut.tau_sat;
         filtered_tau_sat[i] = secondOrderIIRFilter(tau_sat[i], previousVariables->tau_sat[i], previousVariables->prev_tau_sat[i], previousVariables->filtered_tau_sat[i], previousVariables->prev_filtered_tau_sat[i], secondOrderLowPassFilterParams->b0, secondOrderLowPassFilterParams->b1, secondOrderLowPassFilterParams->b2, secondOrderLowPassFilterParams->a1, secondOrderLowPassFilterParams->a2);
         if (filtered_tau_sat[i] < 0) {
