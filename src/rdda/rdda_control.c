@@ -288,8 +288,8 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
     }
 
     /* Disable DOB on new motors */
-    output_force[2] = controlParams->external_force[2];
-    output_force[3] = controlParams->external_force[3];
+    //output_force[2] = controlParams->external_force[2];
+    //output_force[3] = controlParams->external_force[3];
 
     /* motor output with torque saturation */
     for (int i = 0; i < num; i ++) {
