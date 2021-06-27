@@ -20,6 +20,7 @@ typedef struct
     double inertia[4];
     double stiffness[4];
     double damping[4];
+    double vd[4];
 } TeleParam;
 
 typedef struct

@@ -19,7 +19,11 @@ void teleInit(TeleParam *teleParam, TeleFilterVariable *teleFilterVariable, Tele
     teleParam->inertia[2] = 0.2e-3; //1.463e-4;
     teleParam->inertia[3] = 0.2e-3; //1.463e-4;
     teleParam->resonant_frequency = 100; // rad/s
-    teleParam->zeta = 0.12;
+    teleParam->zeta = 0.707;
+    teleParam->vd[0] = 0.0;
+    teleParam->vd[1] = 0.0;
+    teleParam->vd[2] = 0.0;
+    teleParam->vd[3] = 0.0;
 
     /* symmetric stiffness */
     for (int i = 0; i < teleParam->num; i++) {
@@ -75,42 +79,19 @@ void teleController(TeleParam *teleParam, TeleFilterVariable *teleFilterVariable
     pressure[1] = rdda->psensor.analogIn.val2;
     pressure[2] = rdda->psensor.analogIn.val3;
     pressure[3] = rdda->psensor.analogIn.val4;
-    for (int i = 0; i < num; i ++) {
-        pos[i] = rdda->motor[i].motorIn.act_pos;
+    for (int i = 0; i < num; i++) {
+        pos[i] = rdda->motor[i].motorIn.act_pos - rdda->motor[i].init_pos;
         vel[i] = rdda->motor[i].motorIn.act_vel;
         filtered_pos[i] = teleFirstOrderIIRFilter(pos[i], teleFilterVariable->pre_pos[i], teleFilterVariable->pre_filtered_pos[i], teleFirstOrderLowPassFilterParams->b0, teleFirstOrderLowPassFilterParams->b1, teleFirstOrderLowPassFilterParams->a1);
         filtered_vel[i] = teleFirstOrderIIRFilter(vel[i], teleFilterVariable->pre_vel[i],  teleFilterVariable->pre_filtered_vel[i], teleFirstOrderLowPassFilterParams->b0, teleFirstOrderLowPassFilterParams->b1, teleFirstOrderLowPassFilterParams->a1);
         filtered_pressure[i] = teleFirstOrderIIRFilter(pressure[i], teleFilterVariable->pre_pressure[i], teleFilterVariable->pre_filtered_pressure[i], teleFirstOrderLowPassFilterParams->b0, teleFirstOrderLowPassFilterParams->b1, teleFirstOrderLowPassFilterParams->a1);
     }
+    controlParams->external_force[0] = 0.0;
 
-    /* virtual coupling */
-    //rdda->motor[2].motorOut.tau_off = teleParam->stiffness[2] * ((rdda->motor[0].motorIn.act_pos - rdda->motor[0].init_pos) - (rdda->motor[2].motorIn.act_pos - rdda->motor[2].init_pos)) + teleParam->damping[2] * (rdda->motor[0].motorIn.act_vel - rdda->motor[2].motorIn.act_vel);
-    //rdda->motor[3].motorOut.tau_off = teleParam->stiffness[3] * (-1.0 * (rdda->motor[1].motorIn.act_pos - rdda->motor[1].init_pos) - (rdda->motor[3].motorIn.act_pos - rdda->motor[3].init_pos)) + teleParam->damping[3] * (-1.0 * rdda->motor[1].motorIn.act_vel - rdda->motor[3].motorIn.act_vel);
-    //rdda->motor[0].motorOut.tau_off = teleParam->stiffness[0] * ((rdda->motor[2].motorIn.act_pos - rdda->motor[2].init_pos) - (rdda->motor[0].motorIn.act_pos - rdda->motor[0].init_pos)) + teleParam->damping[0] * (rdda->motor[2].motorIn.act_vel - rdda->motor[0].motorIn.act_vel);
-    //rdda->motor[1].motorOut.tau_off = teleParam->stiffness[1] * (-1.0 * (rdda->motor[3].motorIn.act_pos - rdda->motor[3].init_pos) - (rdda->motor[1].motorIn.act_pos - rdda->motor[1].init_pos)) + teleParam->damping[1] * (-1.0 * rdda->motor[3].motorIn.act_vel - rdda->motor[1].motorIn.act_vel);
-    /* DOB enabled */
-    controlParams->external_force[2] = teleParam->stiffness[2] * ((rdda->motor[0].motorIn.act_pos - rdda->motor[0].init_pos) - (rdda->motor[2].motorIn.act_pos - rdda->motor[2].init_pos)) + teleParam->damping[2] * (rdda->motor[0].motorIn.act_vel - rdda->motor[2].motorIn.act_vel);
-    controlParams->external_force[3] = teleParam->stiffness[3] * (-1.0 * (rdda->motor[1].motorIn.act_pos - rdda->motor[1].init_pos) - (rdda->motor[3].motorIn.act_pos - rdda->motor[3].init_pos)) + teleParam->damping[3] * (-1.0 * rdda->motor[1].motorIn.act_vel - rdda->motor[3].motorIn.act_vel);
-    controlParams->external_force[0] = -1.0 * rdda->motor[2].motorOut.tau_off;
-    controlParams->external_force[1] = rdda->motor[3].motorOut.tau_off;
-    /* simple spring-damper connection */
-    //rdda->motor[0].motorOut.tau_off = -1.0 * rdda->motor[2].motorOut.tau_off;
-    //rdda->motor[1].motorOut.tau_off = rdda->motor[3].motorOut.tau_off;
-
-    /* force & position scaling */
-    //rdda->motor[2].motorOut.tau_off = link_stiffness * ((rdda->motor[0].motorIn.act_pos - rdda->motor[0].init_pos) / r - (rdda->motor[2].motorIn.act_pos - rdda->motor[2].init_pos)) + 2 * zeta * sqrt(link_stiffness * 1.0e-3) * (rdda->motor[0].motorIn.act_vel / r - rdda->motor[2].motorIn.act_vel);
-    //rdda->motor[0].motorOut.tau_off = link_stiffness * ((rdda->motor[2].motorIn.act_pos - rdda->motor[2].init_pos) * r  - (rdda->motor[0].motorIn.act_pos - rdda->motor[0].init_pos)) + 2 * zeta * sqrt(link_stiffness * 1.0e-3) * (rdda->motor[2].motorIn.act_vel * r - rdda->motor[0].motorIn.act_vel);
-    //rdda->motor[3].motorOut.tau_off = link_stiffness * (-1.0 * (rdda->motor[1].motorIn.act_pos - rdda->motor[1].init_pos) / r - (rdda->motor[3].motorIn.act_pos - rdda->motor[3].init_pos)) + 2 * zeta * sqrt(link_stiffness * 1.0e-3) * (-1.0 * rdda->motor[1].motorIn.act_vel / r - rdda->motor[3].motorIn.act_vel);
-    //rdda->motor[1].motorOut.tau_off = link_stiffness * (-1.0 * (rdda->motor[3].motorIn.act_pos - rdda->motor[3].init_pos) * r  - (rdda->motor[1].motorIn.act_pos - rdda->motor[1].init_pos)) + 2 * zeta * sqrt(link_stiffness * 1.0e-3) * (-1.0 * rdda->motor[3].motorIn.act_vel * r - rdda->motor[1].motorIn.act_vel);
-
-    /* PV based asymmetric teleoperation */ /*
-    rdda->motor[0].motorOut.tg_pos = (rdda->motor[2].motorIn.act_pos - rdda->motor[2].init_pos);
-    //rdda->motor[0].motorOut.vel_off = rdda->motor[2].motorIn.act_vel; // add velocity offset to make PV as PD
-    //rdda->motor[1].motorOut.tg_pos = -1.0 * (rdda->motor[3].motorIn.act_pos - rdda->motor[3].init_pos);
-    rdda->motor[2].motorOut.tau_off = 0.3 * rdda->psensor.analogIn.val1;
-    //rdda->motor[2].motorOut.tau_off = -1.0 * rdda->motor[0].motorIn.act_tau; // not a good way, too much impedance feeling
-    //rdda->motor[3].motorOut.tau_off = -1.0 * rdda->psensor.analogIn.val2; */
-    //printf(" %+2.4lf, %+2.4lf, %+2.4lf", rdda->motor[2].motorIn.act_tau, rdda->motor[2].motorIn.act_pos, rdda->motor[2].motorIn.act_vel);
+    for (int i = 0; i < num; i++) {
+        teleParam->vd[i] += 1.0 / teleParam->inertia[i] * (pressure[i] - teleParam->damping[i] * vel[i] - teleParam->stiffness[i] * pos[i]);
+    }
+    printf("vd[0]: %+2.4lf\r", pressure[0]);
 
 
     /* previous variable update */
