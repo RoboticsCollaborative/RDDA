@@ -120,10 +120,10 @@ void rdda_run (void *ifnameptr) {
         rdda_update(ecatSlaves, rdda);
 
         i++;
-        printf("tg_pos[0]: %+d, pos[0]: %+2.4lf, vel[0]: %+2.4lf, pre[0]: %+2.4lf, tau_off[0]: %+2.4lf, tg_pos[2]: %+d, pos[2]: %+2.4lf, vel[2]: %+2.4lf, pre[2]: %+2.4lf, tau_off[2]: %+2.4lf, ",
-               ecatSlaves->bel[0].out_motor->tg_pos, rdda->motor[0].motorIn.act_pos, rdda->motor[0].motorIn.act_vel, rdda->psensor.analogIn.val1, rdda->motor[0].motorOut.tau_off,
-               ecatSlaves->bel[2].out_motor->tg_pos, rdda->motor[2].motorIn.act_pos, rdda->motor[2].motorIn.act_vel, rdda->psensor.analogIn.val3, rdda->motor[2].motorOut.tau_off
-        );
+        //printf("tg_pos[0]: %+d, pos[0]: %+2.4lf, vel[0]: %+2.4lf, pre[0]: %+2.4lf, tau_off[0]: %+2.4lf, tg_pos[2]: %+d, pos[2]: %+2.4lf, vel[2]: %+2.4lf, pre[2]: %+2.4lf, tau_off[2]: %+2.4lf, ",
+        //       ecatSlaves->bel[0].out_motor->tg_pos, rdda->motor[0].motorIn.act_pos, rdda->motor[0].motorIn.act_vel, rdda->psensor.analogIn.val1, rdda->motor[0].motorOut.tau_off,
+        //       ecatSlaves->bel[2].out_motor->tg_pos, rdda->motor[2].motorIn.act_pos, rdda->motor[2].motorIn.act_vel, rdda->psensor.analogIn.val3, rdda->motor[2].motorOut.tau_off
+        //);
 
         /* Error code detection */
         done = errorCheck(ecatSlaves);

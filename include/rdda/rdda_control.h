@@ -77,6 +77,7 @@ typedef struct
     double hysteresis_force[4];
     double filtered_finger_bk_comp_force_pressure_part[4];
     double integral_control_force[4];
+    double vel[4];
 } PreviousVariables;
 
 void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstOrderLowPassFilterParams, SecondOrderLowPassFilterParams *secondOrderLowPassFilterParams, PreviousVariables *previousVariables, Rdda *rdda);
