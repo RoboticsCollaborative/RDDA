@@ -70,10 +70,10 @@ void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstO
     controlParams->Pp[3] = 0.0;
     controlParams->Vp[3] = 0.0;
     controlParams->zeta = 0.3;
-    controlParams->max_inner_loop_torque_Nm[0] = 0.2; // ACD motor
-    controlParams->max_inner_loop_torque_Nm[1] = 0.2;
-    controlParams->max_inner_loop_torque_Nm[2] = 0.1; // ADR motor
-    controlParams->max_inner_loop_torque_Nm[3] = 0.1;
+    controlParams->max_inner_loop_torque_Nm[0] = 2.0; // ACD motor
+    controlParams->max_inner_loop_torque_Nm[1] = 2.0;
+    controlParams->max_inner_loop_torque_Nm[2] = 2.0; // ADR motor
+    controlParams->max_inner_loop_torque_Nm[3] = 2.0;
     controlParams->max_torque_Nm = 2.0; // max continuous torque limit
     controlParams->max_velocity = 10.0; // stable for Kp = 20 and cutoff_frequency_LPF[0] = 14
     controlParams->max_stiffness = 40.0;
@@ -292,13 +292,14 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
         integral_control_force[i] = previousVariables->integral_control_force[i] + controlParams->lambda[0] * controlParams->sample_time * (reference_force[i] + pressure[i] + finger_bk_comp_force[i] + hysteresis_force[i] + controlParams->external_force[i] - nominal_force[i]);
         saturated_feedback_force[i] = saturation(controlParams->max_inner_loop_torque_Nm[i], integral_control_force[i]);
         integral_control_force[i] = saturated_feedback_force[i];
-        output_force[i] = saturated_feedback_force[i] + reference_force[i] + finger_bk_comp_force[i] + hysteresis_force[i] + controlParams->external_force[i];// + 0.5 * pressure[i];
+        //output_force[i] = saturated_feedback_force[i] + reference_force[i] + finger_bk_comp_force[i] + hysteresis_force[i] + controlParams->external_force[i];// + 0.5 * pressure[i];
+        output_force[i] = saturated_feedback_force[i] + reference_force[i] + finger_bk_comp_force[i] + hysteresis_force[i];// + 0.5 * pressure[i];
     }
 
     /* Disable DOB on new motors */
     output_force[2] = controlParams->external_force[2];
     output_force[3] = controlParams->external_force[3];
-    printf("tau[0]: %+2.4lf, tau[1]: %+2.4lf, tau[2]: %+2.4lf, tau[3]: %+2.4lf,", output_force[0], output_force[1], output_force[2], output_force[3]);
+    printf("tau[0]: %+2.4lf, tau[1]: %+2.4lf, tau[2]: %+2.4lf, tau[3]: %+2.4lf,", output_force[0], output_force[1], saturated_feedback_force[0], saturated_feedback_force[1]);
 
     /* motor output with torque saturation */
     for (int i = 0; i < num; i ++) {
