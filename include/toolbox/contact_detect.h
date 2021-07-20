@@ -27,6 +27,15 @@ typedef struct
     int reflect_back_flag[2];
     double time[2];
     double vel_threshold[2];
+    double finger_inertia;
+    double finger_damping;
+    double finger_stiffness;
+    double series_stiffness;
+    double series_damping;
+    double finger_est_pos[2];
+    double ext_force_est_gain;
+    double ext_force_est[2];
+    double ext_force_int[2];
 } ContactDetectionParams;
 
 typedef struct

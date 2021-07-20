@@ -72,6 +72,18 @@ void contactDetectionInit(ContactDetectionParams *contactDetectionParams, Contac
     contactDetectionParams->time[1] = 0.0;
     contactDetectionParams->vel_threshold[0] = 1.0e-4;
     contactDetectionParams->vel_threshold[1] = 1.0e-4;
+    contactDetectionParams->finger_inertia = 7.089e-4/2;
+    contactDetectionParams->finger_damping = 3.3879e-2/2;
+    contactDetectionParams->finger_stiffness = 6.367e-2/2;
+    contactDetectionParams->series_damping = 9.2453e-3;
+    contactDetectionParams->series_stiffness = 1.3078e1;
+    contactDetectionParams->finger_est_pos[0] = 0.0;
+    contactDetectionParams->finger_est_pos[1] = 0.0;
+    contactDetectionParams->ext_force_est_gain = 100;
+    contactDetectionParams->ext_force_est[0] = 0.0;
+    contactDetectionParams->ext_force_est[1] = 0.0;
+    contactDetectionParams->ext_force_int[0] = 0.0;
+    contactDetectionParams->ext_force_int[1] = 0.0;
 
     /* high-pass filter parameters initialization */
     for (int i = 0; i < 2; i ++) {
@@ -102,14 +114,30 @@ void contactDetectionInit(ContactDetectionParams *contactDetectionParams, Contac
 void contactDetection(ContactDetectionParams *contactDetectionParams, ContactDetectionHighPassFilterParams *contactDetectionHighPassFilterParams, ContactDetectionPreviousVariable *contactDetectionPreviousVariable, Rdda *rdda) {
     int num = 2;
     double pressure[num];
+    double motor_pos[num];
+    double motor_vel[num];
+    double finger_est_vel[num];
     double filtered_pressure_HPF[num];
     //int intersection = 20;
     double pressure_deviation[2];
 
-    /* pressure filtering */
+    /* sensor reading */
     pressure[0] = rdda->psensor.analogIn.val1;
     pressure[1] = rdda->psensor.analogIn.val2;
+    for (int i = 0; i < num; i ++) {
+        motor_vel[i] = rdda->motor[i].motorIn.act_vel;
+        motor_pos[i] = rdda->motor[i].motorIn.act_pos - rdda->motor[i].init_pos;
+    }
 
+    for (int i = 0; i < num; i ++) {
+        finger_est_vel[i] = (pressure[i] - contactDetectionParams->series_stiffness*(contactDetectionParams->finger_est_pos[i] - motor_pos[i]) + contactDetectionParams->series_damping * motor_vel[i]) / contactDetectionParams->series_damping;
+        contactDetectionParams->finger_est_pos[i] += finger_est_vel[i] * contactDetectionParams->sample_time;
+        contactDetectionParams->ext_force_int[i] += (pressure[i] + contactDetectionParams->finger_stiffness * contactDetectionParams->finger_est_pos[i] - contactDetectionParams->ext_force_est[i]) * contactDetectionParams->sample_time;
+        contactDetectionParams->ext_force_est[i] = contactDetectionParams->ext_force_est_gain * (contactDetectionParams->finger_inertia * finger_est_vel[i] + contactDetectionParams->finger_damping * contactDetectionParams->finger_est_pos[i] + contactDetectionParams->ext_force_int[i]);
+    }
+    printf("est_force[0]: %+2.4lf, est_force[1]: %+2.4lf\r", contactDetectionParams->ext_force_est[0], contactDetectionParams->ext_force_est[1]);
+
+    /* pressure filtering */
     for (int i = 0; i < num; i ++) {
         filtered_pressure_HPF[i] = contactDetectionFirstOrderIIRFilter(pressure[i], contactDetectionPreviousVariable->pressure[i], contactDetectionPreviousVariable->filtered_pressure_HPF[i], contactDetectionHighPassFilterParams->b0[0], contactDetectionHighPassFilterParams->b1[0], contactDetectionHighPassFilterParams->a1[0]);
     }
