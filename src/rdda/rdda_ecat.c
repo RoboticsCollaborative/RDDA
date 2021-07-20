@@ -49,19 +49,7 @@ slaveIdentify(ecat_slaves *slave) {
                     exit(1);
                 }
             }
-            /* motor3 */
-            // new motor as tele-operator master
-            //if (serial_num == 0x256145e) {
-            //    slave->bel[2].slave_id = idx;
-            //    /* CompleteAccess disabled for BEL drive */
-            //    //ec_slave[slaveIdx].CoEdetails ^= ECT_COEDET_SDOCA;
-            //    /* Set PDO mapping */
-            //    printf("Found %s at position %d\n", ec_slave[idx].name, idx);
-            //    if (1 == mapMotorPDOs_callback(idx)) {
-            //        fprintf(stderr, "Motor3 mapping failed!\n");
-            //        exit(1);
-            //    }
-            //}
+
         }
         /* pressure sensor */
         if ((ec_slave[idx].eep_man == 0x00000002) && (ec_slave[idx].eep_id == 0x0c1e3052)) {
@@ -89,11 +77,9 @@ initEcatSlaves(ecat_slaves *ecatSlave) {
         ecatSlave->bel[mot_id].load_counts_per_rad_sec = 52151.8917/327680*40000*10;
         ecatSlave->bel[mot_id].pascal_per_count = 21.04178;
         ecatSlave->bel[mot_id].nm_per_pascal = 2.822e-6;
-        ecatSlave->bel[mot_id].units_per_nm = 5000.0;
+        ecatSlave->bel[mot_id].units_per_nm = 500.0;
     }
     ecatSlave->el3102.in_analog = (analog_input *)ec_slave[ecatSlave->el3102.slave_id].inputs;
-    //ecatSlave->bel[2].counts_per_rad = 83443.0268;
-    //ecatSlave->bel[2].counts_per_rad_sec = 83443.0268*10.0;
 }
 
 /** Set up EtherCAT NIC and state machine to request all slaves to work properly.
@@ -143,7 +129,6 @@ ecat_slaves *initEcatConfig(void *ifnameptr) {
     /* Locate slaves */
     slaveIdentify(ecatSlaves);
     printf("psensor_id: %d\n", ecatSlaves->el3102.slave_id);
-    //if (ecatSlaves->bel[0].slave_id == 0 || ecatSlaves->bel[1].slave_id == 0 || ecatSlaves->bel[2].slave_id == 0 || ecatSlaves->el3102.slave_id == 0) {
     if (ecatSlaves->bel[0].slave_id == 0 || ecatSlaves->bel[1].slave_id == 0 || ecatSlaves->el3102.slave_id == 0) {
         fprintf(stderr, "Slaves identification failure!");
         exit(1);
@@ -161,7 +146,6 @@ ecat_slaves *initEcatConfig(void *ifnameptr) {
 
     initMotor(ecatSlaves->bel[0].slave_id);
     initMotor(ecatSlaves->bel[1].slave_id);
-    //initNewMotor(ecatSlaves->bel[2].slave_id);
     printf("Slaves initialized, state to OP\n");
 
     /* Check if all slaves are working properly */

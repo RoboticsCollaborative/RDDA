@@ -67,11 +67,12 @@ void rdda_run (void *ifnameptr) {
     ecat_slaves *ecatSlaves;
     /* User friendly struct */
     Rdda *rdda;
+    /* DOB */
     ControlParams controlParams;
     FirstOrderLowPassFilterParams firstOrderLowPassFilterParams;
     SecondOrderLowPassFilterParams secondOrderLowPassFilterParams;
     PreviousVariables previousVariables;
-
+    /* Contact */
     ContactDetectionParams contactDetectionParams;
     ContactDetectionHighPassFilterParams contactDetectionHighPassFilterParams;
     ContactDetectionPreviousVariable contactDetectionPreviousVariable;
@@ -104,7 +105,8 @@ void rdda_run (void *ifnameptr) {
     printf("Input/output interface succeed.\n");
 
     /* timer */
-    cycletime = 500; /* in microseconds */
+    cycletime = 500; /* in microseconds */    //initNewMotor(ecatSlaves->bel[2].slave_id);
+
 
     /* Initialize controller */
     /* These two lines are to initialize master to position mode while re-initializing piv gains,
@@ -112,10 +114,10 @@ void rdda_run (void *ifnameptr) {
      */
     pivGainSDOwrite(ecatSlaves->bel[0].slave_id, 0, 0);
     pivGainSDOwrite(ecatSlaves->bel[1].slave_id, 0, 0);
-    //pivGainSDOwrite(ecatSlaves->bel[2].slave_id, 0, 0);
     /**/
 
     initRddaStates(ecatSlaves, rdda);
+    rdda_update(ecatSlaves, rdda);
     dobInit(&controlParams, &firstOrderLowPassFilterParams, &secondOrderLowPassFilterParams, &previousVariables, rdda);
     contactDetectionInit(&contactDetectionParams, &contactDetectionHighPassFilterParams, &contactDetectionPreviousVariable, rdda);
 

@@ -57,7 +57,7 @@ void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstO
     controlParams->Vp[1] = 0.0;
     controlParams->zeta = 0.3;
     controlParams->max_inner_loop_torque_Nm = 0.5;
-    controlParams->max_torque_Nm = 5.0;
+    controlParams->max_torque_Nm = 2.0;
     controlParams->max_velocity = 10.0; // stable for Kp = 20 and cutoff_frequency_LPF[0] = 14
     controlParams->max_stiffness = 40.0;
     controlParams->hysteresis_sigma = 400;
@@ -130,7 +130,6 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
 
     double output_force[num];
     double integral_control_force[num];
-    double saturated_feedback_force[num];
 
     double reference_force[num];
 
@@ -163,7 +162,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
     pressure[0] = rdda->psensor.analogIn.val1;
     pressure[1] = rdda->psensor.analogIn.val2;
     for (int i = 0; i < num; i ++) {
-        motor_pos[i] = rdda->motor[i].motorIn.act_pos;
+        motor_pos[i] = rdda->motor[i].motorIn.act_pos - rdda->motor[i].init_pos;
         motor_vel[i] = rdda->motor[i].motorIn.act_vel;
     }
 
@@ -181,12 +180,12 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
     }
 
     /* cutoff frequency update based on Kp */
-    if ((MAX(filtered_stiffness[0], filtered_stiffness[1])) < 28.0) {
-        controlParams->cutoff_frequency_LPF[0] = 20.0 * (1.0 - (MAX(filtered_stiffness[0], filtered_stiffness[1])) / 28.0);
-    }
-    else {
-        controlParams->cutoff_frequency_LPF[0] = 0.0;
-    }
+    //if ((MAX(filtered_stiffness[0], filtered_stiffness[1])) < 28.0) {
+    //    controlParams->cutoff_frequency_LPF[0] = 20.0 * (1.0 - (MAX(filtered_stiffness[0], filtered_stiffness[1])) / 28.0);
+    //}
+    //else {
+    //    controlParams->cutoff_frequency_LPF[0] = 0.0;
+    //}
 
     /* integral gain update*/
     controlParams->lambda[0] = 2.0 * M_PI * controlParams->cutoff_frequency_LPF[0];
@@ -199,7 +198,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
 
     /* PV controller */
     for (int i = 0; i < num; i ++) {
-        vel_ref[i] = controlParams->Pp[i] * (pos_ref[i] - (motor_pos[i] - rdda->motor[i].init_pos));
+        vel_ref[i] = controlParams->Pp[i] * (pos_ref[i] - motor_pos[i]);
     }
 
     /* reference force */
@@ -236,7 +235,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
         filtered_finger_bk_comp_force_pressure_part[i] = firstOrderIIRFilter(pressure[i], previousVariables->pressure[i], previousVariables->filtered_finger_bk_comp_force_pressure_part[i], firstOrderLowPassFilterParams->friction_cmp_b0[i], firstOrderLowPassFilterParams->friction_cmp_b1[i], firstOrderLowPassFilterParams->friction_cmp_a1[i]);
         /* total */
         finger_bk_comp_force[i] = finger_bk_comp_force_position_part[i] + filtered_finger_bk_comp_force_pressure_part[i];
-        //finger_bk_comp_force[i] = 0.0;
+        finger_bk_comp_force[i] = 0.0;
     }
 
     /* hysteresis compensation */
@@ -253,10 +252,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
     for (int i = 0; i < num; i ++) {
         /* direct equation */
         integral_control_force[i] = previousVariables->integral_control_force[i] + controlParams->lambda[0] * controlParams->sample_time * (reference_force[i] + pressure[i] + finger_bk_comp_force[i] + hysteresis_force[i]);
-        saturated_feedback_force[i] = integral_control_force[i] - nominal_force_integration[i];
-        saturated_feedback_force[i] = saturation(controlParams->max_inner_loop_torque_Nm, saturated_feedback_force[i]);
-        integral_control_force[i] = saturated_feedback_force[i] + nominal_force_integration[i];
-        output_force[i] = saturated_feedback_force[i] + reference_force[i] + finger_bk_comp_force[i] + hysteresis_force[i] + 0.5 * pressure[i];
+        output_force[i] = integral_control_force[i] - nominal_force_integration[i];
     }
 
     /* motor output with torque saturation */

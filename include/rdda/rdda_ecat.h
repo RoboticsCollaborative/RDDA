@@ -26,6 +26,8 @@ typedef struct PACKED
     int16 act_tau;    /* torque actual value (0x6077) */
     int32 load_vel;   /* load encoder velocity (0x2231) */
     int32 load_pos;   /* load encoder position (0x2242) */
+    int16 error_code; /* load error code (0x603F)*/
+    int16 analog_in;  /* general analog input (0x2200) */
 } motor_input;
 
 /** BEL drive CSP Mode outputs from master */
@@ -84,6 +86,7 @@ void add_timespec(struct timespec *ts, int64 addtime);
 int64 ec_sync(int64 reftime, int64 cycletime);
 int32 positionSDOread(uint16 slave_id);
 void pivGainSDOwrite(uint16 slave_id, uint16 Pp, uint16 Vp);
+int rddaDriverErrorSDOcheck(uint16 slave_id);
 void ecatcheck(void *ptr);
 
 #endif //RDDA_ECAT_H
