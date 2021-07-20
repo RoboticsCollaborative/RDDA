@@ -79,7 +79,7 @@ void contactDetectionInit(ContactDetectionParams *contactDetectionParams, Contac
     contactDetectionParams->series_stiffness = 1.3078e1;
     contactDetectionParams->finger_est_pos[0] = 0.0;
     contactDetectionParams->finger_est_pos[1] = 0.0;
-    contactDetectionParams->ext_force_est_gain = 100;
+    contactDetectionParams->ext_force_est_gain = 50;
     contactDetectionParams->ext_force_est[0] = 0.0;
     contactDetectionParams->ext_force_est[1] = 0.0;
     contactDetectionParams->ext_force_int[0] = 0.0;

@@ -132,7 +132,7 @@ void rdda_run (void *ifnameptr) {
     /* Gripper open and close test parameters */
     //double dmax[2];
     //double dmin[2];
-    //double stiffness = 0.0;
+    double stiffness = 1.0;
     //double zeta = 0.4;//0.15;
     //dmax[0] = rdda->motor[0].motorIn.act_pos - rdda->motor[0].init_pos;
     //dmax[1] = rdda->motor[1].motorIn.act_pos - rdda->motor[1].init_pos;
@@ -154,8 +154,8 @@ void rdda_run (void *ifnameptr) {
         /* Gripper open and close test */
         //rdda->motor[0].rosOut.pos_ref = stepFunction(dmax[0], dmin[0], time);
         //rdda->motor[1].rosOut.pos_ref = stepFunction(dmax[1], dmin[1], time);
-        //rdda->motor[0].rosOut.stiffness = stiffness;
-        //rdda->motor[1].rosOut.stiffness = stiffness;
+        rdda->motor[0].rosOut.stiffness = stiffness;
+        rdda->motor[1].rosOut.stiffness = stiffness;
 
         /* PV control target position */
         //rdda->motor[0].motorOut.tg_pos = stepFunction(dmax[0], dmin[0], time);
@@ -170,7 +170,7 @@ void rdda_run (void *ifnameptr) {
             //rdda->motor[2].motorOut.tau_off = -1.0 * stiffness * (rdda->motor[2].motorIn.act_pos - rdda->motor[2].init_pos) -  2 * zeta * sqrt(stiffness * 1.5e-4) * rdda->motor[2].motorIn.act_vel;
         //}
 
-        //contactDetection(&contactDetectionParams, &contactDetectionHighPassFilterParams, &contactDetectionPreviousVariable, rdda);
+        contactDetection(&contactDetectionParams, &contactDetectionHighPassFilterParams, &contactDetectionPreviousVariable, rdda);
         dobController(rdda, &controlParams, &firstOrderLowPassFilterParams, &secondOrderLowPassFilterParams, &previousVariables);
 
         rdda_update(ecatSlaves, rdda);
@@ -183,6 +183,7 @@ void rdda_run (void *ifnameptr) {
 
         /* save data to file */
         //fprintf(fptr, "%lf, %lf, %lf, %lf, %lf, %lf %lf\n", rdda->motor[0].motorIn.act_pos, rdda->motor[1].motorIn.act_pos, rdda->motor[0].motorIn.act_vel, rdda->motor[1].motorIn.act_vel, rdda->psensor.analogIn.val1, rdda->psensor.analogIn.val2, time);
+        fprintf(fptr, "%+lf, %+lf, %+lf\n", contactDetectionParams.ext_force_est[0], rdda->psensor.analogIn.val1, time);
 
         mutex_unlock(&rdda->mutex);
 
