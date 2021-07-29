@@ -23,7 +23,7 @@ typedef struct {
 /* Information sent to ROS interface */
 typedef  struct {
     int contact_flag;
-} RosIn;
+} RosOut;
 
 /* Reference signals from ROS interface */
 typedef struct {
@@ -31,14 +31,15 @@ typedef struct {
     double vel_sat;
     double tau_sat;
     double stiffness;
-} RosOut;
+    double pos_tar;
+    double vel_tar;
+    double tau_cp;
+} RosIn;
 
 /** EL3102 and EL3702 pressure sensor inputs to master */
 typedef struct {
     double val1;
     double val2;
-    double val3;
-    double val4;
 } AnalogIn;
 
 /** BEL slave class */
@@ -68,7 +69,7 @@ typedef struct {
 
 /** EtherCAT slave class */
 typedef struct {
-    BEL_slave motor[4];
+    BEL_slave motor[2];
     EL3102_slave psensor;
     double freq_anti_alias;
     Timestamp ts;

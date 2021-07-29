@@ -24,35 +24,50 @@ slaveIdentify(ecat_slaves *slave) {
             buf = sizeof(serial_num);
             ec_SDOread(idx, 0x1018, 4, FALSE, &buf, &serial_num, EC_TIMEOUTRXM);
 
-            /* motor1 */
+/*
+            */
+/* motor1 *//*
+
             if (serial_num == 0x2098302) {
                 //network->motor[0] = idx;
                 slave->bel[0].slave_id = idx;
-                /* CompleteAccess disabled for BEL drive */
+                */
+/* CompleteAccess disabled for BEL drive *//*
+
                 //ec_slave[slaveIdx].CoEdetails ^= ECT_COEDET_SDOCA;
-                /* Set PDO mapping */
+                */
+/* Set PDO mapping *//*
+
                 printf("Found %s at position %d\n", ec_slave[idx].name, idx);
                 if (1 == mapMotorPDOs_callback(idx)) {
                     fprintf(stderr, "Motor1 mapping failed!\n");
                     exit(1);
                 }
             }
-            /* motor2 */
+            */
+/* motor2 *//*
+
             if (serial_num == 0x2098303) {
                 slave->bel[1].slave_id = idx;
-                /* CompleteAccess disabled for BEL drive */
+                */
+/* CompleteAccess disabled for BEL drive *//*
+
                 //ec_slave[slaveIdx].CoEdetails ^= ECT_COEDET_SDOCA;
-                /* Set PDO mapping */
+                */
+/* Set PDO mapping *//*
+
                 printf("Found %s at position %d\n", ec_slave[idx].name, idx);
                 if (1 == mapMotorPDOs_callback(idx)) {
                     fprintf(stderr, "Motor2 mapping failed!\n");
                     exit(1);
                 }
             }
-            /* motor3 */
+*/
+
+            /* motor1 */
             // new motor as tele-operator master
             if (serial_num == 0x256145e) {
-                slave->bel[2].slave_id = idx;
+                slave->bel[0].slave_id = idx;
                 /* CompleteAccess disabled for BEL drive */
                 //ec_slave[slaveIdx].CoEdetails ^= ECT_COEDET_SDOCA;
                 /* Set PDO mapping */
@@ -62,10 +77,10 @@ slaveIdentify(ecat_slaves *slave) {
                     exit(1);
                 }
             }
-            /* motor4 */
+            /* motor2 */
             // new motor as tele-operator master
             if (serial_num == 0x2561457) {
-                slave->bel[3].slave_id = idx;
+                slave->bel[1].slave_id = idx;
                 /* CompleteAccess disabled for BEL drive */
                 //ec_slave[slaveIdx].CoEdetails ^= ECT_COEDET_SDOCA;
                 /* Set PDO mapping */
@@ -76,10 +91,10 @@ slaveIdentify(ecat_slaves *slave) {
                 }
             }
         }
-        /* pressure sensor */
+/*        *//* pressure sensor *//*
         if ((ec_slave[idx].eep_man == 0x00000002) && (ec_slave[idx].eep_id == 0x0c1e3052)) {
             slave->el3102.slave_id = idx;
-        }
+        }*/
     }
 
     return 0;
@@ -91,12 +106,12 @@ slaveIdentify(ecat_slaves *slave) {
  */
 static void
 initEcatSlaves(ecat_slaves *ecatSlave) {
-    /* old motor setup */
+/*    *//* old motor setup *//*
     for (int mot_id = 0; mot_id < 2; mot_id ++) {
-        /* Input/output memory allocation */
+        *//* Input/output memory allocation *//*
         ecatSlave->bel[mot_id].in_motor = (motor_input *)ec_slave[ecatSlave->bel[mot_id].slave_id].inputs;
         ecatSlave->bel[mot_id].out_motor = (motor_output *)ec_slave[ecatSlave->bel[mot_id].slave_id].outputs;
-        /* Constant parameters assignment */
+        *//* Constant parameters assignment *//*
         ecatSlave->bel[mot_id].counts_per_rad = 52151.8917;
         ecatSlave->bel[mot_id].counts_per_rad_sec = 52151.8917*10.0;
         ecatSlave->bel[mot_id].load_counts_per_rad = 52151.8917/327680*40000;
@@ -105,10 +120,10 @@ initEcatSlaves(ecat_slaves *ecatSlave) {
         ecatSlave->bel[mot_id].nm_per_pascal = 2.822e-6;
         ecatSlave->bel[mot_id].units_per_nm = 500.0;
     }
-    ecatSlave->el3102.in_analog = (analog_input *)ec_slave[ecatSlave->el3102.slave_id].inputs;
+    ecatSlave->el3102.in_analog = (analog_input *)ec_slave[ecatSlave->el3102.slave_id].inputs;*/
 
     /* new motor setup */
-    for (int mot_id = 2; mot_id < 4; mot_id ++) {
+    for (int mot_id = 0; mot_id < 2; mot_id ++) {
         /* Input/output memory allocation */
         ecatSlave->bel[mot_id].in_motor = (motor_input *)ec_slave[ecatSlave->bel[mot_id].slave_id].inputs;
         ecatSlave->bel[mot_id].out_motor = (motor_output *)ec_slave[ecatSlave->bel[mot_id].slave_id].outputs;
@@ -170,9 +185,12 @@ ecat_slaves *initEcatConfig(void *ifnameptr) {
     /* Locate slaves */
     slaveIdentify(ecatSlaves);
     printf("psensor_id: %d\n", ecatSlaves->el3102.slave_id);
-    if (ecatSlaves->bel[0].slave_id == 0 || ecatSlaves->bel[1].slave_id == 0 || ecatSlaves->bel[2].slave_id == 0 || ecatSlaves->bel[3].slave_id == 0 || ecatSlaves->el3102.slave_id == 0) {
-        fprintf(stderr, "Slaves identification failure!");
-        exit(1);
+
+    //if (ecatSlaves->bel[0].slave_id == 0 || ecatSlaves->bel[1].slave_id == 0 || ecatSlaves->el3102.slave_id == 0) {
+
+    if (ecatSlaves->bel[0].slave_id == 0 || ecatSlaves->bel[1].slave_id == 0) {
+            fprintf(stderr, "Slaves identification failure!");
+            exit(1);
     }
 
     //ec_configdc();
@@ -188,10 +206,10 @@ ecat_slaves *initEcatConfig(void *ifnameptr) {
     /* Wait for all salves to reach SAFE_OP state */
     ec_statecheck(0, EC_STATE_SAFE_OP, EC_TIMEOUTSTATE);
 
-    initMotor(ecatSlaves->bel[0].slave_id);
-    initMotor(ecatSlaves->bel[1].slave_id);
-    initNewMotor(ecatSlaves->bel[2].slave_id);
-    initNewMotor(ecatSlaves->bel[3].slave_id);
+    //initMotor(ecatSlaves->bel[0].slave_id);
+    //initMotor(ecatSlaves->bel[1].slave_id);
+    initNewMotor(ecatSlaves->bel[0].slave_id);
+    initNewMotor(ecatSlaves->bel[1].slave_id);
     printf("Slaves initialized, state to OP\n");
 
     /* Check if all slaves are working properly */

@@ -84,8 +84,6 @@ void rdda_run (void *ifnameptr) {
      */
     pivGainSDOwrite(ecatSlaves->bel[0].slave_id, 0, 0); // Pp 400, Vp 100, Kp 18.6
     pivGainSDOwrite(ecatSlaves->bel[1].slave_id, 0, 0);
-    pivGainSDOwrite(ecatSlaves->bel[2].slave_id, 0, 0);
-    pivGainSDOwrite(ecatSlaves->bel[3].slave_id, 0, 0);
     /**/
 
     initRddaStates(ecatSlaves, rdda);

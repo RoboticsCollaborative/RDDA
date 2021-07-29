@@ -35,22 +35,16 @@ double trajectoryGenerator(double input, double pre_output, double max_vel, doub
 
 void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstOrderLowPassFilterParams, SecondOrderLowPassFilterParams *secondOrderLowPassFilterParams, PreviousVariables *previousVariables, Rdda *rdda) {
     /* control parameters initialization */
-    controlParams->motor_inertia[0] = 1.0*1.11e-3;//1.1144e-3;
-    controlParams->motor_inertia[1] = 1.0*1.11e-3;//1.1144e-3;
-    controlParams->motor_inertia[2] = 1.6*1.463e-4;//1.1144e-3;
-    controlParams->motor_inertia[3] = 1.6*1.463e-4;//1.1144e-3;
+    //controlParams->motor_inertia[0] = 1.0*1.11e-3;//1.1144e-3;
+    //controlParams->motor_inertia[1] = 1.0*1.11e-3;//1.1144e-3;
+    controlParams->motor_inertia[0] = 1.6*1.463e-4;//1.1144e-3;
+    controlParams->motor_inertia[1] = 1.6*1.463e-4;//1.1144e-3;
     controlParams->motor_damping[0] = 0.0;
     controlParams->motor_damping[1] = 0.0;
-    controlParams->motor_damping[2] = 0.0;
-    controlParams->motor_damping[3] = 0.0;
-    controlParams->finger_damping[0] = 0.8*1.0933e-2;//1.6933e-2;
-    controlParams->finger_damping[1] = 0.8*1.0933e-2;//1.6933e-2;
-    controlParams->finger_damping[2] = 1.0933e-2;//1.6933e-2;
-    controlParams->finger_damping[3] = 1.0933e-2;//1.6933e-2;
+    controlParams->finger_damping[0] = 1.0933e-2;//1.6933e-2;
+    controlParams->finger_damping[1] = 1.0933e-2;//1.6933e-2;
     controlParams->finger_stiffness[0] = 0.0;//0.0235;
     controlParams->finger_stiffness[1] = 0.0;//0.0235;
-    controlParams->finger_stiffness[2] = 0.0;//0.0235;
-    controlParams->finger_stiffness[3] = 0.0;//0.0235;
     controlParams->hydraulic_damping = 0.009257;
     controlParams->hydraulic_stiffness = 13.0948;
     controlParams->cutoff_frequency_LPF[0] = 20.0; // Q for overall DOB
@@ -63,17 +57,9 @@ void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstO
     controlParams->Kp[1] = 0.0;
     controlParams->Pp[1] = 0.0;
     controlParams->Vp[1] = 0.0;
-    controlParams->Kp[2] = 0.0;
-    controlParams->Pp[2] = 0.0;
-    controlParams->Vp[2] = 0.0;
-    controlParams->Kp[3] = 0.0;
-    controlParams->Pp[3] = 0.0;
-    controlParams->Vp[3] = 0.0;
     controlParams->zeta = 0.3;
-    controlParams->max_inner_loop_torque_Nm[0] = 0.5; // ACD motor
-    controlParams->max_inner_loop_torque_Nm[1] = 0.5;
-    controlParams->max_inner_loop_torque_Nm[2] = 0.5; // ADR motor
-    controlParams->max_inner_loop_torque_Nm[3] = 0.5;
+    controlParams->max_external_torque[0] = 0.5; // ACD motor
+    controlParams->max_external_torque[1] = 0.5;
     controlParams->max_torque_Nm = 2.0; // max continuous torque limit
     controlParams->max_velocity = 10.0; // stable for Kp = 20 and cutoff_frequency_LPF[0] = 14
     controlParams->max_stiffness = 40.0;
@@ -81,13 +67,11 @@ void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstO
     controlParams->hysteresis_friction = 0.016;
     controlParams->sample_time = 0.5e-3;
     controlParams->gear_ratio = 1.33;
-    controlParams->external_force[0] = 0.0;
-    controlParams->external_force[1] = 0.0;
-    controlParams->external_force[2] = 0.0;
-    controlParams->external_force[3] = 0.0;
+    controlParams->coupling_torque[0] = 0.0;
+    controlParams->coupling_torque[1] = 0.0;
 
     /* friction compensation and hysteresis filter parameters initialization */
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < 2; i++) {
         firstOrderLowPassFilterParams->friction_cmp_a1[i] = (2.0 * controlParams->hydraulic_damping - controlParams->hydraulic_stiffness * controlParams->sample_time) / (2.0 * controlParams->hydraulic_damping + controlParams->hydraulic_stiffness * controlParams->sample_time);
         firstOrderLowPassFilterParams->friction_cmp_b0[i] = (controlParams->finger_stiffness[i] * controlParams->sample_time + 2.0 * controlParams->finger_damping[i]) / (2.0 * controlParams->hydraulic_damping + controlParams->hydraulic_stiffness * controlParams->sample_time);
         firstOrderLowPassFilterParams->friction_cmp_b1[i] = (controlParams->finger_stiffness[i] * controlParams->sample_time - 2.0 * controlParams->finger_damping[i]) / (2.0 * controlParams->hydraulic_damping + controlParams->hydraulic_stiffness * controlParams->sample_time);
@@ -106,14 +90,10 @@ void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstO
     /* previous variables initialization */
     previousVariables->pressure[0] = rdda->psensor.analogIn.val1;
     previousVariables->pressure[1] = rdda->psensor.analogIn.val2;
-    previousVariables->pressure[2] = rdda->psensor.analogIn.val3;
-    previousVariables->pressure[3] = rdda->psensor.analogIn.val4;
     previousVariables->filtered_finger_bk_comp_force_pressure_part[0] = rdda->psensor.analogIn.val1 * controlParams->finger_stiffness[0] / controlParams->hydraulic_stiffness;
     previousVariables->filtered_finger_bk_comp_force_pressure_part[1] = rdda->psensor.analogIn.val2 * controlParams->finger_stiffness[1] / controlParams->hydraulic_stiffness;
-    previousVariables->filtered_finger_bk_comp_force_pressure_part[2] = rdda->psensor.analogIn.val1 * controlParams->finger_stiffness[2] / controlParams->hydraulic_stiffness;
-    previousVariables->filtered_finger_bk_comp_force_pressure_part[3] = rdda->psensor.analogIn.val2 * controlParams->finger_stiffness[3] / controlParams->hydraulic_stiffness;
 
-    for (int i = 0; i < 4; i ++) {
+    for (int i = 0; i < 2; i ++) {
         previousVariables->pos_tar[i] = rdda->motor[i].rosOut.pos_ref;
         previousVariables->prev_pos_tar[i] = rdda->motor[i].rosOut.pos_ref;
         previousVariables->filtered_pos_tar[i] = rdda->motor[i].rosOut.pos_ref;
@@ -140,7 +120,7 @@ void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstO
 
 void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFilterParams *firstOrderLowPassFilterParams, SecondOrderLowPassFilterParams *secondOrderLowPassFilterParams, PreviousVariables *previousVariables) {
     /* dob parameters */
-    int num = 4;
+    int num = 2;
     double motor_pos[num];
     double motor_vel[num];
     //double motor_acc[num];
@@ -191,8 +171,6 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
     /* sensor reading */
     pressure[0] = rdda->psensor.analogIn.val1;
     pressure[1] = rdda->psensor.analogIn.val2;
-    pressure[2] = rdda->psensor.analogIn.val3;
-    pressure[3] = rdda->psensor.analogIn.val4;
     for (int i = 0; i < num; i ++) {
         motor_pos[i] = rdda->motor[i].motorIn.act_pos - rdda->motor[i].init_pos;
         motor_vel[i] = rdda->motor[i].motorIn.act_vel;
@@ -285,20 +263,16 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
     /* output force */
     for (int i = 0; i < num; i ++) {
         /* direct equation */
-        //integral_control_force[i] = previousVariables->integral_control_force[i] + controlParams->lambda[0] * controlParams->sample_time * (reference_force[i] + pressure[i] + finger_bk_comp_force[i] + hysteresis_force[i] + controlParams->external_force[i]);
-        //saturated_feedback_force[i] = integral_control_force[i] - nominal_force_integration[i];
-        //saturated_feedback_force[i] = saturation(controlParams->max_inner_loop_torque_Nm[i], saturated_feedback_force[i]);
-        //integral_control_force[i] = saturated_feedback_force[i] + nominal_force_integration[i];
-        controlParams->external_force[i] = saturation(controlParams->max_inner_loop_torque_Nm[i], controlParams->external_force[i]);
-        integral_control_force[i] = previousVariables->integral_control_force[i] + controlParams->lambda[0] * controlParams->sample_time * (reference_force[i] + pressure[i] + finger_bk_comp_force[i] + hysteresis_force[i] + controlParams->external_force[i]);
+        controlParams->coupling_torque[i] = saturation(controlParams->max_external_torque[i], controlParams->coupling_torque[i]);
+        integral_control_force[i] = previousVariables->integral_control_force[i] + controlParams->lambda[0] * controlParams->sample_time * (reference_force[i] + pressure[i] + finger_bk_comp_force[i] + hysteresis_force[i] + controlParams->coupling_torque[i]);
         //output_force[i] = integral_control_force[i] + reference_force[i] + finger_bk_comp_force[i] + hysteresis_force[i];// + 0.5 * pressure[i];
         output_force[i] = integral_control_force[i] - nominal_force_integration[i];// + 0.5 * pressure[i];
     }
 
     /* Disable DOB on new motors */
-    output_force[2] = controlParams->external_force[2];
-    output_force[3] = controlParams->external_force[3];
-    printf("tau[0]: %+2.4lf, tau[1]: %+2.4lf, tau[2]: %+2.4lf, tau[3]: %+2.4lf,", output_force[0], output_force[1], output_force[2], output_force[3]);
+    output_force[0] = controlParams->coupling_torque[0];
+    output_force[1] = controlParams->coupling_torque[1];
+    printf("tau[0]: %+2.4lf, tau[1]: %+2.4lf,", output_force[0], output_force[1]);
 
     /* motor output with torque saturation */
     for (int i = 0; i < num; i ++) {

@@ -17,19 +17,19 @@ typedef struct
     double sample_time;
     double resonant_frequency;
     double zeta;
-    double inertia[4];
-    double stiffness[4];
-    double damping[4];
+    double inertia[2];
+    double stiffness[2];
+    double damping[2];
 } TeleParam;
 
 typedef struct
 {
-    double pre_pos[4];
-    double pre_vel[4];
-    double pre_pressure[4];
-    double pre_filtered_pos[4];
-    double pre_filtered_vel[4];
-    double pre_filtered_pressure[4];
+    double pre_pos[2];
+    double pre_vel[2];
+    double pre_pressure[2];
+    double pre_filtered_pos[2];
+    double pre_filtered_vel[2];
+    double pre_filtered_pressure[2];
 } TeleFilterVariable;
 
 typedef struct
