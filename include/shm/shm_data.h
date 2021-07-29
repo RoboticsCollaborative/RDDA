@@ -4,6 +4,17 @@
 #include <stdint.h>
 #include <pthread.h>
 
+
+/*
+   Bel                          RDDA                        ROS Node
+┌──────────────────┐MotorOut┌──────────────────┐ RosIn  ┌────────────────────┐
+│                  ├────────►                  ├────────►                    │
+│                  │        │                  │        │                    │
+│                  ◄────────┤                  ◄────────┤                    │
+│                  │MotorIn │                  │ RosOut │                    │
+└──────────────────┘        └──────────────────┘        └────────────────────┘
+ */
+
 /** BEL drive CSP Mode inputs to master */
 typedef struct {
     double act_pos;
