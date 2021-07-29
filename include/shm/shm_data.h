@@ -34,6 +34,7 @@ typedef struct {
 /* Information sent to ROS interface */
 typedef  struct {
     int contact_flag;
+    double wave_out;
 } RosOut;
 
 /* Reference signals from ROS interface */
@@ -43,8 +44,7 @@ typedef struct {
     double tau_sat;
     double stiffness;
     double pos_tar;
-    double vel_tar;
-    double tau_cp;
+    double wave_in;
 } RosIn;
 
 /** EL3102 and EL3702 pressure sensor inputs to master */
