@@ -154,26 +154,26 @@ void contactDetection(ContactDetectionParams *contactDetectionParams, ContactDet
     for (int i = 0; i < 1; i ++) {
         if (contactDetectionParams->contact_flag_local[i] != 0) {
             contactDetectionPreviousVariable->contact_detection_count[i]--;
-            contactDetectionPreviousVariable->pos_collision[i] = rdda->motor[i].rosOut.pos_ref;
-            rdda->motor[i].rosOut.pos_ref += contactDetectionParams->contact_flag_local[i] * contactDetectionParams->reflect_distance[i];
+            contactDetectionPreviousVariable->pos_collision[i] = rdda->motor[i].rosIn.pos_ref;
+            rdda->motor[i].rosIn.pos_ref += contactDetectionParams->contact_flag_local[i] * contactDetectionParams->reflect_distance[i];
             contactDetectionParams->reflect_flag[i] = 1;
         }
     }
 
     /* back to collision position */
     for (int i = 0; i < num; i ++) {
-        if ((contactDetectionParams->reflect_flag[i] == 1) && (fabs(rdda->motor[i].motorIn.act_pos - rdda->motor[i].init_pos - rdda->motor[i].rosOut.pos_ref) <= contactDetectionParams->pos_deviation[i])) {
+        if ((contactDetectionParams->reflect_flag[i] == 1) && (fabs(rdda->motor[i].motorIn.act_pos - rdda->motor[i].init_pos - rdda->motor[i].rosIn.pos_ref) <= contactDetectionParams->pos_deviation[i])) {
             contactDetectionParams->reflect_flag[i] = 0;
             contactDetectionParams->reflect_back_flag[i] = 1;
-            contactDetectionPreviousVariable->pos_reflection[i] = rdda->motor[i].rosOut.pos_ref;
+            contactDetectionPreviousVariable->pos_reflection[i] = rdda->motor[i].rosIn.pos_ref;
         }
         if ((contactDetectionParams->reflect_back_flag[i] == 1) && (fabs(rdda->motor[i].motorIn.act_pos - rdda->motor[i].init_pos - contactDetectionPreviousVariable->pos_collision[i]) > contactDetectionParams->pos_deviation[i]) && (contactDetectionParams->time[i] <= 3.5)) {
-            rdda->motor[i].rosOut.pos_ref = reflectBack(contactDetectionPreviousVariable->pos_reflection[i], contactDetectionPreviousVariable->pos_collision[i], contactDetectionParams->time[i]);
+            rdda->motor[i].rosIn.pos_ref = reflectBack(contactDetectionPreviousVariable->pos_reflection[i], contactDetectionPreviousVariable->pos_collision[i], contactDetectionParams->time[i]);
             contactDetectionParams->time[i] += contactDetectionParams->sample_time;
         }
         else if ((contactDetectionParams->reflect_back_flag[i] == 1) && (fabs(rdda->motor[i].motorIn.act_pos - rdda->motor[i].init_pos - contactDetectionPreviousVariable->pos_collision[i]) <= contactDetectionParams->pos_deviation[i]) && (fabs(rdda->motor[i].motorIn.act_vel) <= contactDetectionParams->vel_threshold[i])) {
             contactDetectionParams->reflect_back_flag[i] = 0;
-            rdda->motor[i].rosOut.pos_ref = contactDetectionPreviousVariable->pos_collision[i];
+            rdda->motor[i].rosIn.pos_ref = contactDetectionPreviousVariable->pos_collision[i];
             contactDetectionParams->time[i] = 0.0;
         }
     }
