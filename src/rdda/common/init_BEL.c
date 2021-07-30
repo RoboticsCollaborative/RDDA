@@ -1,6 +1,6 @@
 /** init_BEL.c */
 
-#include "../../include/rdda/init_BEL.h"
+#include "init_BEL.h"
 
 /** SOEM wrapper for ec_SDOwrite().
  *

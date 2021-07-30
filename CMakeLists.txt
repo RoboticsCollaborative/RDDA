@@ -26,29 +26,52 @@ include_directories(/usr/include/soem)
 #link_directories(/home/step/SOEM/build)
 
 # Add the headers from the <include> directory
-include_directories(include/${PROJECT_NAME}/ include/shm)
-include_directories(include/${PROJECT_NAME}/ include/toolbox)
-include_directories(src/${PROJECT_NAME}/ src/shm)
-include_directories(src/${PROJECT_NAME}/ src/toolbox)
+include_directories(
+        include/${PROJECT_NAME}/
+        include/shm
+        include/toolbox
+)
 
 # Add the source files from the <src> directory
-add_library(${PROJECT_NAME}_src
-        src/${PROJECT_NAME}/rdda_ecat.c
-        src/${PROJECT_NAME}/init_BEL.c
-        src/${PROJECT_NAME}/rdda_base.c
-        src/${PROJECT_NAME}/rdda_control.c
+add_library(${PROJECT_NAME}_master_lib
+        src/${PROJECT_NAME}/master/rdda_ecat.c
+        src/${PROJECT_NAME}/common/init_BEL.c
+        src/${PROJECT_NAME}/master/rdda_base.c
+        src/${PROJECT_NAME}/master/rdda_control.c
         src/toolbox/contact_detect.c
         src/shm/shm.c
-        src/toolbox/tele_control.c)
+        src/toolbox/master/tele_control.c)
 
-target_link_libraries(${PROJECT_NAME}_src soem ${OS_LIBS})
+target_link_libraries(${PROJECT_NAME}_master_lib soem ${OS_LIBS})
 
 # Add the executable files
-add_executable(${PROJECT_NAME}_simpletest src/${PROJECT_NAME}/rdda_simpletest.c)
-# Linking for libraries
-target_link_libraries(${PROJECT_NAME}_simpletest
-        ${PROJECT_NAME}_src
-        soem
-        ${OS_LIBS}
+add_executable(${PROJECT_NAME}_master
+        src/${PROJECT_NAME}/master/rdda_simpletest.c
         )
 
+# Linking for libraries
+target_link_libraries(${PROJECT_NAME}_master
+        ${PROJECT_NAME}_master_lib
+        )
+
+### Build RDDA slave
+add_library(${PROJECT_NAME}_slave_lib
+        src/${PROJECT_NAME}/slave/rdda_ecat.c
+        src/${PROJECT_NAME}/common/init_BEL.c
+        src/${PROJECT_NAME}/slave/rdda_base.c
+        src/${PROJECT_NAME}/slave/rdda_control.c
+        src/toolbox/contact_detect.c
+        src/shm/shm.c
+        src/toolbox/slave/tele_control.c)
+
+target_link_libraries(${PROJECT_NAME}_slave_lib soem ${OS_LIBS})
+
+# Add the executable files
+add_executable(${PROJECT_NAME}_slave
+        src/${PROJECT_NAME}/slave/rdda_simpletest.c
+        )
+
+# Linking for libraries
+target_link_libraries(${PROJECT_NAME}_slave
+        ${PROJECT_NAME}_slave_lib
+        )
