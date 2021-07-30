@@ -21,17 +21,10 @@ void teleInit(TeleParam *teleParam) {
     teleParam->resonant_frequency = 100; // rad/s
     teleParam->zeta = 0.12;
     teleParam->wave_damping = 0.01;
-    teleParam->delay_index = 0;
-    teleParam->delay_cycle = 200;
-    teleParam->tau_int[0] = 0.0;
-    teleParam->tau_int[1] = 0.0;
+    teleParam->vel_tar[0] = 0.0;
+    teleParam->vel_tar[1] = 0.0;
+    teleParam->lambda = 1e-3;
 
-    for (int j = 0; j < teleParam->delay_cycle; j ++) {
-        for (int i = 0; i < teleParam->num; i ++) {
-            teleParam->pos_tar_delay[j][i] = 0.0;
-            teleParam->tau_cp_delay[j][i] = 0.0;
-        }
-    }
     /* symmetric stiffness */
     for (int i = 0; i < teleParam->num; i ++) {
         teleParam->stiffness[i] = 10.0;//4.0;
@@ -57,7 +50,6 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
 
     double pos_tar[num];
     double vel_tar[num];
-    int last_index;
 
     /* pos, vel & wave input */
     for (int i = 0; i < num; i ++) {
@@ -76,26 +68,12 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
 
     /* wave tele */
     for (int i = 0; i < num; i ++) {
-        if (teleParam->delay_index - 1 < 0) {
-            last_index = teleParam->delay_cycle - 1;
-        }
-        else {
-            last_index = teleParam->delay_index - 1;
-        }
-        teleParam->tau_int[i] += (teleParam->tau_cp_delay[last_index][i] - teleParam->tau_cp_delay[teleParam->delay_index][i]) * teleParam->sample_time;
-        pos_tar[i] = 2.0 * rdda->motor[i].rosIn.pos_tar - teleParam->pos_tar_delay[teleParam->delay_index][i] - 1.0 / teleParam->wave_damping * teleParam->tau_int[i];
+        teleParam->pos_tar_int[i] += teleParam->vel_tar[i] * teleParam->sample_time;
+        pos_tar[i] = teleParam->pos_tar_int[i] + teleParam->lambda * (rdda->motor[i].rosIn.pos_tar - pos[i]);
         vel_tar[i] = (sqrt(2.0 * teleParam->wave_damping) * wave_input[i] + teleParam->damping[i] * vel[i] + teleParam->stiffness[i] * (pos[i] - pos_tar[i])) / (teleParam->damping[i] + teleParam->wave_damping);
-
         controlParams->coupling_torque[i] = teleParam->stiffness[i] * (pos_tar[i] - pos[i]) + teleParam->damping[i] * (vel_tar[i] - vel[i]);
         rdda->motor[i].rosOut.wave_out = rdda->motor[i].rosIn.wave_in - sqrt(2.0 / teleParam->wave_damping) * controlParams->coupling_torque[i];
-        teleParam->pos_tar_delay[teleParam->delay_index][i] = pos_tar[i];
-        teleParam->tau_cp_delay[teleParam->delay_index][i] = controlParams->coupling_torque[i];
-        teleParam->delay_index++;
-        if (teleParam->delay_index >= teleParam->delay_cycle) {
-            teleParam->delay_index = 0;
-        }
-        //rdda->motor[i].rosIn.wave_in = -1.0 * rdda->motor[i].rosOut.wave_out;
     }
-    printf("tau[0]: %+2.4lf, tau[1]: %+2.4lf,", vel_tar[0], vel_tar[1]);
+    //printf("tau[0]: %+2.4lf, tau[1]: %+2.4lf,", vel_tar[0], vel_tar[1]);
 
 }

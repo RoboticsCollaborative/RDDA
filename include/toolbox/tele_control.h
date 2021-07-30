@@ -21,11 +21,9 @@ typedef struct
     double stiffness[2];
     double damping[2];
     double wave_damping;
-    int delay_index;
-    int delay_cycle;
-    double pos_tar_delay[200][2];
-    double tau_cp_delay[200][2];
-    double tau_int[2];
+    double pos_tar_int[2];
+    double vel_tar[2];
+    double lambda;
 } TeleParam;
 
 void teleInit(TeleParam *teleParam);
