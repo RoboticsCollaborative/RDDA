@@ -30,24 +30,16 @@ typedef struct {
     double tau_off;
 } MotorOut;
 
-/* Information sent to ROS interface */
-typedef  struct {
-    double act_pos;
-    double act_vel;
-    double act_tau;
-    int contact_flag;
-    double wave_out;
-} RDDARead;
-
-/* Reference signals from ROS interface */
+/** RDDAPacket transmitted using ROS */
 typedef struct {
-    double pos_ref;
-    double vel_sat;
-    double tau_sat;
-    double stiffness;
-    double pos_tar;
+    double pos_in;
+    double pos_out;
+    double vel;
+    double tau;
     double wave_in;
-} RDDAWrite;
+    double wave_out;
+    int contact_flag;
+} RDDAPacket;
 
 /** EL3102 and EL3702 pressure sensor inputs to master */
 typedef struct {
@@ -59,11 +51,13 @@ typedef struct {
 typedef struct {
     MotorIn motorIn;
     MotorOut motorOut;
-    RDDAWrite rddaWrite;
-    RDDARead rddaRead;
+    RDDAPacket rddaPacket;
     /* Constant */
-    double tau_max;
     double init_pos;
+    /* Parameter */
+    double vel_sat;
+    double tau_sat;
+    double stiffness;
     /* SDO */
     int Pp;
     int Vp;

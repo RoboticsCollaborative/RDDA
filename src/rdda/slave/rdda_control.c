@@ -94,23 +94,23 @@ void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstO
     previousVariables->filtered_finger_bk_comp_force_pressure_part[1] = rdda->psensor.analogIn.val2 * controlParams->finger_stiffness[1] / controlParams->hydraulic_stiffness;
 
     for (int i = 0; i < 2; i ++) {
-        previousVariables->pos_tar[i] = rdda->motor[i].rddaWrite.pos_ref;
-        previousVariables->prev_pos_tar[i] = rdda->motor[i].rddaWrite.pos_ref;
-        previousVariables->filtered_pos_tar[i] = rdda->motor[i].rddaWrite.pos_ref;
-        previousVariables->prev_filtered_pos_tar[i] = rdda->motor[i].rddaWrite.pos_ref;
-        previousVariables->stiffness[i] = rdda->motor[i].rddaWrite.stiffness;
-        previousVariables->prev_stiffness[i] = rdda->motor[i].rddaWrite.stiffness;
-        previousVariables->filtered_stiffness[i] = rdda->motor[i].rddaWrite.stiffness;
-        previousVariables->prev_filtered_stiffness[i] = rdda->motor[i].rddaWrite.stiffness;
-        previousVariables->vel_sat[i] = rdda->motor[i].rddaWrite.vel_sat;
-        previousVariables->prev_vel_sat[i] = rdda->motor[i].rddaWrite.vel_sat;
-        previousVariables->filtered_vel_sat[i] = rdda->motor[i].rddaWrite.vel_sat;
-        previousVariables->prev_filtered_vel_sat[i] = rdda->motor[i].rddaWrite.vel_sat;
-        previousVariables->tau_sat[i] = rdda->motor[i].rddaWrite.tau_sat;
-        previousVariables->prev_tau_sat[i] = rdda->motor[i].rddaWrite.tau_sat;
-        previousVariables->filtered_tau_sat[i] = rdda->motor[i].rddaWrite.tau_sat;
-        previousVariables->prev_filtered_tau_sat[i] = rdda->motor[i].rddaWrite.tau_sat;
-        previousVariables->pos_ref[i] = rdda->motor[i].rddaWrite.pos_ref;
+        previousVariables->pos_tar[i] = rdda->motor[i].rddaPacket.pos_in;
+        previousVariables->prev_pos_tar[i] = rdda->motor[i].rddaPacket.pos_in;
+        previousVariables->filtered_pos_tar[i] = rdda->motor[i].rddaPacket.pos_in;
+        previousVariables->prev_filtered_pos_tar[i] = rdda->motor[i].rddaPacket.pos_in;
+        previousVariables->stiffness[i] = rdda->motor[i].stiffness;
+        previousVariables->prev_stiffness[i] = rdda->motor[i].stiffness;
+        previousVariables->filtered_stiffness[i] = rdda->motor[i].stiffness;
+        previousVariables->prev_filtered_stiffness[i] = rdda->motor[i].stiffness;
+        previousVariables->vel_sat[i] = rdda->motor[i].vel_sat;
+        previousVariables->prev_vel_sat[i] = rdda->motor[i].vel_sat;
+        previousVariables->filtered_vel_sat[i] = rdda->motor[i].vel_sat;
+        previousVariables->prev_filtered_vel_sat[i] = rdda->motor[i].vel_sat;
+        previousVariables->tau_sat[i] = rdda->motor[i].tau_sat;
+        previousVariables->prev_tau_sat[i] = rdda->motor[i].tau_sat;
+        previousVariables->filtered_tau_sat[i] = rdda->motor[i].tau_sat;
+        previousVariables->prev_filtered_tau_sat[i] = rdda->motor[i].tau_sat;
+        previousVariables->pos_ref[i] = rdda->motor[i].rddaPacket.pos_in;
         previousVariables->hysteresis_force[i] = 0.0;
         previousVariables->finger_vel_pressure_part[i] = 0.0;
         previousVariables->integral_control_force[i] = 0.0;
@@ -159,10 +159,10 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
 
     /* position reference considering max velocity */
     for (int i = 0; i < num; i ++) {
-        pos_tar[i] = rdda->motor[i].rddaWrite.pos_ref;
+        pos_tar[i] = rdda->motor[i].rddaPacket.pos_in;
         filtered_pos_tar[i] = secondOrderIIRFilter(pos_tar[i], previousVariables->pos_tar[i], previousVariables->prev_pos_tar[i], previousVariables->filtered_pos_tar[i], previousVariables->prev_filtered_pos_tar[i], secondOrderLowPassFilterParams->b0, secondOrderLowPassFilterParams->b1, secondOrderLowPassFilterParams->b2, secondOrderLowPassFilterParams->a1, secondOrderLowPassFilterParams->a2);
         //filtered_pos_tar[i] = secondOrderLowPassFilterParams->a1[2] * previousVariables->filtered_pos_tar[i] + secondOrderLowPassFilterParams->a2[2] * previousVariables->prev_filtered_pos_tar[i] + secondOrderLowPassFilterParams->b0[2] * pos_tar[i] + secondOrderLowPassFilterParams->b1[2] * previousVariables->pos_tar[i] + secondOrderLowPassFilterParams->b2[2] * previousVariables->prev_pos_tar[i];
-        vel_sat[i] = rdda->motor[i].rddaWrite.vel_sat;
+        vel_sat[i] = rdda->motor[i].vel_sat;
         filtered_vel_sat[i] = secondOrderIIRFilter(vel_sat[i], previousVariables->vel_sat[i], previousVariables->prev_vel_sat[i], previousVariables->filtered_vel_sat[i], previousVariables->prev_filtered_vel_sat[i], secondOrderLowPassFilterParams->b0, secondOrderLowPassFilterParams->b1, secondOrderLowPassFilterParams->b2, secondOrderLowPassFilterParams->a1, secondOrderLowPassFilterParams->a2);
         filtered_vel_sat[i] = MIN(controlParams->max_velocity, filtered_vel_sat[i]);
         pos_ref[i] = trajectoryGenerator(filtered_pos_tar[i], previousVariables->pos_ref[i], filtered_vel_sat[i], controlParams->sample_time);
@@ -179,7 +179,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
 
     /* Stiffness reading */
     for (int i = 0; i < num; i ++) {
-        stiffness[i] = rdda->motor[i].rddaWrite.stiffness;
+        stiffness[i] = rdda->motor[i].stiffness;
         filtered_stiffness[i] = secondOrderIIRFilter(stiffness[i], previousVariables->stiffness[i], previousVariables->prev_stiffness[i], previousVariables->filtered_stiffness[i], previousVariables->prev_filtered_stiffness[i], secondOrderLowPassFilterParams->b0, secondOrderLowPassFilterParams->b1, secondOrderLowPassFilterParams->b2, secondOrderLowPassFilterParams->a1, secondOrderLowPassFilterParams->a2);
         if (filtered_stiffness[i] < 0) {
             filtered_stiffness[i] = 0.0;
@@ -276,7 +276,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
 
     /* motor output with torque saturation */
     for (int i = 0; i < num; i ++) {
-        tau_sat[i] = rdda->motor[i].rddaWrite.tau_sat;
+        tau_sat[i] = rdda->motor[i].tau_sat;
         filtered_tau_sat[i] = secondOrderIIRFilter(tau_sat[i], previousVariables->tau_sat[i], previousVariables->prev_tau_sat[i], previousVariables->filtered_tau_sat[i], previousVariables->prev_filtered_tau_sat[i], secondOrderLowPassFilterParams->b0, secondOrderLowPassFilterParams->b1, secondOrderLowPassFilterParams->b2, secondOrderLowPassFilterParams->a1, secondOrderLowPassFilterParams->a2);
         if (filtered_tau_sat[i] < 0) {
             filtered_tau_sat[i] = 0.0;

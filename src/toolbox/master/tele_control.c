@@ -41,15 +41,15 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
     int num;
     num = teleParam->num;
 
-    //double pos[num];
+    double pos[num];
     double vel[num];
     double wave_input[num];
 
     /* pos, vel & wave input */
     for (int i = 0; i < num; i ++) {
-        //pos[i] = rdda->motor[i].motorIn.act_pos;
+        pos[i] = rdda->motor[i].motorIn.act_pos - rdda->motor[i].init_pos;
         vel[i] = rdda->motor[i].motorIn.act_vel;
-        wave_input[i] = rdda->motor[i].rddaWrite.wave_in;
+        wave_input[i] = rdda->motor[i].rddaPacket.wave_in;
     }
 
     /* virtual coupling */
@@ -63,7 +63,8 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
     /* wave tele */
     for (int i = 0; i < num; i ++) {
         controlParams->coupling_torque[i] = -1.0 * (teleParam->wave_damping * vel[i] - sqrt(2 * teleParam->wave_damping) * wave_input[i]);
-        rdda->motor[i].rddaRead.wave_out = sqrt(2 * teleParam->wave_damping) * vel[i] - wave_input[i];
+        rdda->motor[i].rddaPacket.wave_out = sqrt(2 * teleParam->wave_damping) * vel[i] - wave_input[i];
+        rdda->motor[i].rddaPacket.pos_out = pos[i];
     }
 
 }

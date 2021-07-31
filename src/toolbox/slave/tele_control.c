@@ -55,7 +55,7 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
     for (int i = 0; i < num; i ++) {
         pos[i] = rdda->motor[i].motorIn.act_pos - rdda->motor[i].init_pos;
         vel[i] = rdda->motor[i].motorIn.act_vel;
-        wave_input[i] = rdda->motor[i].rddaWrite.wave_in;
+        wave_input[i] = rdda->motor[i].rddaPacket.wave_in;
     }
 
     /* virtual coupling */
@@ -69,10 +69,11 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
     /* wave tele */
     for (int i = 0; i < num; i ++) {
         teleParam->pos_tar_int[i] += teleParam->vel_tar[i] * teleParam->sample_time;
-        pos_tar[i] = teleParam->pos_tar_int[i] + teleParam->lambda * (rdda->motor[i].rddaWrite.pos_tar - pos[i]);
+        pos_tar[i] = teleParam->pos_tar_int[i] + teleParam->lambda * (rdda->motor[i].rddaPacket.pos_in - pos[i]);
         vel_tar[i] = (sqrt(2.0 * teleParam->wave_damping) * wave_input[i] + teleParam->damping[i] * vel[i] + teleParam->stiffness[i] * (pos[i] - pos_tar[i])) / (teleParam->damping[i] + teleParam->wave_damping);
         controlParams->coupling_torque[i] = teleParam->stiffness[i] * (pos_tar[i] - pos[i]) + teleParam->damping[i] * (vel_tar[i] - vel[i]);
-        rdda->motor[i].rddaRead.wave_out = rdda->motor[i].rddaWrite.wave_in - sqrt(2.0 / teleParam->wave_damping) * controlParams->coupling_torque[i];
+        rdda->motor[i].rddaPacket.wave_out = rdda->motor[i].rddaPacket.wave_in - sqrt(2.0 / teleParam->wave_damping) * controlParams->coupling_torque[i];
+        rdda->motor[i].rddaPacket.pos_out = pos[i];
     }
     //printf("tau[0]: %+2.4lf, tau[1]: %+2.4lf,", vel_tar[0], vel_tar[1]);
 
