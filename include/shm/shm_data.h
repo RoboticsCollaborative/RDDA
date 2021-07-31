@@ -4,15 +4,14 @@
 #include <stdint.h>
 #include <pthread.h>
 
-
 /*
-   Bel                          RDDA                        ROS Node
-┌──────────────────┐MotorOut┌──────────────────┐ RosIn  ┌────────────────────┐
-│                  ├────────►                  ├────────►                    │
-│                  │        │                  │        │                    │
-│                  ◄────────┤                  ◄────────┤                    │
-│                  │MotorIn │                  │ RosOut │                    │
-└──────────────────┘        └──────────────────┘        └────────────────────┘
++-----------------+         +------------------+          +-------------------+
+|                 | MotorOut|                  | RDDAWrite|                   |
+|                 <---------+                  <----------+                   |
+|    Bel          |         |     RDDA         |          |        ROS        |
+|                 +--------->                  +---------->                   |
+|                 | MotorIn |                  | RDDARead |                   |
++-----------------+         +------------------+          +-------------------+
  */
 
 /** BEL drive CSP Mode inputs to master */
@@ -33,9 +32,12 @@ typedef struct {
 
 /* Information sent to ROS interface */
 typedef  struct {
+    double act_pos;
+    double act_vel;
+    double act_tau;
     int contact_flag;
     double wave_out;
-} RosOut;
+} RDDARead;
 
 /* Reference signals from ROS interface */
 typedef struct {
@@ -45,7 +47,7 @@ typedef struct {
     double stiffness;
     double pos_tar;
     double wave_in;
-} RosIn;
+} RDDAWrite;
 
 /** EL3102 and EL3702 pressure sensor inputs to master */
 typedef struct {
@@ -57,8 +59,8 @@ typedef struct {
 typedef struct {
     MotorIn motorIn;
     MotorOut motorOut;
-    RosIn rosIn;
-    RosOut rosOut;
+    RDDAWrite rddaWrite;
+    RDDARead rddaRead;
     /* Constant */
     double tau_max;
     double init_pos;
