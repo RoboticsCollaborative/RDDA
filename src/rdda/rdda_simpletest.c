@@ -84,7 +84,7 @@ void rdda_run (void *ifnameptr) {
 
     /* create a data file */
     FILE *fptr;
-    char filename[] = "/home/ethercat/rdda.dat";
+    char filename[] = "/home/chunpeng/rdda.dat";
     remove(filename);
     fptr = fopen(filename, "w");
 
@@ -183,7 +183,7 @@ void rdda_run (void *ifnameptr) {
 
         /* save data to file */
         //fprintf(fptr, "%lf, %lf, %lf, %lf, %lf, %lf %lf\n", rdda->motor[0].motorIn.act_pos, rdda->motor[1].motorIn.act_pos, rdda->motor[0].motorIn.act_vel, rdda->motor[1].motorIn.act_vel, rdda->psensor.analogIn.val1, rdda->psensor.analogIn.val2, time);
-        fprintf(fptr, "%+lf, %+lf, %+lf\n", contactDetectionParams.ext_force_est[0], rdda->psensor.analogIn.val1, time);
+        fprintf(fptr, "%lf, %lf, %lf\n", contactDetectionParams.ext_force_est[0], rdda->psensor.analogIn.val1, time);
 
         mutex_unlock(&rdda->mutex);
 
