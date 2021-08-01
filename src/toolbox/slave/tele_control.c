@@ -75,6 +75,6 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
         rdda->motor[i].rddaPacket.wave_out = rdda->motor[i].rddaPacket.wave_in - sqrt(2.0 / teleParam->wave_damping) * controlParams->coupling_torque[i];
         rdda->motor[i].rddaPacket.pos_out = pos[i];
     }
-    //printf("tau[0]: %+2.4lf, tau[1]: %+2.4lf,", vel_tar[0], vel_tar[1]);
+    printf("p[0]: %+2.4lf, v[0]: %+2.4lf, t[0]: %+2.4lf, p[1]: %+2.4lf, v[1]: %+2.4lf, t[1]: %+2.4lf,", rdda->motor[0].motorIn.act_pos, rdda->motor[0].motorIn.act_vel, rdda->psensor.analogIn.val1, rdda->motor[1].motorIn.act_pos, rdda->motor[1].motorIn.act_vel, rdda->psensor.analogIn.val2);
 
 }

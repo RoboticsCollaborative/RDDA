@@ -272,7 +272,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
     /* Disable DOB on new motors */
     output_force[0] = controlParams->coupling_torque[0];
     output_force[1] = controlParams->coupling_torque[1];
-    printf("tau[0]: %+2.4lf, tau[1]: %+2.4lf,", output_force[0], output_force[1]);
+    //printf("tau[0]: %+2.4lf, tau[1]: %+2.4lf,", output_force[0], output_force[1]);
 
     /* motor output with torque saturation */
     for (int i = 0; i < num; i ++) {

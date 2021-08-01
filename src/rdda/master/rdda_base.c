@@ -37,17 +37,22 @@ void rdda_update(ecat_slaves *ecatSlaves, Rdda *rdda) {
     //ec_send_processdata();
 
     /* Inputs */
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < 1; i++) {
         rdda->motor[i].motorIn.act_pos = (double)(ecatSlaves->bel[i].in_motor->act_pos) / ecatSlaves->bel[i].counts_per_rad;
         rdda->motor[i].motorIn.act_vel = (double)(ecatSlaves->bel[i].in_motor->act_vel) / ecatSlaves->bel[i].counts_per_rad_sec;
         rdda->motor[i].motorIn.act_tau = (double)(ecatSlaves->bel[i].in_motor->act_tau) / ecatSlaves->bel[i].units_per_nm;
         rdda->motor[i].motorIn.load_pos = (double)(ecatSlaves->bel[i].in_motor->load_pos) / ecatSlaves->bel[i].load_counts_per_rad;
         rdda->motor[i].motorIn.load_vel = (double)(ecatSlaves->bel[i].in_motor->load_vel) / ecatSlaves->bel[i].load_counts_per_rad_sec;
     }
-    //rdda->psensor.analogIn.val1 = (double)(ecatSlaves->el3102.in_analog->val1 - pressure_offset_acd) * ecatSlaves->bel[0].pascal_per_count * ecatSlaves->bel[0].nm_per_pascal;
-    //rdda->psensor.analogIn.val2 = (double)(ecatSlaves->el3102.in_analog->val2 - pressure_offset_acd) * ecatSlaves->bel[1].pascal_per_count * ecatSlaves->bel[1].nm_per_pascal;
     rdda->psensor.analogIn.val1 = (double)(ecatSlaves->bel[0].in_motor->analog_in + pressure_offset_adr) * ecatSlaves->bel[0].pascal_per_count * ecatSlaves->bel[0].nm_per_pascal * (-1.0);
-    rdda->psensor.analogIn.val2 = (double)(ecatSlaves->bel[1].in_motor->analog_in - pressure_offset_adr) * ecatSlaves->bel[1].pascal_per_count * ecatSlaves->bel[1].nm_per_pascal * (-1.0);
+    for (int i = 1; i < 2; i++) {
+        rdda->motor[i].motorIn.act_pos = -1.0 * (double)(ecatSlaves->bel[i].in_motor->act_pos) / ecatSlaves->bel[i].counts_per_rad;
+        rdda->motor[i].motorIn.act_vel = -1.0 * (double)(ecatSlaves->bel[i].in_motor->act_vel) / ecatSlaves->bel[i].counts_per_rad_sec;
+        rdda->motor[i].motorIn.act_tau = -1.0 * (double)(ecatSlaves->bel[i].in_motor->act_tau) / ecatSlaves->bel[i].units_per_nm;
+        rdda->motor[i].motorIn.load_pos = -1.0 * (double)(ecatSlaves->bel[i].in_motor->load_pos) / ecatSlaves->bel[i].load_counts_per_rad;
+        rdda->motor[i].motorIn.load_vel = -1.0 * (double)(ecatSlaves->bel[i].in_motor->load_vel) / ecatSlaves->bel[i].load_counts_per_rad_sec;
+    }
+    rdda->psensor.analogIn.val2 = (double)(ecatSlaves->bel[1].in_motor->analog_in - pressure_offset_adr) * ecatSlaves->bel[1].pascal_per_count * ecatSlaves->bel[1].nm_per_pascal;
 
     rdda->ts.nsec = ecatSlaves->ts.tv_nsec;
     rdda->ts.sec = ecatSlaves->ts.tv_sec;
@@ -55,11 +60,17 @@ void rdda_update(ecat_slaves *ecatSlaves, Rdda *rdda) {
     /* Outputs */
     ecatSlaves->bel[0].out_motor->ctrl_wd = 15;//15;
     ecatSlaves->bel[1].out_motor->ctrl_wd = 15;
-    for (int j = 0; j < 2; j++) {
+    for (int j = 0; j < 1; j++) {
         //ecatSlaves->bel[j].out_motor->ctrl_wd = 0;
         ecatSlaves->bel[j].out_motor->tg_pos = (int32)saturation(limit_int32, ecatSlaves->bel[j].init_pos_cnts + (int32)saturation(limit_int32, rdda->motor[j].motorOut.tg_pos * ecatSlaves->bel[j].counts_per_rad));
         ecatSlaves->bel[j].out_motor->vel_off = (int32)saturation(limit_int32, rdda->motor[j].motorOut.vel_off * ecatSlaves->bel[j].counts_per_rad_sec);
         ecatSlaves->bel[j].out_motor->tau_off = (int16)saturation(limit_int16, rdda->motor[j].motorOut.tau_off * ecatSlaves->bel[j].units_per_nm);
+    }
+    for (int j = 1; j < 2; j++) {
+        //ecatSlaves->bel[j].out_motor->ctrl_wd = 0;
+        ecatSlaves->bel[j].out_motor->tg_pos = (int32)saturation(limit_int32, ecatSlaves->bel[j].init_pos_cnts + (int32)saturation(limit_int32, -1.0 * rdda->motor[j].motorOut.tg_pos * ecatSlaves->bel[j].counts_per_rad));
+        ecatSlaves->bel[j].out_motor->vel_off = (int32)saturation(limit_int32, -1.0 * rdda->motor[j].motorOut.vel_off * ecatSlaves->bel[j].counts_per_rad_sec);
+        ecatSlaves->bel[j].out_motor->tau_off = (int16)saturation(limit_int16, -1.0 * rdda->motor[j].motorOut.tau_off * ecatSlaves->bel[j].units_per_nm);
     }
 
     /* Timestamp */
