@@ -6,13 +6,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE true)
 set(OS_LIBS pthread rt m)
 
 # SOEM
-include_directories(/usr/include/soem)
-#find_package(soem)
-#include_directories(../SOEM/build)
-#include_directories(../SOEM/soem)
-#include_directories(../SOEM/osal)
-#include_directories(../SOEM/osal/linux)
-#include_directories(../SOEM/oshw/linux)
+find_package(soem)
 
 #link_directories(/home/steph/SOEM/soem/)
 #add_library(SOEM_LIB STATIC /home/steph/SOEM/build/libsoem.a)
