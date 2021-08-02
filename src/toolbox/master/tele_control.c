@@ -51,6 +51,7 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
         vel[i] = rdda->motor[i].motorIn.act_vel;
         wave_input[i] = rdda->motor[i].rddaPacket.wave_in;
     }
+    pos[1] = rdda->motor[1].motorIn.act_pos + rdda->motor[1].init_pos;
 
     /* virtual coupling */
 //    controlParams->external_force[2] = teleParam->stiffness[2] * ((rdda->motor[0].motorIn.act_pos - rdda->motor[0].init_pos) - (rdda->motor[2].motorIn.act_pos - rdda->motor[2].init_pos)) + teleParam->damping[2] * (rdda->motor[0].motorIn.act_vel - rdda->motor[2].motorIn.act_vel);
