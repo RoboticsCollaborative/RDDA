@@ -103,6 +103,9 @@ int initMotor(uint16 slaveIdx)
 {
     printf("Motor drive %d init\n", slaveIdx);
 
+    /* Clear latched faults */
+    SDO_write32(slaveIdx, 0x2181, 0, 0xFFFFFFFF);
+
     /* Motor params */
     SDO_write32(slaveIdx, 0x2383, 12, 25456);   /* motor torque constant */
     SDO_write32(slaveIdx, 0x2383, 13, 650000);  /* motor peak torque */
@@ -128,6 +131,9 @@ int initMotor(uint16 slaveIdx)
 int initNewMotor(uint16 slaveIdx)
 {
     printf("Motor drive %d init\n", slaveIdx);
+
+    /* Clear latched faults */
+    SDO_write32(slaveIdx, 0x2181, 0, 0xFFFFFFFF);
 
     /* Motor params */
     SDO_write32(slaveIdx, 0x2383, 12, 22627);   /* motor torque constant */
