@@ -6,8 +6,8 @@ set(CMAKE_POSITION_INDEPENDENT_CODE true)
 set(OS_LIBS pthread rt m)
 
 # SOEM
-include_directories(/usr/include/soem)
-#find_package(soem)
+#include_directories(/usr/include/soem)
+find_package(soem)
 #include_directories(../SOEM/build)
 #include_directories(../SOEM/soem)
 #include_directories(../SOEM/osal)
