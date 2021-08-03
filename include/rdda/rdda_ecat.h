@@ -26,7 +26,7 @@ typedef struct PACKED
     int16 act_tau;    /* torque actual value (0x6077) */
     int32 load_vel;   /* load encoder velocity (0x2231) */
     int32 load_pos;   /* load encoder position (0x2242) */
-    int16 error_code; /* load error code (0x603F)*/
+    int32 latching_fault; /* load latching fault (0x2183)*/
     int16 analog_in;  /* general analog input (0x2200) */
 } motor_input;
 

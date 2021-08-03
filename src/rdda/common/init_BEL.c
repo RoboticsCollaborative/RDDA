@@ -60,7 +60,7 @@ int mapMotorPDOs(uint16 slaveIdx)
     wkc += SDO_write8(slaveIdx, 0x1A00, 0, 2);           /* set number of objects mapped by PDO */
 
     wkc += SDO_write8(slaveIdx, 0x1A01, 0, 0);           /* clear the PDO first */
-    wkc += SDO_write32(slaveIdx, 0x1A01, 1, 0x603F0010); /* Load error code */
+    wkc += SDO_write32(slaveIdx, 0x1A01, 1, 0x21830020); /* Load error code */
     wkc += SDO_write32(slaveIdx, 0x1A01, 2, 0x22000010); /* analog input */
     wkc += SDO_write8(slaveIdx, 0x1A01, 0, 2);           /* set number of objects mapped by PDO */
 
@@ -104,7 +104,8 @@ int initMotor(uint16 slaveIdx)
     printf("Motor drive %d init\n", slaveIdx);
 
     /* Clear latched faults */
-    SDO_write32(slaveIdx, 0x2181, 0, 0xFFFFFFFF);
+    SDO_write16(slaveIdx, 0x6040, 0, 0x008f); /* set bit 7 low-to-high to clear latched fault*/
+    SDO_write16(slaveIdx, 0x6040, 0, 0x000f); /* reset control word */
 
     /* Motor params */
     SDO_write32(slaveIdx, 0x2383, 12, 25456);   /* motor torque constant */
@@ -133,7 +134,8 @@ int initNewMotor(uint16 slaveIdx)
     printf("Motor drive %d init\n", slaveIdx);
 
     /* Clear latched faults */
-    SDO_write32(slaveIdx, 0x2181, 0, 0xFFFFFFFF);
+    SDO_write16(slaveIdx, 0x6040, 0, 0x008f); /* set bit 7 low-to-high to clear latched fault*/
+    SDO_write16(slaveIdx, 0x6040, 0, 0x000f); /* reset control word */
 
     /* Motor params */
     SDO_write32(slaveIdx, 0x2383, 12, 22627);   /* motor torque constant */
