@@ -15,9 +15,7 @@ typedef struct
 {
     int num;
     double sample_time;
-    double resonant_frequency;
     double zeta;
-    double inertia[2];
     double stiffness[2];
     double damping[2];
     double wave_damping;
