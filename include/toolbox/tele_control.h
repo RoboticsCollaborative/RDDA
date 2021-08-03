@@ -22,6 +22,7 @@ typedef struct
     double damping[2];
     double wave_damping;
     double pos_tar_int[2];
+    double pos_tar[2];
     double vel_tar[2];
     double lambda;
 } TeleParam;
