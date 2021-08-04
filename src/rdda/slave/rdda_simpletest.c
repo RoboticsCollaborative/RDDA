@@ -54,7 +54,7 @@ void rdda_run (void *ifnameptr) {
 
     /* create a data file */
     FILE *fptr;
-    char filename[] = "rdda.dat";
+    char filename[] = "rdda_log.dat";
     remove(filename);
     fptr = fopen(filename, "w");
 
@@ -115,7 +115,6 @@ void rdda_run (void *ifnameptr) {
         dobController(rdda, &controlParams, &firstOrderLowPassFilterParams, &secondOrderLowPassFilterParams, &previousVariables);
 
         rdda_update(ecatSlaves, rdda);
-
         i++;
         //printf("tg_pos[0]: %+d, pos[0]: %+2.4lf, vel[0]: %+2.4lf, pre[0]: %+2.4lf, tau_off[0]: %+2.4lf, tg_pos[2]: %+d, pos[2]: %+2.4lf, vel[2]: %+2.4lf, pre[2]: %+2.4lf, tau_off[2]: %+2.4lf, ",
         //       ecatSlaves->bel[0].out_motor->tg_pos, rdda->motor[0].motorIn.act_pos, rdda->motor[0].motorIn.act_vel, rdda->psensor.analogIn.val1, rdda->motor[0].motorOut.tau_off,
@@ -130,12 +129,14 @@ void rdda_run (void *ifnameptr) {
         /* save data to file */
         //fprintf(fptr, "%lf, %lf, %lf, %lf, %lf, %lf, %lf\n", rdda->motor[0].motorIn.act_pos, rdda->motor[2].motorIn.act_pos, rdda->motor[0].motorIn.act_vel, rdda->motor[2].motorIn.act_vel, rdda->psensor.analogIn.val1, rdda->psensor.analogIn.val3, time);
         //fprintf(fptr, "%lf, %lf, %lf, %lf, %lf\n", rdda->motor[2].motorIn.act_pos, controlParams.filtered_pos[2], rdda->motor[2].motorIn.act_vel, controlParams.filtered_vel[2], time);
-
         mutex_unlock(&rdda->mutex);
-
         clock_gettime(CLOCK_MONOTONIC, &endTime);
         controlInterval = (endTime.tv_sec-startTime.tv_sec)*usec_per_sec + (endTime.tv_nsec-startTime.tv_nsec)/nsec_per_usec;
         printf("CT: %4d\r", controlInterval);
+        if (controlInterval >= cycletime) {
+            printf("\nControl interval time exceeds defined cycle time\n");
+            continue;
+        }
         rdda_sleep(ecatSlaves, cycletime-controlInterval);
     }
 

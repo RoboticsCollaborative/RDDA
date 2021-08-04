@@ -54,7 +54,7 @@ void rdda_run (void *ifnameptr) {
 
     /* create a data file */
     FILE *fptr;
-    char filename[] = "rdda.dat";
+    char filename[] = "rdda_log.dat";
     remove(filename);
     fptr = fopen(filename, "w");
 
@@ -136,6 +136,10 @@ void rdda_run (void *ifnameptr) {
         clock_gettime(CLOCK_MONOTONIC, &endTime);
         controlInterval = (endTime.tv_sec-startTime.tv_sec)*usec_per_sec + (endTime.tv_nsec-startTime.tv_nsec)/nsec_per_usec;
         printf("CT: %4d\r", controlInterval);
+        if (controlInterval >= cycletime) {
+            printf("\nControl interval time exceeds defined cycle time\n");
+            continue;
+        }
         rdda_sleep(ecatSlaves, cycletime-controlInterval);
     }
 

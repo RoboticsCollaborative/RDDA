@@ -264,6 +264,7 @@ int64 ec_sync(int64 reftime, int64 cycletime) {
     static int64 integral = 0;
     int64 delta;
     /* Set linux sync point 50us later than DC sync */
+    assert( cycletime > 0);
     delta = (reftime - 50000) % cycletime;
     if (delta > (cycletime/2)) { delta=delta-cycletime; }
     if (delta > 0) { integral++; }
