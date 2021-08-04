@@ -23,3 +23,7 @@
 `cmake ..`
 
 `make`
+
+
+### Grant socket permission to executable
+` sudo setcap cap_net_admin,cap_net_raw=eip ./rdda_slave`  (or rdda_master)
