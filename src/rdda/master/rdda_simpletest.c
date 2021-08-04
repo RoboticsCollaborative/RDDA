@@ -24,6 +24,7 @@ volatile sig_atomic_t done = 0;
 void intHandler (int sig) {
     if (sig == SIGINT) {
         done = 1;
+        printf("Received interrupt");
     }
 }
 
@@ -53,7 +54,7 @@ void rdda_run (void *ifnameptr) {
 
     /* create a data file */
     FILE *fptr;
-    char filename[] = "/home/ethercat/rdda.dat";
+    char filename[] = "rdda.dat";
     remove(filename);
     fptr = fopen(filename, "w");
 
@@ -141,7 +142,12 @@ void rdda_run (void *ifnameptr) {
     rddaStop(ecatSlaves);
 
     /* close file */
-    fclose(fptr);
+    if (fclose(fptr) == 0) {
+        printf("Shared memory file pointer closed\n");
+    }
+    else {
+        printf("Failed to close the file stream\n");
+    }
 }
 
 int main(int argc, char **argv) {

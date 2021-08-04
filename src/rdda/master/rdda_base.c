@@ -17,8 +17,9 @@ void rddaStop(ecat_slaves *slave) {
     ec_slave[0].state = EC_STATE_INIT;
     ec_writestate(0);
     delete_ecat_slave(slave);
-    printf("Close socket\n");
     ec_close(); /* stop SOEM, close socket */
+    printf("Socket closed\n");
+
 }
 
 /** Sync PDO data by layers
