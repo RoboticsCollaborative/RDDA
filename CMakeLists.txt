@@ -56,7 +56,8 @@ add_library(${PROJECT_NAME}_slave_lib
         src/${PROJECT_NAME}/slave/rdda_control.c
         src/toolbox/contact_detect.c
         src/shm/shm.c
-        src/toolbox/slave/tele_control.c)
+        src/toolbox/slave/tele_control.c
+        src/toolbox/slave/rdda_homing.c)
 
 target_link_libraries(${PROJECT_NAME}_slave_lib soem ${OS_LIBS})
 

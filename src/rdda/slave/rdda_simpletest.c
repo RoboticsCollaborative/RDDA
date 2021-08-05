@@ -17,6 +17,7 @@
 #include "rdda_control.h"
 #include "contact_detect.h"
 #include "tele_control.h"
+#include "rdda_homing.h"
 #include "shm_data.h"
 #include "shm.h"
 
@@ -90,6 +91,9 @@ void rdda_run (void *ifnameptr) {
     dobInit(&controlParams, &firstOrderLowPassFilterParams, &secondOrderLowPassFilterParams, &previousVariables, rdda);
     teleInit(&teleParam);
     contactDetectionInit(&contactDetectionParams, &contactDetectionHighPassFilterParams, &contactDetectionPreviousVariable, rdda);
+
+    /* homing */
+//    rddaHoming(ecatSlaves, rdda, &controlParams, &firstOrderLowPassFilterParams, &secondOrderLowPassFilterParams, &previousVariables);
 
     /* Measure time interval for sleep */
     int usec_per_sec = 1000000;

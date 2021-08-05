@@ -32,6 +32,7 @@ typedef struct
     double sample_time;
     double gear_ratio;
     double coupling_torque[2];
+    double pos_ref[2];
 } ControlParams;
 
 typedef struct
