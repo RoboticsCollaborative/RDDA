@@ -17,7 +17,6 @@
 #include "rdda_control.h"
 #include "contact_detect.h"
 #include "tele_control.h"
-#include "rdda_homing.h"
 #include "shm_data.h"
 #include "shm.h"
 
