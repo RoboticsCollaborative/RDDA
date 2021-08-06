@@ -31,7 +31,7 @@ void rdda_update(ecat_slaves *ecatSlaves, Rdda *rdda) {
 
     double limit_int16 = 32767.0;
     double limit_int32 = 2147483647.0;
-    int16 pressure_offset_acd = 500;//750;
+    int16 pressure_offset_acd = 150;//750;
     //int16 pressure_offset_adr = 200;
 
     ec_receive_processdata(EC_TIMEOUTRET);
@@ -61,6 +61,12 @@ void rdda_update(ecat_slaves *ecatSlaves, Rdda *rdda) {
         ecatSlaves->bel[j].out_motor->tg_pos = (int32)saturation(limit_int32, ecatSlaves->bel[j].init_pos_cnts + (int32)saturation(limit_int32, rdda->motor[j].motorOut.tg_pos * ecatSlaves->bel[j].counts_per_rad));
         ecatSlaves->bel[j].out_motor->vel_off = (int32)saturation(limit_int32, rdda->motor[j].motorOut.vel_off * ecatSlaves->bel[j].counts_per_rad_sec);
         ecatSlaves->bel[j].out_motor->tau_off = (int16)saturation(limit_int16, rdda->motor[j].motorOut.tau_off * ecatSlaves->bel[j].units_per_nm);
+    }
+
+    /* rddaPacket update */
+    for (int i = 0; i < 2; i ++) {
+        rdda->motor[i].rddaPacket.tau = rdda->motor[i].motorIn.act_tau;
+        rdda->motor[i].rddaPacket.pos_out = rdda->motor[i].motorIn.act_pos - rdda->motor[i].init_pos;
     }
 
     /* Timestamp */

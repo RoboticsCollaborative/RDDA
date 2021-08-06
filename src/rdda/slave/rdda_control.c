@@ -161,8 +161,8 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
 
     /* position reference considering max velocity */
     for (int i = 0; i < num; i ++) {
-//        pos_tar[i] = rdda->motor[i].rddaPacket.pos_in;
-        pos_tar[i] = controlParams->pos_ref[i];
+        pos_tar[i] = rdda->motor[i].rddaPacket.pos_ref;
+        // pos_tar[i] = controlParams->pos_ref[i];
         filtered_pos_tar[i] = secondOrderIIRFilter(pos_tar[i], previousVariables->pos_tar[i], previousVariables->prev_pos_tar[i], previousVariables->filtered_pos_tar[i], previousVariables->prev_filtered_pos_tar[i], secondOrderLowPassFilterParams->b0, secondOrderLowPassFilterParams->b1, secondOrderLowPassFilterParams->b2, secondOrderLowPassFilterParams->a1, secondOrderLowPassFilterParams->a2);
         //filtered_pos_tar[i] = secondOrderLowPassFilterParams->a1[2] * previousVariables->filtered_pos_tar[i] + secondOrderLowPassFilterParams->a2[2] * previousVariables->prev_filtered_pos_tar[i] + secondOrderLowPassFilterParams->b0[2] * pos_tar[i] + secondOrderLowPassFilterParams->b1[2] * previousVariables->pos_tar[i] + secondOrderLowPassFilterParams->b2[2] * previousVariables->prev_pos_tar[i];
         vel_sat[i] = rdda->motor[i].vel_sat;
