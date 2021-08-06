@@ -80,7 +80,7 @@ void rdda_update(ecat_slaves *ecatSlaves, Rdda *rdda) {
         rdda->motor[i].rddaPacket.pos_out = rdda->motor[i].motorIn.act_pos - rdda->motor[i].init_pos;
         rdda->motor[i].rddaPacket.vel = rdda->motor[i].motorIn.act_vel;
     }
-    rdda->motor[1].rddaPacket.pos_out = rdda->motor[1].motorIn.act_pos + rdda->motor[i].init_pos;
+    rdda->motor[1].rddaPacket.pos_out = rdda->motor[1].motorIn.act_pos + rdda->motor[1].init_pos;
 
     /* Timestamp */
     rdda->ts.sec = ecatSlaves->ts.tv_sec;
