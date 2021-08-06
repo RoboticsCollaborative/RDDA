@@ -31,7 +31,7 @@ void rdda_update(ecat_slaves *ecatSlaves, Rdda *rdda) {
 
     double limit_int16 = 32767.0;
     double limit_int32 = 2147483647.0;
-    int16 pressure_offset_acd = 150;//750;
+    int16 pressure_offset_acd = 300;//750;
     //int16 pressure_offset_adr = 200;
 
     ec_receive_processdata(EC_TIMEOUTRET);
@@ -146,6 +146,7 @@ void initRddaStates(ecat_slaves *ecatSlaves, Rdda *rdda) {
         rdda->motor[i].stiffness = 0.0;
         rdda->motor[i].rddaPacket.pos_in = 0.0;
         rdda->motor[i].rddaPacket.wave_in = 0.0;
+        rdda->motor[i].rddaPacket.pos_ref = 0.0;
     }
     rdda->freq_anti_alias = 500;
     rdda->ts.sec = rdda->ts.nsec = 0;

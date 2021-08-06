@@ -91,9 +91,6 @@ void rdda_run (void *ifnameptr) {
     teleInit(&teleParam);
     contactDetectionInit(&contactDetectionParams, &contactDetectionHighPassFilterParams, &contactDetectionPreviousVariable, rdda);
 
-    /* homing */
-//    rddaHoming(ecatSlaves, rdda, &controlParams, &firstOrderLowPassFilterParams, &secondOrderLowPassFilterParams, &previousVariables);
-
     /* Measure time interval for sleep */
     int usec_per_sec = 1000000;
     int nsec_per_usec = 1000;
