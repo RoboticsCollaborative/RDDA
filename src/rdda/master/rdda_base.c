@@ -74,6 +74,13 @@ void rdda_update(ecat_slaves *ecatSlaves, Rdda *rdda) {
         ecatSlaves->bel[j].out_motor->tau_off = (int16)saturation(limit_int16, -1.0 * rdda->motor[j].motorOut.tau_off * ecatSlaves->bel[j].units_per_nm);
     }
 
+    /* rddaPacket update */
+    for (int i = 0; i < 2; i ++) {
+        rdda->motor[i].rddaPacket.tau = rdda->motor[i].motorIn.act_tau;
+        rdda->motor[i].rddaPacket.pos_out = rdda->motor[i].motorIn.act_pos - rdda->motor[i].init_pos;
+        rdda->motor[i].rddaPacket.vel = rdda->motor[i].motorIn.act_vel;
+    }
+
     /* Timestamp */
     rdda->ts.sec = ecatSlaves->ts.tv_sec;
     rdda->ts.nsec = ecatSlaves->ts.tv_nsec;

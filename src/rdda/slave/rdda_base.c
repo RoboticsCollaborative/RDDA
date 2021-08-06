@@ -67,6 +67,7 @@ void rdda_update(ecat_slaves *ecatSlaves, Rdda *rdda) {
     for (int i = 0; i < 2; i ++) {
         rdda->motor[i].rddaPacket.tau = rdda->motor[i].motorIn.act_tau;
         rdda->motor[i].rddaPacket.pos_out = rdda->motor[i].motorIn.act_pos - rdda->motor[i].init_pos;
+        rdda->motor[i].rddaPacket.vel = rdda->motor[i].motorIn.act_vel;
     }
 
     /* Timestamp */
