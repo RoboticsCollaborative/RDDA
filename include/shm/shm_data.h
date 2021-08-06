@@ -4,16 +4,6 @@
 #include <stdint.h>
 #include <pthread.h>
 
-/*
-+-----------------+         +------------------+          +-------------------+
-|                 | MotorOut|                  | RDDAWrite|                   |
-|                 <---------+                  <----------+                   |
-|    Bel          |         |     RDDA         |          |        ROS        |
-|                 +--------->                  +---------->                   |
-|                 | MotorIn |                  | RDDARead |                   |
-+-----------------+         +------------------+          +-------------------+
- */
-
 /** BEL drive CSP Mode inputs to master */
 typedef struct {
     double act_pos;
@@ -34,6 +24,7 @@ typedef struct {
 typedef struct {
     double pos_in;
     double pos_out;
+    double pos_ref;  /* for homing */
     double vel;
     double tau;
     double wave_in;
