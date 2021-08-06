@@ -58,8 +58,8 @@ void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstO
     controlParams->Pp[1] = 0.0;
     controlParams->Vp[1] = 0.0;
     controlParams->zeta = 0.3;
-    controlParams->max_external_torque[0] = 0.5; // ACD motor
-    controlParams->max_external_torque[1] = 0.5;
+    controlParams->max_external_torque[0] = 1.0; // ACD motor
+    controlParams->max_external_torque[1] = 1.0;
     controlParams->max_torque_Nm = 2.0; // max continuous torque limit
     controlParams->max_velocity = 10.0; // stable for Kp = 20 and cutoff_frequency_LPF[0] = 14
     controlParams->max_stiffness = 40.0;

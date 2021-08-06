@@ -15,7 +15,7 @@ void teleInit(TeleParam *teleParam) {
     teleParam->num = 2;
     teleParam->sample_time = 0.5e-3;
     teleParam->zeta = 0.12;
-    teleParam->wave_damping = 0.02;
+    teleParam->wave_damping = 0.01;
     teleParam->vel_tar[0] = 0.0;
     teleParam->vel_tar[1] = 0.0;
     teleParam->lambda = 10e-2;
