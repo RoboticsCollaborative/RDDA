@@ -1,33 +1,44 @@
-cmake_minimum_required(VERSION 2.8)
-project(rdda C CXX)
+cmake_minimum_required(VERSION 3.0.2)
+project(rdda)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror")
-set(CMAKE_POSITION_INDEPENDENT_CODE true)
+## Compile as C++11, supported in ROS Kinetic and newer
+# add_compile_options(-std=c++11)
+
+## Find catkin macros and libraries
+## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
+## is used, also find other catkin packages
+
+# set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror")
+# set(CMAKE_POSITION_INDEPENDENT_CODE true)
 set(OS_LIBS pthread rt m)
 
+# catkin
+find_package(catkin REQUIRED)
+
 # SOEM
-find_package(soem)
-
-#link_directories(/home/steph/SOEM/soem/)
-#add_library(SOEM_LIB STATIC /home/steph/SOEM/build/libsoem.a)
-#add_library(SOEM_LIB STATIC /home/steph/SOEM/soem/ethercat.h)
-#set_target_properties(SOEM_LIB PROPERTIES LINKER_LANGUAGE C)
+find_package(soem REQUIRED)
 
 
+catkin_package(
+#  INCLUDE_DIRS include
+#  LIBRARIES rdda_ros
+#  CATKIN_DEPENDS other_catkin_pkg
+#  DEPENDS system_lib
+)
 
-#FIND_LIBRARY(SOEM_LIB /home/step/SOEM/build)
-#link_directories(SOEM_LIB)
-#link_directories(/home/step/SOEM/build)
+###########
+## Build ##
+###########
 
-# Add the headers from the <include> directory
+## Specify additional locations of header files
+## Your package locations should be listed before other locations
 include_directories(
         include/${PROJECT_NAME}/
         include/shm
         include/toolbox
 )
 
-# Add the source files from the <src> directory
-add_library(${PROJECT_NAME}_master_lib
+add_library(${PROJECT_NAME}_master_lib STATIC
         src/${PROJECT_NAME}/master/rdda_ecat.c
         src/${PROJECT_NAME}/common/init_BEL.c
         src/${PROJECT_NAME}/master/rdda_base.c
@@ -37,7 +48,6 @@ add_library(${PROJECT_NAME}_master_lib
         src/toolbox/master/tele_control.c)
 
 target_link_libraries(${PROJECT_NAME}_master_lib soem ${OS_LIBS})
-
 # Add the executable files
 add_executable(${PROJECT_NAME}_master
         src/${PROJECT_NAME}/master/rdda_simpletest.c
@@ -48,8 +58,7 @@ target_link_libraries(${PROJECT_NAME}_master
         ${PROJECT_NAME}_master_lib
         )
 
-### Build RDDA slave
-add_library(${PROJECT_NAME}_slave_lib
+add_library(${PROJECT_NAME}_slave_lib STATIC
         src/${PROJECT_NAME}/slave/rdda_ecat.c
         src/${PROJECT_NAME}/common/init_BEL.c
         src/${PROJECT_NAME}/slave/rdda_base.c
