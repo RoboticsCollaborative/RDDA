@@ -23,6 +23,10 @@ typedef struct
     double pos_tar[2];
     double vel_tar[2];
     double lambda;
+    int delay_index;
+    int delay_const;
+    double wave_int[2];
+    double wave_history[2][8];
 } TeleParam;
 
 void teleInit(TeleParam *teleParam);
