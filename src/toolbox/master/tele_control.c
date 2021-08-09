@@ -12,15 +12,13 @@ double teleFirstOrderIIRFilter(double input, double input_prev, double output_pr
 
 void teleInit(TeleParam *teleParam) {
     /* parameter initialization */
-    teleParam->num = 2;
     teleParam->sample_time = 0.5e-3;
     teleParam->zeta = 0.12;
-    teleParam->wave_damping = 0.01;
+    teleParam->wave_damping = 0.03;
 }
 
 void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rdda) {
-    int num;
-    num = teleParam->num;
+    int num = MOTOR_NUM;
 
     double vel[num];
     double wave_input[num];

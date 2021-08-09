@@ -11,22 +11,24 @@
 #include "shm_data.h"
 #include "rdda_base.h"
 
+#define MOTOR_NUM 2
+#define MAX_BUFF 2000
+
 typedef struct
 {
-    int num;
     double sample_time;
     double zeta;
-    double stiffness[2];
-    double damping[2];
+    double stiffness[MOTOR_NUM];
+    double damping[MOTOR_NUM];
     double wave_damping;
-    double pos_tar_int[2];
-    double pos_tar[2];
-    double vel_tar[2];
+    double pos_tar_int[MOTOR_NUM];
+    double pos_tar[MOTOR_NUM];
+    double vel_tar[MOTOR_NUM];
     double lambda;
-    int delay_index;
-    int delay_const;
-    double wave_int[2];
-    double wave_history[2][8];
+    int delay_current_index;
+    int delay_cycle;
+    double wave_int[MOTOR_NUM];
+    double wave_history[MOTOR_NUM][MAX_BUFF];
 } TeleParam;
 
 void teleInit(TeleParam *teleParam);
