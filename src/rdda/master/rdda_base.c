@@ -169,142 +169,142 @@ void initRddaStates(ecat_slaves *ecatSlaves, Rdda *rdda) {
  * @param ecatSlave     =   EtherCAT structure.
  */
 
-// int errorCheck(ecat_slaves *ecatSlaves) {
-//     for (int i = 0; i < 2; i++) {
-//         if (ecatSlaves->bel[i].in_motor->latching_fault == 0x0001) {
-//             printf("Fault: Data flash CRC failure on bel[%d]. This fault is considered fatal and cannot be cleared\n", i);
-//             return 1;
-//         }
-//         else if (ecatSlaves->bel[i].in_motor->latching_fault == 0x0002) {
-//             printf("Fault: Amplifier internal error on bel[%d].This fault is considered fatal and cannot be cleared\n", i);
-//             return 1;
-//         }
-//         else if (ecatSlaves->bel[i].in_motor->latching_fault == 0x0004) {
-//             printf("Fault: Short circuit on bel[%d].\n", i);
-//             return 1;
-//         }
-//         else if (ecatSlaves->bel[i].in_motor->latching_fault == 0x0008) {
-//             printf("Fault: amplifier over temperature on bel[%d].\n", i);
-//             return 1;
-//         }
-//         else if (ecatSlaves->bel[i].in_motor->latching_fault == 0x0010) {
-//             printf("Fault: Motor over temperature on bel[%d].\n", i);
-//             return 1;
-//         }
-//         else if (ecatSlaves->bel[i].in_motor->latching_fault == 0x0020) {
-//             printf("Fault: Over voltage on bel[%d].\n", i);
-//             return 1;
-//         }
-//         else if (ecatSlaves->bel[i].in_motor->latching_fault == 0x0040) {
-//             printf("Fault: Under voltage on bel[%d].\n", i);
-//             return 1;
-//         }
-//         else if (ecatSlaves->bel[i].in_motor->latching_fault == 0x0080) {
-//             printf("Fault: Feedback fault on bel[%d].\n", i);
-//             return 1;
-//         }
-//         else if (ecatSlaves->bel[i].in_motor->latching_fault == 0x0100) {
-//             printf("Fault: Phasing error on bel[%d].\n", i);
-//             return 1;
-//         }
-//         else if (ecatSlaves->bel[i].in_motor->latching_fault == 0x0200) {
-//             printf("Fault: Tracking error on bel[%d].\n", i);
-//             return 1;
-//         }
-//         else if (ecatSlaves->bel[i].in_motor->latching_fault == 0x0400) {
-//             printf("Fault: Over current on bel[%d].\n", i);
-//             return 1;
-//         }
-//         else if (ecatSlaves->bel[i].in_motor->latching_fault == 0x0800) {
-//             printf("Fault: FPGA failure case 1 on bel[%d].\n", i);
-//             return 1;
-//         }
-//         else if (ecatSlaves->bel[i].in_motor->latching_fault == 0x1000) {
-//             printf("Fault: Command input lost on bel[%d].\n", i);
-//             return 1;
-//         }
-//         else if (ecatSlaves->bel[i].in_motor->latching_fault == 0x2000) {
-//             printf("Fault: FPGA failure case 2 on bel[%d].\n", i);
-//             return 1;
-//         }
-//         else if (ecatSlaves->bel[i].in_motor->latching_fault == 0x4000) {
-//             printf("Fault: Safety circuit fault on bel[%d].\n", i);
-//             return 1;
-//         }
-//         else if (ecatSlaves->bel[i].in_motor->latching_fault == 0x8000) {
-//             printf("Fault: Unable to control current on bel[%d].\n", i);
-//             return 1;
-//         }
-//     }
-//     return 0;
-// }
-
 int errorCheck(ecat_slaves *ecatSlaves) {
     for (int i = 0; i < 2; i++) {
-        if (ecatSlaves->bel[i].in_motor->error_code == 0x2320) {
-            printf("Error: Short circuit on bel[%d].\n", i);
+        if (ecatSlaves->bel[i].in_motor->latching_fault == 0x0001) {
+            printf("Fault: Data flash CRC failure on bel[%d]. This fault is considered fatal and cannot be cleared\n", i);
             return 1;
         }
-        else if (ecatSlaves->bel[i].in_motor->error_code == 0x4210) {
-            printf("Error: Amp over temp on bel[%d].\n", i);
+        else if (ecatSlaves->bel[i].in_motor->latching_fault == 0x0002) {
+            printf("Fault: Amplifier internal error on bel[%d].This fault is considered fatal and cannot be cleared\n", i);
             return 1;
         }
-        else if (ecatSlaves->bel[i].in_motor->error_code == 0x3110) {
-            printf("Error: Amp over voltage on bel[%d].\n", i);
+        else if (ecatSlaves->bel[i].in_motor->latching_fault == 0x0004) {
+            printf("Fault: Short circuit on bel[%d].\n", i);
             return 1;
         }
-        else if (ecatSlaves->bel[i].in_motor->error_code == 0x3120) {
-            printf("Error: Amp under voltage on bel[%d].\n", i);
+        else if (ecatSlaves->bel[i].in_motor->latching_fault == 0x0008) {
+            printf("Fault: amplifier over temperature on bel[%d].\n", i);
             return 1;
         }
-        else if (ecatSlaves->bel[i].in_motor->error_code == 0x4300) {
-            printf("Error: Motor over temp on bel[%d].\n", i);
+        else if (ecatSlaves->bel[i].in_motor->latching_fault == 0x0010) {
+            printf("Fault: Motor over temperature on bel[%d].\n", i);
             return 1;
         }
-        else if (ecatSlaves->bel[i].in_motor->error_code == 0x2280) {
-            printf("Error: Feedback error on bel[%d].\n", i);
+        else if (ecatSlaves->bel[i].in_motor->latching_fault == 0x0020) {
+            printf("Fault: Over voltage on bel[%d].\n", i);
             return 1;
         }
-        else if (ecatSlaves->bel[i].in_motor->error_code == 0x7122) {
-            printf("Error: Phasing error on bel[%d].\n", i);
+        else if (ecatSlaves->bel[i].in_motor->latching_fault == 0x0040) {
+            printf("Fault: Under voltage on bel[%d].\n", i);
             return 1;
         }
-        else if (ecatSlaves->bel[i].in_motor->error_code == 0x2310) {
-            printf("Error: Current limit on bel[%d].\n", i);
+        else if (ecatSlaves->bel[i].in_motor->latching_fault == 0x0080) {
+            printf("Fault: Feedback fault on bel[%d].\n", i);
             return 1;
         }
-        else if (ecatSlaves->bel[i].in_motor->error_code == 0x3310) {
-            printf("Error: Voltage limit on bel[%d].\n", i);
+        else if (ecatSlaves->bel[i].in_motor->latching_fault == 0x0100) {
+            printf("Fault: Phasing error on bel[%d].\n", i);
             return 1;
         }
-        else if (ecatSlaves->bel[i].in_motor->error_code == 0x7380) {
-            printf("Error: Positive position limit on bel[%d].\n", i);
+        else if (ecatSlaves->bel[i].in_motor->latching_fault == 0x0200) {
+            printf("Fault: Tracking error on bel[%d].\n", i);
             return 1;
         }
-        else if (ecatSlaves->bel[i].in_motor->error_code == 0x7381) {
-            printf("Error: Negative position limit on bel[%d].\n", i);
+        else if (ecatSlaves->bel[i].in_motor->latching_fault == 0x0400) {
+            printf("Fault: Over current on bel[%d].\n", i);
             return 1;
         }
-        else if (ecatSlaves->bel[i].in_motor->error_code == 0x7390) {
-            printf("Error: Tracking error on bel[%d].\n", i);
+        else if (ecatSlaves->bel[i].in_motor->latching_fault == 0x0800) {
+            printf("Fault: FPGA failure case 1 on bel[%d].\n", i);
             return 1;
         }
-        else if (ecatSlaves->bel[i].in_motor->error_code == 0x73A0) {
-            printf("Error: Position wrap on bel[%d].\n", i);
+        else if (ecatSlaves->bel[i].in_motor->latching_fault == 0x1000) {
+            printf("Fault: Command input lost on bel[%d].\n", i);
             return 1;
         }
-        else if (ecatSlaves->bel[i].in_motor->error_code == 0x5080) {
-            printf("Error: Used for faults with no other emergency on bel[%d].\n", i);
+        else if (ecatSlaves->bel[i].in_motor->latching_fault == 0x2000) {
+            printf("Fault: FPGA failure case 2 on bel[%d].\n", i);
             return 1;
         }
-        // else if (ecatSlaves->bel[i].in_motor->error_code == 0x61FF) {
-        //     printf("Error: Command error on bel[%d].\n", i);
-        //     return 1;
-        // }
-        else if (ecatSlaves->bel[i].in_motor->error_code == 0x5440) {
-            printf("Error: STO fault on bel[%d].\n", i);
+        else if (ecatSlaves->bel[i].in_motor->latching_fault == 0x4000) {
+            printf("Fault: Safety circuit fault on bel[%d].\n", i);
+            return 1;
+        }
+        else if (ecatSlaves->bel[i].in_motor->latching_fault == 0x8000) {
+            printf("Fault: Unable to control current on bel[%d].\n", i);
             return 1;
         }
     }
     return 0;
 }
+
+// int errorCheck(ecat_slaves *ecatSlaves) {
+//     for (int i = 0; i < 2; i++) {
+//         if (ecatSlaves->bel[i].in_motor->error_code == 0x2320) {
+//             printf("Error: Short circuit on bel[%d].\n", i);
+//             return 1;
+//         }
+//         else if (ecatSlaves->bel[i].in_motor->error_code == 0x4210) {
+//             printf("Error: Amp over temp on bel[%d].\n", i);
+//             return 1;
+//         }
+//         else if (ecatSlaves->bel[i].in_motor->error_code == 0x3110) {
+//             printf("Error: Amp over voltage on bel[%d].\n", i);
+//             return 1;
+//         }
+//         else if (ecatSlaves->bel[i].in_motor->error_code == 0x3120) {
+//             printf("Error: Amp under voltage on bel[%d].\n", i);
+//             return 1;
+//         }
+//         else if (ecatSlaves->bel[i].in_motor->error_code == 0x4300) {
+//             printf("Error: Motor over temp on bel[%d].\n", i);
+//             return 1;
+//         }
+//         else if (ecatSlaves->bel[i].in_motor->error_code == 0x2280) {
+//             printf("Error: Feedback error on bel[%d].\n", i);
+//             return 1;
+//         }
+//         else if (ecatSlaves->bel[i].in_motor->error_code == 0x7122) {
+//             printf("Error: Phasing error on bel[%d].\n", i);
+//             return 1;
+//         }
+//         else if (ecatSlaves->bel[i].in_motor->error_code == 0x2310) {
+//             printf("Error: Current limit on bel[%d].\n", i);
+//             return 1;
+//         }
+//         else if (ecatSlaves->bel[i].in_motor->error_code == 0x3310) {
+//             printf("Error: Voltage limit on bel[%d].\n", i);
+//             return 1;
+//         }
+//         else if (ecatSlaves->bel[i].in_motor->error_code == 0x7380) {
+//             printf("Error: Positive position limit on bel[%d].\n", i);
+//             return 1;
+//         }
+//         else if (ecatSlaves->bel[i].in_motor->error_code == 0x7381) {
+//             printf("Error: Negative position limit on bel[%d].\n", i);
+//             return 1;
+//         }
+//         else if (ecatSlaves->bel[i].in_motor->error_code == 0x7390) {
+//             printf("Error: Tracking error on bel[%d].\n", i);
+//             return 1;
+//         }
+//         else if (ecatSlaves->bel[i].in_motor->error_code == 0x73A0) {
+//             printf("Error: Position wrap on bel[%d].\n", i);
+//             return 1;
+//         }
+//         else if (ecatSlaves->bel[i].in_motor->error_code == 0x5080) {
+//             printf("Error: Used for faults with no other emergency on bel[%d].\n", i);
+//             return 1;
+//         }
+//         // else if (ecatSlaves->bel[i].in_motor->error_code == 0x61FF) {
+//         //     printf("Error: Command error on bel[%d].\n", i);
+//         //     return 1;
+//         // }
+//         else if (ecatSlaves->bel[i].in_motor->error_code == 0x5440) {
+//             printf("Error: STO fault on bel[%d].\n", i);
+//             return 1;
+//         }
+//     }
+//     return 0;
+// }
