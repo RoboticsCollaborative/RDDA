@@ -47,7 +47,6 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
     double vel[num];
     double wave_input[num];
     double wave_output[num];
-    double wave_test[num];
 
     double actual_pos_error[num];
     double predict_pos_error[num];
@@ -76,7 +75,6 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
         teleParam->vel_tar[i] = (sqrt(2.0 * teleParam->wave_damping) * wave_input[i] + teleParam->damping[i] * vel[i] + teleParam->stiffness[i] * (pos[i] - teleParam->pos_tar[i])) / (teleParam->damping[i] + teleParam->wave_damping);
         controlParams->coupling_torque[i] = teleParam->stiffness[i] * (teleParam->pos_tar[i] - pos[i]) + teleParam->damping[i] * (teleParam->vel_tar[i] - vel[i]);
         wave_output[i] = rdda->motor[i].rddaPacket.wave_in - sqrt(2.0 / teleParam->wave_damping) * controlParams->coupling_torque[i];
-        wave_test[i] = wave_output[i];
         
         /* pos drift correction */
         actual_pos_error[i] = rdda->motor[i].rddaPacket.pos_in - pos[i];
@@ -100,6 +98,13 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
     if (teleParam->delay_current_index >= MAX_BUFF) {
         teleParam->delay_current_index = 0;
     }
-    printf("ppe: %+2.4lf, ape: %+2.4lf, ed: %+2.4lf, raww: %+2.4lf, corw: %+2.4lf\r", predict_pos_error[0], actual_pos_error[0], error_difference[0], wave_test[0], wave_output[0]);
+
+    // for (int i = 0; i < num; i ++) {
+    //     teleParam->pos_tar[i] = rdda->motor[i].rddaPacket.pos_in;
+    //     teleParam->vel_tar[i] = wave_input[i];
+    //     controlParams->coupling_torque[i] = teleParam->stiffness[i] * (teleParam->pos_tar[i] - pos[i]) + teleParam->damping[i] * (teleParam->vel_tar[i] - vel[i]);
+    //     rdda->motor[i].rddaPacket.wave_out = vel[i];
+    // }
+    // printf("%+2.4lf, %+2.4lf\r", pos[0], pos[1]);
 
 }

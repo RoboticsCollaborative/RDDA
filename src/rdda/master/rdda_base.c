@@ -80,7 +80,6 @@ void rdda_update(ecat_slaves *ecatSlaves, Rdda *rdda) {
         rdda->motor[i].rddaPacket.pos_out = rdda->motor[i].motorIn.act_pos - rdda->motor[i].init_pos;
         rdda->motor[i].rddaPacket.vel = rdda->motor[i].motorIn.act_vel;
     }
-    rdda->motor[1].rddaPacket.pos_out = rdda->motor[1].motorIn.act_pos + rdda->motor[1].init_pos;
 
     /* Timestamp */
     rdda->ts.sec = ecatSlaves->ts.tv_sec;
@@ -162,6 +161,7 @@ void initRddaStates(ecat_slaves *ecatSlaves, Rdda *rdda) {
     }
     rdda->freq_anti_alias = 500;
     rdda->ts.sec = rdda->ts.nsec = 0;
+    rdda->motor[1].init_pos = -1.0 * (double)(ecatSlaves->bel[1].init_pos_cnts) / ecatSlaves->bel[1].counts_per_rad;
 }
 
 /** Error Check
