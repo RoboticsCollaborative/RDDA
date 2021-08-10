@@ -60,7 +60,8 @@ int mapMotorPDOs(uint16 slaveIdx)
     wkc += SDO_write8(slaveIdx, 0x1A00, 0, 2);           /* set number of objects mapped by PDO */
 
     wkc += SDO_write8(slaveIdx, 0x1A01, 0, 0);           /* clear the PDO first */
-    wkc += SDO_write32(slaveIdx, 0x1A01, 1, 0x21830020); /* Load error code */
+    // wkc += SDO_write32(slaveIdx, 0x1A01, 1, 0x21830020); /* Load error code */
+    wkc += SDO_write32(slaveIdx, 0x1A01, 1, 0x603F0010); /* Load error code */
     wkc += SDO_write32(slaveIdx, 0x1A01, 2, 0x22000010); /* analog input */
     wkc += SDO_write8(slaveIdx, 0x1A01, 0, 2);           /* set number of objects mapped by PDO */
 
