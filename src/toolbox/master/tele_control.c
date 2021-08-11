@@ -27,13 +27,13 @@ void teleInit(TeleParam *teleParam) {
 void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rdda) {
     int num = MOTOR_NUM;
 
-    // double pos[num];
+    double pos[num];
     double vel[num];
     double wave_input[num];
 
     /* pos, vel & wave input */
     for (int i = 0; i < num; i ++) {
-        // pos[i] = rdda->motor[i].motorIn.act_pos - rdda->motor[i].init_pos;
+        pos[i] = rdda->motor[i].motorIn.act_pos - rdda->motor[i].init_pos;
         vel[i] = rdda->motor[i].motorIn.act_vel;
         wave_input[i] = rdda->motor[i].rddaPacket.wave_in;
     }
@@ -50,6 +50,6 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
     //     controlParams->coupling_torque[i] = teleParam->stiffness[i] * (teleParam->pos_tar[i] - pos[i]) + teleParam->damping[i] * (teleParam->vel_tar[i] - vel[i]);
     //     rdda->motor[i].rddaPacket.wave_out = vel[i];
     // }
-    // printf("%+2.4lf, %+2.4lf\r", pos[0], pos[1]);
+    printf("%+2.4lf, %+2.4lf\r", pos[0], pos[1]);
 
 }

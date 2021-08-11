@@ -18,7 +18,7 @@ void teleInit(TeleParam *teleParam) {
     teleParam->wave_damping = 0.03;
     teleParam->vel_tar[0] = 0.0;
     teleParam->vel_tar[1] = 0.0;
-    teleParam->lambda = 1.0; //0.1;
+    teleParam->lambda = 10.0; //20.0; //0.1;
     teleParam->pos_tar_int[0] = 0.0;
     teleParam->pos_tar_int[1] = 0.0;
     teleParam->pos_tar[0] = 0.0;
@@ -70,6 +70,7 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
 
     for (int i = 0; i < num; i ++) {
         teleParam->pos_tar_int[i] += teleParam->vel_tar[i] * teleParam->sample_time;
+        /* intuitive pos drift correction */
         // teleParam->pos_tar[i] = teleParam->pos_tar_int[i] + teleParam->lambda * (rdda->motor[i].rddaPacket.pos_in - teleParam->pos_tar[i]);
         teleParam->pos_tar[i] = teleParam->pos_tar_int[i];
         teleParam->vel_tar[i] = (sqrt(2.0 * teleParam->wave_damping) * wave_input[i] + teleParam->damping[i] * vel[i] + teleParam->stiffness[i] * (pos[i] - teleParam->pos_tar[i])) / (teleParam->damping[i] + teleParam->wave_damping);
@@ -77,7 +78,7 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
         wave_output[i] = rdda->motor[i].rddaPacket.wave_in - sqrt(2.0 / teleParam->wave_damping) * controlParams->coupling_torque[i];
         
         /* pos drift correction */
-        actual_pos_error[i] = rdda->motor[i].rddaPacket.pos_in - pos[i];
+        actual_pos_error[i] = rdda->motor[i].rddaPacket.pos_in - teleParam->pos_tar[i];
         predict_pos_error[i] = -1.0 / sqrt(2.0 * teleParam->wave_damping) * teleParam->wave_int[i];
         error_difference[i] = predict_pos_error[i] - actual_pos_error[i];
         wave_correction[i] = 1.0 * sqrt(2.0 * teleParam->wave_damping) * (2.0 * M_PI * teleParam->lambda) * error_difference[i];
@@ -105,6 +106,6 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
     //     controlParams->coupling_torque[i] = teleParam->stiffness[i] * (teleParam->pos_tar[i] - pos[i]) + teleParam->damping[i] * (teleParam->vel_tar[i] - vel[i]);
     //     rdda->motor[i].rddaPacket.wave_out = vel[i];
     // }
-    // printf("%+2.4lf, %+2.4lf\r", pos[0], pos[1]);
+    printf("%+2.4lf, %+2.4lf\r", pos[0], pos[1]);
 
 }
