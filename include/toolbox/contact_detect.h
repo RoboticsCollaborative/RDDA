@@ -27,6 +27,7 @@ typedef struct
     int reflect_back_flag[2];
     double time[2];
     double vel_threshold[2];
+    int contact_detection_trigger;
 } ContactDetectionParams;
 
 typedef struct
