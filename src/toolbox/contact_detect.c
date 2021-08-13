@@ -142,7 +142,7 @@ void contactDetection(ContactDetectionParams *contactDetectionParams, ContactDet
     }
     else contactDetectionParams->contact_detection_trigger = 0;
 
-    printf("%+2.8lf, %+2.8lf, %+2.8lf, %+2.8lf, %d\r", rdda->motor[0].motorIn.act_pos - rdda->motor[0].init_pos, rdda->motor[1].motorIn.act_pos - rdda->motor[1].init_pos, rdda->motor[0].motorIn.act_vel, rdda->motor[1].motorIn.act_vel, contactDetectionParams->contact_detection_trigger);
+    // printf("%+2.8lf, %+2.8lf, %+2.8lf, %+2.8lf, %d\r", rdda->motor[0].motorIn.act_pos - rdda->motor[0].init_pos, rdda->motor[1].motorIn.act_pos - rdda->motor[1].init_pos, rdda->motor[0].motorIn.act_vel, rdda->motor[1].motorIn.act_vel, contactDetectionParams->contact_detection_trigger);
 
     /* contact detection */
     for (int i = 0; i < num; i ++) {

@@ -26,7 +26,7 @@ typedef struct
     double vel_tar[MOTOR_NUM];
     double lambda;
     int delay_current_index;
-    int delay_cycle;
+    int delay_cycle_previous;
     double wave_int[MOTOR_NUM];
     double wave_history[MOTOR_NUM][MAX_BUFF];
 } TeleParam;
