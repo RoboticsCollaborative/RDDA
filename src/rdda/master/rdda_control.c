@@ -247,7 +247,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
         filtered_finger_bk_comp_force_pressure_part[i] = firstOrderIIRFilter(pressure[i], previousVariables->pressure[i], previousVariables->filtered_finger_bk_comp_force_pressure_part[i], firstOrderLowPassFilterParams->friction_cmp_b0[i], firstOrderLowPassFilterParams->friction_cmp_b1[i], firstOrderLowPassFilterParams->friction_cmp_a1[i]);
         /* total */
         finger_bk_comp_force[i] = finger_bk_comp_force_position_part[i] + filtered_finger_bk_comp_force_pressure_part[i];
-        finger_bk_comp_force[i] = 0.0;
+        // finger_bk_comp_force[i] = 0.0;
     }
 
     /* hysteresis compensation */
@@ -257,14 +257,15 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
         finger_vel[i] = finger_vel_pressure_part[i] + motor_vel[i];
         /* hysteresis force */
         hysteresis_force[i] = (previousVariables->hysteresis_force[i] + controlParams->sample_time * controlParams->hysteresis_sigma * finger_vel[i] * controlParams->hysteresis_friction) / (1.0 + controlParams->sample_time * controlParams->hysteresis_sigma * fabs(finger_vel[i]));
-        hysteresis_force[i] = 0.0;
+        // hysteresis_force[i] = 0.0;
+        rdda->motor[i].rddaPacket.test = pressure[i] + finger_bk_comp_force[i] + hysteresis_force[i];
     }
 
     /* output force */
     for (int i = 0; i < num; i ++) {
         /* direct equation */
         controlParams->coupling_torque[i] = saturation(controlParams->max_external_torque[i], controlParams->coupling_torque[i]);
-        integral_control_force[i] = previousVariables->integral_control_force[i] + controlParams->lambda[0] * controlParams->sample_time * (reference_force[i] + pressure[i] + finger_bk_comp_force[i] + hysteresis_force[i] + controlParams->coupling_torque[i]);
+        integral_control_force[i] = previousVariables->integral_control_force[i] + controlParams->lambda[0] * controlParams->sample_time * (reference_force[i] + pressure[i] + controlParams->coupling_torque[i]);
         //output_force[i] = integral_control_force[i] + reference_force[i] + finger_bk_comp_force[i] + hysteresis_force[i];// + 0.5 * pressure[i];
         output_force[i] = integral_control_force[i] - nominal_force_integration[i];// + 0.5 * pressure[i];
     }

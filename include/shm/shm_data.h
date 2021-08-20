@@ -30,6 +30,7 @@ typedef struct {
     double wave_in;
     double wave_out;
     int contact_flag;
+    double test;
 } RDDAPacket;
 
 /** EL3102 and EL3702 pressure sensor inputs to master */

@@ -46,10 +46,10 @@ void contactDetectionInit(ContactDetectionParams *contactDetectionParams, Contac
     contactDetectionParams->cutoff_frequency_HPF[0] = 1; // Hz
     contactDetectionParams->cutoff_frequency_HPF[1] = 1;
     contactDetectionParams->sample_time = 0.5e-3; // second
-    contactDetectionParams->pressure_threshold[0] = 5.0e-3; //2.5e-3; // Nm
-    contactDetectionParams->pressure_threshold[1] = 5.0e-3; //2.5e-3;
-    contactDetectionParams->reflect_stiffness[0] = 2.0; // Nm/rad
-    contactDetectionParams->reflect_stiffness[1] = 2.0;
+    contactDetectionParams->pressure_threshold[0] = 4.0e-3; //2.5e-3; // Nm
+    contactDetectionParams->pressure_threshold[1] = 4.0e-3; //2.5e-3;
+    contactDetectionParams->reflect_stiffness[0] = 4.0; // Nm/rad
+    contactDetectionParams->reflect_stiffness[1] = 4.0;
     contactDetectionParams->reflect_distance[0] = 0.2;//0.4; // rad
     contactDetectionParams->reflect_distance[1] = 0.2;//0.4;
     contactDetectionParams->contact_detection_time[0] = 2000;
@@ -60,8 +60,8 @@ void contactDetectionInit(ContactDetectionParams *contactDetectionParams, Contac
     contactDetectionParams->pressure_deviation_threshold[1] = 1.5e-3;
     contactDetectionParams->location[0] = 0;
     contactDetectionParams->location[1] = 0;
-    contactDetectionParams->pos_deviation[0] = 4.0e-2;
-    contactDetectionParams->pos_deviation[1] = 4.0e-2;
+    contactDetectionParams->pos_deviation[0] = 5.0e-2;
+    contactDetectionParams->pos_deviation[1] = 5.0e-2;
     contactDetectionParams->contact_flag_local[0] = 0;
     contactDetectionParams->contact_flag_local[1] = 0;
     contactDetectionParams->reflect_flag[0] = 0;
@@ -131,7 +131,7 @@ void contactDetection(ContactDetectionParams *contactDetectionParams, ContactDet
     }
 
     /* pre-contact pos & vel requirement */
-    if ((rdda->motor[1].motorIn.act_pos - rdda->motor[1].init_pos < -0.7) && (rdda->motor[0].motorIn.act_pos - rdda->motor[0].init_pos > 0.0) && (rdda->motor[0].motorIn.act_pos - rdda->motor[0].init_pos < 0.4)) {
+    if ((rdda->motor[1].motorIn.act_pos - rdda->motor[1].init_pos < -0.6) && (rdda->motor[0].motorIn.act_pos - rdda->motor[0].init_pos > -0.2) && (rdda->motor[0].motorIn.act_pos - rdda->motor[0].init_pos < 0.4)) {
         pos_flag = 1;
     }
     if ((fabs(rdda->motor[0].motorIn.act_vel) < 1.0e-2) && (fabs(rdda->motor[1].motorIn.act_vel) < 1.0e-2)) {
@@ -150,12 +150,12 @@ void contactDetection(ContactDetectionParams *contactDetectionParams, ContactDet
             if (pressure[i] - contactDetectionPreviousVariable->pressure_average[i] > contactDetectionParams->pressure_threshold[i]) {
                 contactDetectionParams->contact_flag_local[i] = 1;
                 rdda->motor[i].rddaPacket.contact_flag = 1;
-                rdda->motor[i].stiffness = 2.0;
+                rdda->motor[i].stiffness = contactDetectionParams->reflect_stiffness[i];
             }
             else if (pressure[i] - contactDetectionPreviousVariable->pressure_average[i] < -contactDetectionParams->pressure_threshold[i]) {
                 contactDetectionParams->contact_flag_local[i] = -1;
                 rdda->motor[i].rddaPacket.contact_flag = 1;
-                rdda->motor[i].stiffness = 2.0;
+                rdda->motor[i].stiffness = contactDetectionParams->reflect_stiffness[i];
             }
             else contactDetectionParams->contact_flag_local[i] = 0;
         }

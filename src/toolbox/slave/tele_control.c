@@ -24,7 +24,7 @@ void teleInit(TeleParam *teleParam) {
     teleParam->pos_tar[0] = 0.0;
     teleParam->pos_tar[1] = 0.0;
     teleParam->delay_current_index = 0;
-    teleParam->delay_cycle_previous = 8;
+    teleParam->delay_cycle_previous = 18;
 
     /* symmetric stiffness */
     for (int i = 0; i < num; i ++) {
@@ -55,7 +55,7 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
 
     int delay_index;
     int delay_difference;
-    int delay_cycle_current = 8;
+    int delay_cycle_current = 18;
 
     /* pos, vel & wave input */
     for (int i = 0; i < num; i ++) {
