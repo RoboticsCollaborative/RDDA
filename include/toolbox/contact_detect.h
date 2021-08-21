@@ -12,9 +12,11 @@
 
 typedef struct
 {
+    double cutoff_frequency_LPF[2];
     double cutoff_frequency_HPF[2];
     double sample_time;
     double pressure_threshold[2];
+    double pressure_change_threshold[2];
     double reflect_stiffness[2];
     double reflect_distance[2];
     int contact_detection_time[2];
@@ -40,7 +42,18 @@ typedef struct
 
 typedef struct
 {
+    double lambda[2];
+    double a1[2];
+    double b0[2];
+    double b1[2];
+} ContactDetectionLowPassFilterParams;
+
+typedef struct
+{
     double pressure[2];
+    double pressure_change_slop[2];
+    double filtered_pressure_change_slop[2];
+    double filtered_pressure_LPF[2];
     double filtered_pressure_HPF[2];
     double pos_collision[2];
     double pos_reflection[2];
@@ -51,7 +64,7 @@ typedef struct
     int contact_detection_count[2];
 } ContactDetectionPreviousVariable;
 
-void contactDetectionInit(ContactDetectionParams *contactDetectionParams, ContactDetectionHighPassFilterParams *contactDetectionHighPassFilterParams, ContactDetectionPreviousVariable *contactDetectionPreviousVariable, Rdda *rdda);
-void contactDetection(ContactDetectionParams *contactDetectionParams, ContactDetectionHighPassFilterParams *contactDetectionHighPassFilterParams, ContactDetectionPreviousVariable *contactDetectionPreviousVariable, Rdda *rdda);
+void contactDetectionInit(ContactDetectionParams *contactDetectionParams, ContactDetectionLowPassFilterParams *contactDetectionLowPassFilterParams ,ContactDetectionHighPassFilterParams *contactDetectionHighPassFilterParams, ContactDetectionPreviousVariable *contactDetectionPreviousVariable, Rdda *rdda);
+void contactDetection(ContactDetectionParams *contactDetectionParams, ContactDetectionLowPassFilterParams *contactDetectionLowPassFilterParams ,ContactDetectionHighPassFilterParams *contactDetectionHighPassFilterParams, ContactDetectionPreviousVariable *contactDetectionPreviousVariable, Rdda *rdda);
 
 #endif // CONTACT_DETECT_H

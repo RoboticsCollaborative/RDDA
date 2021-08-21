@@ -41,6 +41,7 @@ void rdda_run (void *ifnameptr) {
     PreviousVariables previousVariables;
     /* Contact */
     ContactDetectionParams contactDetectionParams;
+    ContactDetectionLowPassFilterParams contactDetectionLowPassFilterParams;
     ContactDetectionHighPassFilterParams contactDetectionHighPassFilterParams;
     ContactDetectionPreviousVariable contactDetectionPreviousVariable;
     /* Teleoperation */
@@ -89,7 +90,7 @@ void rdda_run (void *ifnameptr) {
     rdda_update(ecatSlaves, rdda);
     dobInit(&controlParams, &firstOrderLowPassFilterParams, &secondOrderLowPassFilterParams, &previousVariables, rdda);
     teleInit(&teleParam);
-    contactDetectionInit(&contactDetectionParams, &contactDetectionHighPassFilterParams, &contactDetectionPreviousVariable, rdda);
+    contactDetectionInit(&contactDetectionParams, &contactDetectionLowPassFilterParams, &contactDetectionHighPassFilterParams, &contactDetectionPreviousVariable, rdda);
 
     /* Measure time interval for sleep */
     int usec_per_sec = 1000000;
@@ -111,7 +112,7 @@ void rdda_run (void *ifnameptr) {
         mutex_lock(&rdda->mutex);
 
         teleController(&teleParam, &controlParams, rdda);
-        contactDetection(&contactDetectionParams, &contactDetectionHighPassFilterParams, &contactDetectionPreviousVariable, rdda);
+        contactDetection(&contactDetectionParams, &contactDetectionLowPassFilterParams, &contactDetectionHighPassFilterParams, &contactDetectionPreviousVariable, rdda);
         dobController(rdda, &controlParams, &firstOrderLowPassFilterParams, &secondOrderLowPassFilterParams, &previousVariables);
 
         rdda_update(ecatSlaves, rdda);
