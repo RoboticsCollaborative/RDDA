@@ -27,7 +27,8 @@ slaveIdentify(ecat_slaves *slave) {
             /* motor1 */
             if (serial_num == 0x2098302) {
                 //network->motor[0] = idx;
-                slave->bel[0].slave_id = idx;
+                // slave->bel[0].slave_id = idx;
+                slave->bel[1].slave_id = idx;
                 /* CompleteAccess disabled for BEL drive */
                 //ec_slave[slaveIdx].CoEdetails ^= ECT_COEDET_SDOCA;
                 /* Set PDO mapping */
@@ -39,7 +40,8 @@ slaveIdentify(ecat_slaves *slave) {
             }
             /* motor2 */
             if (serial_num == 0x2098303) {
-                slave->bel[1].slave_id = idx;
+                // slave->bel[1].slave_id = idx;
+                slave->bel[0].slave_id = idx;
                 /* CompleteAccess disabled for BEL drive */
                 //ec_slave[slaveIdx].CoEdetails ^= ECT_COEDET_SDOCA;
                 /* Set PDO mapping */

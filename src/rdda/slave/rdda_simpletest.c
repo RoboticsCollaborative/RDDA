@@ -112,7 +112,7 @@ void rdda_run (void *ifnameptr) {
         mutex_lock(&rdda->mutex);
 
         teleController(&teleParam, &controlParams, rdda);
-        contactDetection(&contactDetectionParams, &contactDetectionLowPassFilterParams, &contactDetectionHighPassFilterParams, &contactDetectionPreviousVariable, rdda);
+        // contactDetection(&contactDetectionParams, &contactDetectionLowPassFilterParams, &contactDetectionHighPassFilterParams, &contactDetectionPreviousVariable, rdda);
         dobController(rdda, &controlParams, &firstOrderLowPassFilterParams, &secondOrderLowPassFilterParams, &previousVariables);
 
         rdda_update(ecatSlaves, rdda);
