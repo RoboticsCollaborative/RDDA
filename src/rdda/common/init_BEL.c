@@ -109,8 +109,12 @@ int initMotor(uint16 slaveIdx)
     SDO_write16(slaveIdx, 0x6040, 0, 0x000f); /* reset control word */
 
     /* Motor params */
-    SDO_write32(slaveIdx, 0x2383, 12, 25456);   /* motor torque constant */
-    SDO_write32(slaveIdx, 0x2383, 13, 650000);  /* motor peak torque */
+    // SDO_write32(slaveIdx, 0x2383, 12, 25456);   /* motor torque constant */
+    // SDO_write32(slaveIdx, 0x2383, 13, 650000);  /* motor peak torque */
+    // SDO_write32(slaveIdx, 0x2383, 14, 200000);   /* motor continuous torque */
+    // SDO_write32(slaveIdx, 0x6076, 0, 2000);      /* motor rated torque */
+    SDO_write32(slaveIdx, 0x2383, 12, 22627);   /* motor torque constant */
+    SDO_write32(slaveIdx, 0x2383, 13, 580000);  /* motor peak torque */
     SDO_write32(slaveIdx, 0x2383, 14, 200000);   /* motor continuous torque */
     SDO_write32(slaveIdx, 0x6076, 0, 2000);      /* motor rated torque */
 

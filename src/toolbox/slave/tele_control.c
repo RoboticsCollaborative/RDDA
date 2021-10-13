@@ -24,7 +24,7 @@ void teleInit(TeleParam *teleParam) {
     teleParam->pos_tar[0] = 0.0;
     teleParam->pos_tar[1] = 0.0;
     teleParam->delay_current_index = 0;
-    teleParam->delay_cycle_previous = 18;
+    teleParam->delay_cycle_previous = 4;
 
     /* symmetric stiffness */
     for (int i = 0; i < num; i ++) {
@@ -55,7 +55,7 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
 
     int delay_index;
     int delay_difference;
-    int delay_cycle_current = 18;
+    int delay_cycle_current = 4;
 
     /* pos, vel & wave input */
     for (int i = 0; i < num; i ++) {
@@ -78,7 +78,7 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
         teleParam->pos_tar[i] = teleParam->pos_tar_int[i];
         teleParam->vel_tar[i] = (sqrt(2.0 * teleParam->wave_damping) * wave_input[i] + teleParam->damping[i] * vel[i] + teleParam->stiffness[i] * (pos[i] - teleParam->pos_tar[i])) / (teleParam->damping[i] + teleParam->wave_damping);
         controlParams->coupling_torque[i] = teleParam->stiffness[i] * (teleParam->pos_tar[i] - pos[i]) + teleParam->damping[i] * (teleParam->vel_tar[i] - vel[i]);
-        wave_output[i] = rdda->motor[i].rddaPacket.wave_in - sqrt(2.0 / teleParam->wave_damping) * controlParams->coupling_torque[i];
+	    wave_output[i] = rdda->motor[i].rddaPacket.wave_in - sqrt(2.0 / teleParam->wave_damping) * controlParams->coupling_torque[i];
         
         /* pos drift correction */
         actual_pos_error[i] = rdda->motor[i].rddaPacket.pos_in - teleParam->pos_tar[i];
@@ -127,6 +127,6 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
     //     controlParams->coupling_torque[i] = teleParam->stiffness[i] * (teleParam->pos_tar[i] - pos[i]) + teleParam->damping[i] * (teleParam->vel_tar[i] - vel[i]);
     //     rdda->motor[i].rddaPacket.wave_out = vel[i];
     // }
-    printf("%+2.4lf, %+2.4lf\r", pos[0], pos[1]);
+    printf("%+2.4lf, %+2.4lf, %+2.4lf, %+2.4lf\r", pos[0], pos[1], rdda->psensor.analogIn.val1, rdda->psensor.analogIn.val2);
 
 }
