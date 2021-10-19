@@ -35,10 +35,10 @@ double trajectoryGenerator(double input, double pre_output, double max_vel, doub
 
 void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstOrderLowPassFilterParams, SecondOrderLowPassFilterParams *secondOrderLowPassFilterParams, PreviousVariables *previousVariables, Rdda *rdda) {
     /* control parameters initialization */
-    controlParams->motor_inertia[0] = 1.0*1.11e-3;//1.1144e-3;
-    controlParams->motor_inertia[1] = 1.0*1.11e-3;//1.1144e-3;
-    //controlParams->motor_inertia[0] = 1.6*1.463e-4;//1.1144e-3;
-    //controlParams->motor_inertia[1] = 1.6*1.463e-4;//1.1144e-3;
+    // controlParams->motor_inertia[0] = 1.0*1.11e-3;//1.1144e-3;
+    // controlParams->motor_inertia[1] = 1.0*1.11e-3;//1.1144e-3;
+    controlParams->motor_inertia[0] = 1.6*1.463e-4;//1.1144e-3;
+    controlParams->motor_inertia[1] = 1.6*1.463e-4;//1.1144e-3;
     controlParams->motor_damping[0] = 0.0;
     controlParams->motor_damping[1] = 0.0;
     controlParams->finger_damping[0] = 1.0933e-2;//1.6933e-2;
@@ -270,12 +270,13 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
         integral_control_force[i] = previousVariables->integral_control_force[i] + controlParams->lambda[0] * controlParams->sample_time * (reference_force[i] + pressure[i] + finger_bk_comp_force[i] + hysteresis_force[i] + controlParams->coupling_torque[i]);
         //output_force[i] = integral_control_force[i] + reference_force[i] + finger_bk_comp_force[i] + hysteresis_force[i];// + 0.5 * pressure[i];
         output_force[i] = integral_control_force[i] - nominal_force_integration[i];// + 0.5 * pressure[i];
+        output_force[i] = reference_force[i] + controlParams->coupling_torque[i];
     }
 
     /* Disable DOB on new motors */
-    output_force[0] = controlParams->coupling_torque[0];
-    output_force[1] = controlParams->coupling_torque[1];
-    //printf("tau[0]: %+2.4lf, tau[1]: %+2.4lf,", output_force[0], output_force[1]);
+    //output_force[0] = controlParams->coupling_torque[0];
+    //output_force[1] = controlParams->coupling_torque[1];
+    // printf("tau[0]: %+2.4lf, tau[1]: %+2.4lf,", output_force[0], output_force[1]);
 
     /* motor output with torque saturation */
     for (int i = 0; i < num; i ++) {
