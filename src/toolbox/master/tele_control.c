@@ -14,12 +14,12 @@ void teleInit(TeleParam *teleParam) {
     /* parameter initialization */
     int num = MOTOR_NUM;
     teleParam->sample_time = 0.5e-3;
-    teleParam->zeta = 0.12;
+    teleParam->zeta = 0.2;//0.12;
     teleParam->wave_damping = 0.04;
 
     /* symmetric stiffness */
     for (int i = 0; i < num; i ++) {
-        teleParam->stiffness[i] = 20.0;
+        teleParam->stiffness[i] = 24.0;
         teleParam->damping[i] = 2.0 * teleParam->zeta * sqrt(teleParam->stiffness[i] * 1.1e-3);
     }
 }
