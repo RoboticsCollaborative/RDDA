@@ -37,8 +37,8 @@ void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstO
     /* control parameters initialization */
     // controlParams->motor_inertia[0] = 1.0*1.11e-3;//1.1144e-3;
     // controlParams->motor_inertia[1] = 1.0*1.11e-3;//1.1144e-3;
-    controlParams->motor_inertia[0] = 1.6*1.463e-4;//1.1144e-3;
-    controlParams->motor_inertia[1] = 1.6*1.463e-4;//1.1144e-3;
+    controlParams->motor_inertia[0] = 1.6e-4;//1.6*1.463e-4;//1.1144e-3;
+    controlParams->motor_inertia[1] = 1.6e-4;//1.6*1.463e-4;//1.1144e-3;
     controlParams->motor_damping[0] = 0.0;
     controlParams->motor_damping[1] = 0.0;
     controlParams->finger_damping[0] = 1.0933e-2;//1.6933e-2;
@@ -140,6 +140,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
     double hysteresis_force[num];
 
     double output_force[num];
+    double coupling_torque[num];
     double integral_control_force[num];
     //double saturated_feedback_force[num];
 
@@ -266,11 +267,12 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
     /* output force */
     for (int i = 0; i < num; i ++) {
         /* direct equation */
-        controlParams->coupling_torque[i] = saturation(controlParams->max_external_torque[i], controlParams->coupling_torque[i]);
-        integral_control_force[i] = previousVariables->integral_control_force[i] + controlParams->lambda[0] * controlParams->sample_time * (reference_force[i] + pressure[i] + finger_bk_comp_force[i] + hysteresis_force[i] + controlParams->coupling_torque[i]);
+        coupling_torque[i] = saturation(controlParams->max_external_torque[i], controlParams->coupling_torque[i]);
+        // coupling_torque[i] = -20.0 * motor_pos[i] - 2.0 * 0.2 * sqrt(20.0 * 1.1e-4) * motor_vel[i];
+        integral_control_force[i] = previousVariables->integral_control_force[i] + controlParams->lambda[0] * controlParams->sample_time * (reference_force[i] + pressure[i] + finger_bk_comp_force[i] + hysteresis_force[i] + coupling_torque[i]);
         //output_force[i] = integral_control_force[i] + reference_force[i] + finger_bk_comp_force[i] + hysteresis_force[i];// + 0.5 * pressure[i];
         output_force[i] = integral_control_force[i] - nominal_force_integration[i];// + 0.5 * pressure[i];
-        output_force[i] = reference_force[i] + controlParams->coupling_torque[i];
+        output_force[i] = reference_force[i] + coupling_torque[i];
     }
 
     /* Disable DOB on new motors */

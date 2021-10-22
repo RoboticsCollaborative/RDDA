@@ -138,6 +138,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
     double hysteresis_force[num];
 
     double output_force[num];
+    double coupling_torque[num];
     double integral_control_force[num];
     //double saturated_feedback_force[num];
 
@@ -263,15 +264,16 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
     /* output force */
     for (int i = 0; i < num; i ++) {
         /* direct equation */
-        controlParams->coupling_torque[i] = saturation(controlParams->max_external_torque[i], controlParams->coupling_torque[i]);
-        integral_control_force[i] = previousVariables->integral_control_force[i] + controlParams->lambda[0] * controlParams->sample_time * (reference_force[i] + pressure[i] + finger_bk_comp_force[i] + hysteresis_force[i] + controlParams->coupling_torque[i]);
+        coupling_torque[i] = saturation(controlParams->max_external_torque[i], controlParams->coupling_torque[i]);
+        integral_control_force[i] = previousVariables->integral_control_force[i] + controlParams->lambda[0] * controlParams->sample_time * (reference_force[i] + pressure[i] + finger_bk_comp_force[i] + hysteresis_force[i] + coupling_torque[i]);
         //output_force[i] = integral_control_force[i] + reference_force[i] + finger_bk_comp_force[i] + hysteresis_force[i];// + 0.5 * pressure[i];
         output_force[i] = integral_control_force[i] - nominal_force_integration[i];// + 0.5 * pressure[i];
+        output_force[i] = reference_force[i] + coupling_torque[i];
     }
 
     /* Disable DOB on new motors */
-    output_force[0] = controlParams->coupling_torque[0];
-    output_force[1] = controlParams->coupling_torque[1];
+    // output_force[0] = controlParams->coupling_torque[0];
+    // output_force[1] = controlParams->coupling_torque[1];
     //printf("tau[0]: %+2.4lf, tau[1]: %+2.4lf,", output_force[0], output_force[1]);
 
     /* motor output with torque saturation */
