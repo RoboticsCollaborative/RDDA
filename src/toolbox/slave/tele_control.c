@@ -28,7 +28,7 @@ void teleInit(TeleParam *teleParam) {
 
     /* symmetric stiffness */
     for (int i = 0; i < num; i ++) {
-        teleParam->stiffness[i] = 24.0;
+        teleParam->stiffness[i] = 22.0;
         teleParam->damping[i] = 2.0 * teleParam->zeta * sqrt(teleParam->stiffness[i] * 1.1e-4);
     }
 
