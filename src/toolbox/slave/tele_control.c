@@ -13,8 +13,8 @@ double teleFirstOrderIIRFilter(double input, double input_prev, double output_pr
 void teleInit(TeleParam *teleParam) {
     /* parameter initialization */
     int num = MOTOR_NUM;
-    teleParam->sample_time = 0.5e-3;
-    teleParam->zeta = 0.2;//0.12;
+    teleParam->sample_time = 0.2e-3;
+    teleParam->zeta = 0.5;//0.12;
     teleParam->wave_damping = 0.04;
     teleParam->vel_tar[0] = 0.0;
     teleParam->vel_tar[1] = 0.0;
@@ -28,8 +28,8 @@ void teleInit(TeleParam *teleParam) {
 
     /* symmetric stiffness */
     for (int i = 0; i < num; i ++) {
-        teleParam->stiffness[i] = 22.0;
-        teleParam->damping[i] = 2.0 * teleParam->zeta * sqrt(teleParam->stiffness[i] * 1.1e-4);
+        teleParam->stiffness[i] = 20.0;
+        teleParam->damping[i] = 2.0 * teleParam->zeta * sqrt(teleParam->stiffness[i] * 1.463e-4);
     }
 
     for (int i = 0; i < num; i ++) {

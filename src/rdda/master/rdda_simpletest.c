@@ -76,7 +76,7 @@ void rdda_run (void *ifnameptr) {
     printf("Input/output interface succeed.\n");
 
     /* timer */
-    cycletime = 500; /* in microseconds */
+    cycletime = 200; /* in microseconds */
 
     /* Initialize controller */
     /* These two lines are to initialize master to position mode while re-initializing piv gains,
@@ -107,7 +107,7 @@ void rdda_run (void *ifnameptr) {
         /* Mark start time */
         clock_gettime(CLOCK_MONOTONIC, &startTime);
 
-        time += 0.5e-3;
+        time += 0.2e-3;
 
         mutex_lock(&rdda->mutex);
 
