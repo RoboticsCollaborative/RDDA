@@ -128,11 +128,11 @@ initEcatSlaves(ecat_slaves *ecatSlave) {
         ecatSlave->bel[mot_id].in_motor = (motor_input *)ec_slave[ecatSlave->bel[mot_id].slave_id].inputs;
         ecatSlave->bel[mot_id].out_motor = (motor_output *)ec_slave[ecatSlave->bel[mot_id].slave_id].outputs;
         /* Constant parameters assignment */
-        ecatSlave->bel[mot_id].counts_per_rad = 667544.2144; // Res: 2048 * 1024
+        ecatSlave->bel[mot_id].counts_per_rad = 667544.2144; // Res: 512 * 4 * 2048 / 2 / pi
         ecatSlave->bel[mot_id].counts_per_rad_sec = 667544.2144*10.0;
         ecatSlave->bel[mot_id].load_counts_per_rad = 52151.8917/327680*40000;
         ecatSlave->bel[mot_id].load_counts_per_rad_sec = 52151.8917/327680*40000*10;
-        ecatSlave->bel[mot_id].pascal_per_count = 21.04178;
+        ecatSlave->bel[mot_id].pascal_per_count = 68.9476; // +-100 psi <-> +-689476 pascal <-> +-10 V count unit: mV -> C/1000*689476/10
         ecatSlave->bel[mot_id].nm_per_pascal = 2.822e-6;
         ecatSlave->bel[mot_id].units_per_nm = 500.0;
     }
