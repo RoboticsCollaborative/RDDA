@@ -277,7 +277,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
         saturated_feedback_force[i] = saturation(controlParams->max_inner_loop_torque_Nm, integral_control_force[i] - nominal_force_integration[i]);
         integral_control_force[i] = saturated_feedback_force[i] + nominal_force_integration[i];
         output_force[i] = coupling_torque[i] + saturated_feedback_force[i];// + 0.5 * pressure[i];
-        output_force[i] = reference_force[i] + coupling_torque[i];
+        // output_force[i] = reference_force[i] + coupling_torque[i];
     }
 
     /* Disable DOB on new motors */

@@ -32,7 +32,8 @@ void rdda_update(ecat_slaves *ecatSlaves, Rdda *rdda) {
     double limit_int16 = 32767.0;
     double limit_int32 = 2147483647.0;
     //int16 pressure_offset_acd = 500;//750;
-    int16 pressure_offset_adr = 200;
+    int16 pressure_offset_adr1 = 200;
+    int16 pressure_offset_adr2 = 300;
 
     ec_receive_processdata(EC_TIMEOUTRET);
     //ec_send_processdata();
@@ -45,7 +46,7 @@ void rdda_update(ecat_slaves *ecatSlaves, Rdda *rdda) {
         rdda->motor[i].motorIn.load_pos = (double)(ecatSlaves->bel[i].in_motor->load_pos) / ecatSlaves->bel[i].load_counts_per_rad;
         rdda->motor[i].motorIn.load_vel = (double)(ecatSlaves->bel[i].in_motor->load_vel) / ecatSlaves->bel[i].load_counts_per_rad_sec;
     }
-    rdda->psensor.analogIn.val1 = (double)(ecatSlaves->bel[0].in_motor->analog_in - pressure_offset_adr) * ecatSlaves->bel[0].pascal_per_count * ecatSlaves->bel[0].nm_per_pascal;
+    rdda->psensor.analogIn.val1 = (double)(ecatSlaves->bel[0].in_motor->analog_in + pressure_offset_adr1) * ecatSlaves->bel[0].pascal_per_count * ecatSlaves->bel[0].nm_per_pascal * (-1.0);
     for (int i = 1; i < 2; i++) {
         rdda->motor[i].motorIn.act_pos = -1.0 * (double)(ecatSlaves->bel[i].in_motor->act_pos) / ecatSlaves->bel[i].counts_per_rad;
         rdda->motor[i].motorIn.act_vel = -1.0 * (double)(ecatSlaves->bel[i].in_motor->act_vel) / ecatSlaves->bel[i].counts_per_rad_sec;
@@ -53,8 +54,9 @@ void rdda_update(ecat_slaves *ecatSlaves, Rdda *rdda) {
         rdda->motor[i].motorIn.load_pos = -1.0 * (double)(ecatSlaves->bel[i].in_motor->load_pos) / ecatSlaves->bel[i].load_counts_per_rad;
         rdda->motor[i].motorIn.load_vel = -1.0 * (double)(ecatSlaves->bel[i].in_motor->load_vel) / ecatSlaves->bel[i].load_counts_per_rad_sec;
     }
-    rdda->psensor.analogIn.val2 = (double)(ecatSlaves->bel[1].in_motor->analog_in + pressure_offset_adr) * ecatSlaves->bel[1].pascal_per_count * ecatSlaves->bel[1].nm_per_pascal * (-1.0);
-
+    // rdda->psensor.analogIn.val2 = (double)(ecatSlaves->bel[1].in_motor->analog_in - pressure_offset_adr) * ecatSlaves->bel[1].pascal_per_count * ecatSlaves->bel[1].nm_per_pascal;
+    rdda->psensor.analogIn.val2 = (double)(ecatSlaves->bel[1].in_motor->analog_in - ecatSlaves->el3102.in_analog->val1*10*1000/32768 + pressure_offset_adr2) * ecatSlaves->bel[1].pascal_per_count * ecatSlaves->bel[1].nm_per_pascal * (-1.0);
+    
     rdda->ts.nsec = ecatSlaves->ts.tv_nsec;
     rdda->ts.sec = ecatSlaves->ts.tv_sec;
 
