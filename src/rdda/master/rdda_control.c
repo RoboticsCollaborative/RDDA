@@ -37,8 +37,8 @@ void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstO
     /* control parameters initialization */
     //controlParams->motor_inertia[0] = 1.0*1.11e-3;//1.1144e-3;
     //controlParams->motor_inertia[1] = 1.0*1.11e-3;//1.1144e-3;
-    controlParams->motor_inertia[0] = 1.6*1.463e-4;//1.1144e-3;
-    controlParams->motor_inertia[1] = 1.6*1.463e-4;//1.1144e-3;
+    controlParams->motor_inertia[0] = 1.6e-4;//1.6*1.463e-4;//1.1144e-3;
+    controlParams->motor_inertia[1] = 1.6e-4;//1.6*1.463e-4;//1.1144e-3;
     controlParams->motor_damping[0] = 0.0;
     controlParams->motor_damping[1] = 0.0;
     controlParams->finger_damping[0] = 1.0933e-2;//1.6933e-2;
