@@ -37,8 +37,8 @@ void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstO
     /* control parameters initialization */
     // controlParams->motor_inertia[0] = 1.0*1.11e-3;//1.1144e-3;
     // controlParams->motor_inertia[1] = 1.0*1.11e-3;//1.1144e-3;
-    controlParams->motor_inertia[0] = 1.6e-4;//1.6*1.463e-4;//1.1144e-3;
-    controlParams->motor_inertia[1] = 1.6e-4;//1.6*1.463e-4;//1.1144e-3;
+    controlParams->motor_inertia[0] = 1.463e-4;//1.6*1.463e-4;//1.1144e-3;
+    controlParams->motor_inertia[1] = 1.463e-4;//1.6*1.463e-4;//1.1144e-3;
     controlParams->motor_damping[0] = 0.0;
     controlParams->motor_damping[1] = 0.0;
     controlParams->finger_damping[0] = 1.0933e-2;//1.6933e-2;
@@ -57,7 +57,7 @@ void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstO
     controlParams->Kp[1] = 0.0;
     controlParams->Pp[1] = 0.0;
     controlParams->Vp[1] = 0.0;
-    controlParams->zeta = 0.3;
+    controlParams->zeta = 1.0;
     controlParams->max_external_torque[0] = 2.0; // ACD motor
     controlParams->max_external_torque[1] = 2.0;
     controlParams->max_inner_loop_torque_Nm = 0.5;
@@ -173,7 +173,8 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
         vel_sat[i] = rdda->motor[i].vel_sat;
         filtered_vel_sat[i] = secondOrderIIRFilter(vel_sat[i], previousVariables->vel_sat[i], previousVariables->prev_vel_sat[i], previousVariables->filtered_vel_sat[i], previousVariables->prev_filtered_vel_sat[i], secondOrderLowPassFilterParams->b0, secondOrderLowPassFilterParams->b1, secondOrderLowPassFilterParams->b2, secondOrderLowPassFilterParams->a1, secondOrderLowPassFilterParams->a2);
         filtered_vel_sat[i] = MIN(controlParams->max_velocity, filtered_vel_sat[i]);
-        pos_ref[i] = trajectoryGenerator(filtered_pos_tar[i], previousVariables->pos_ref[i], filtered_vel_sat[i], controlParams->sample_time);
+        // pos_ref[i] = trajectoryGenerator(filtered_pos_tar[i], previousVariables->pos_ref[i], filtered_vel_sat[i], controlParams->sample_time);
+        pos_ref[i] = rdda->motor[i].rddaPacket.pos_ref;
     }
 
     /* sensor reading */
@@ -272,14 +273,14 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
     for (int i = 0; i < num; i ++) {
         /* direct equation */
         coupling_torque[i] = saturation(controlParams->max_external_torque[i], controlParams->coupling_torque[i]);
-        // Kp[i] = 30.0;
+        // Kp[i] = 0.0;
         // Kd[i] = MIN(2.0 * 0.5 * sqrt(Kp[i] * 1.463e-4), 0.08);
         // coupling_torque[i] = -1.0 * Kp[i] * motor_pos[i] - 1.0 * Kd[i] * motor_vel[i];
         integral_control_force[i] = previousVariables->integral_control_force[i] + controlParams->lambda[0] * controlParams->sample_time * (reference_force[i] + pressure[i] + finger_bk_comp_force[i] + hysteresis_force[i] + coupling_torque[i]);
         //output_force[i] = integral_control_force[i] + reference_force[i] + finger_bk_comp_force[i] + hysteresis_force[i];// + 0.5 * pressure[i];
         saturated_feedback_force[i] = saturation(controlParams->max_inner_loop_torque_Nm, integral_control_force[i] - nominal_force_integration[i]);
         integral_control_force[i] = saturated_feedback_force[i] + nominal_force_integration[i];
-        output_force[i] = coupling_torque[i] + saturated_feedback_force[i];// + 0.5 * pressure[i];
+        output_force[i] = coupling_torque[i] + reference_force[i] + saturated_feedback_force[i];// + 0.5 * pressure[i];
     }
     // printf("%+2.4lf, %+2.4lf\r", integral_control_force[0], saturated_feedback_force[0]);
 

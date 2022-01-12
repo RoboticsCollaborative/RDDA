@@ -50,20 +50,30 @@ void contactDetectionInit(ContactDetectionParams *contactDetectionParams, Contac
     contactDetectionParams->sample_time = 0.2e-3; // second
     contactDetectionParams->pressure_change_threshold[0] = 0.02; //2.5e-3; // Nm
     contactDetectionParams->pressure_change_threshold[1] = 0.02; //2.5e-3;
-    contactDetectionParams->reflect_stiffness[0] = 30.0; // Nm/rad
-    contactDetectionParams->reflect_stiffness[1] = 30.0;
+    contactDetectionParams->reflect_stiffness[0] = 10.0; // Nm/rad
+    contactDetectionParams->reflect_stiffness[1] = 10.0;
     contactDetectionParams->reflect_distance[0] = 0.6;//0.4; // rad
     contactDetectionParams->reflect_distance[1] = 0.6;//0.4;
-    contactDetectionParams->contact_detection_time[0] = 5000;
-    contactDetectionParams->contact_detection_time[1] = 5000;
+    contactDetectionParams->contact_detection_time[0] = 20000;
+    contactDetectionParams->contact_detection_time[1] = 20000;
     contactDetectionParams->pos_buffer_size[0] = 1000;
     contactDetectionParams->pos_buffer_size[1] = 1000;
-    contactDetectionParams->pos_deviation_threshold[0] = 1.0e-2;
-    contactDetectionParams->pos_deviation_threshold[1] = 1.0e-2;
+    contactDetectionParams->hard_contact_pos_deviation_threshold[0] = 1.0e-2;
+    contactDetectionParams->hard_contact_pos_deviation_threshold[1] = 1.0e-2;
+    contactDetectionParams->hard_contact_pos_deviation_multiplier[0] = 9.0;
+    contactDetectionParams->hard_contact_pos_deviation_multiplier[1] = 9.0;
+    contactDetectionParams->soft_contact_pos_deviation_threshold[0] = 1.0e-2;
+    contactDetectionParams->soft_contact_pos_deviation_threshold[1] = 1.0e-2;
+    contactDetectionParams->soft_contact_pos_deviation_multiplier[0] = 4.0;
+    contactDetectionParams->soft_contact_pos_deviation_multiplier[1] = 4.0;
+    contactDetectionParams->soft_contact_count[0] = 0;
+    contactDetectionParams->soft_contact_count[1] = 0;
+    contactDetectionParams->soft_contact_count_threshold[0] = 50;
+    contactDetectionParams->soft_contact_count_threshold[1] = 50;
     contactDetectionParams->location[0] = 0;
     contactDetectionParams->location[1] = 0;
-    contactDetectionParams->pos_deviation[0] = 5.0e-2;
-    contactDetectionParams->pos_deviation[1] = 5.0e-2;
+    contactDetectionParams->pos_deviation[0] = 1.0e-2;
+    contactDetectionParams->pos_deviation[1] = 1.0e-2;
     contactDetectionParams->contact_flag_local[0] = 0;
     contactDetectionParams->contact_flag_local[1] = 0;
     contactDetectionParams->reflect_flag[0] = 0;
@@ -108,12 +118,16 @@ void contactDetectionInit(ContactDetectionParams *contactDetectionParams, Contac
     /* pressure buffer initialization */
     for (int i = 0; i < 2; i ++) {
         for (int j = 0; j < contactDetectionParams->pos_buffer_size[i]; j ++) {
-            contactDetectionPreviousVariable->pos_buffer[i][j] = rdda->motor[i].motorIn.act_pos;
+            contactDetectionPreviousVariable->pos_buffer[i][j] = rdda->motor[i].motorIn.act_pos - rdda->motor[i].init_pos;
         }
         contactDetectionPreviousVariable->pos_variance_sum[i] = 0.0;
-        contactDetectionPreviousVariable->pos_average[i] = rdda->motor[i].motorIn.act_pos;
+        contactDetectionPreviousVariable->pos_average[i] = rdda->motor[i].motorIn.act_pos - rdda->motor[i].init_pos;
         contactDetectionPreviousVariable->pos_deviation[i] = 0.0;
         contactDetectionPreviousVariable->contact_detection_count[i] = contactDetectionParams->contact_detection_time[i];
+    }
+
+    for (int i = 0; i < 2; i ++) {
+        rdda->motor[i].rddaPacket.pos_ref = rdda->motor[i].motorIn.act_pos - rdda->motor[i].init_pos;
     }
 }
 
@@ -131,7 +145,7 @@ void contactDetection(ContactDetectionParams *contactDetectionParams, ContactDet
     int vel_flag = 0;
 
     for (int i = 0; i < num; i ++) {
-        pos[i] = rdda->motor[i].motorIn.act_pos;
+        pos[i] = rdda->motor[i].motorIn.act_pos - rdda->motor[i].init_pos;
         rdda->motor[i].stiffness = contactDetectionParams->reflect_stiffness[i];
     }
 
@@ -159,28 +173,56 @@ void contactDetection(ContactDetectionParams *contactDetectionParams, ContactDet
     }
     else contactDetectionParams->contact_detection_trigger = 0;
 
-    rdda->motor[0].rddaPacket.test = pos[1] - contactDetectionPreviousVariable->pos_average[1] - contactDetectionParams->pos_deviation_threshold[1];
-    rdda->motor[1].rddaPacket.test = pos[1] - contactDetectionPreviousVariable->pos_average[1] + contactDetectionParams->pos_deviation_threshold[1];
+    // rdda->motor[0].rddaPacket.test = rdda->motor[1].rddaPacket.pos_ref - contactDetectionPreviousVariable->pos_average[1] - contactDetectionParams->pos_deviation_threshold[1];
+    rdda->motor[0].rddaPacket.test = contactDetectionParams->soft_contact_pos_deviation_threshold[1];
+    rdda->motor[1].rddaPacket.test = -contactDetectionParams->soft_contact_pos_deviation_threshold[1];
+    // rdda->motor[1].rddaPacket.test = rdda->motor[1].rddaPacket.pos_ref - contactDetectionPreviousVariable->pos_average[1] + contactDetectionParams->pos_deviation_threshold[1];
+    rdda->motor[1].rddaPacket.wave_out = pos[1] - contactDetectionPreviousVariable->pos_average[1];
+    rdda->motor[0].rddaPacket.wave_out = contactDetectionParams->soft_contact_count[1];
 
     /* contact detection */
     for (int i = 0; i < num; i ++) {
         if ((contactDetectionParams->reflect_flag[i] == 0) && (contactDetectionParams->reflect_back_flag[i] == 0) && (contactDetectionParams->contact_detection_time[i] == contactDetectionPreviousVariable->contact_detection_count[i]) && contactDetectionParams->contact_detection_trigger) {
             // if ((filtered_pressure_change_slop[i] > contactDetectionParams->pressure_change_threshold[i]) && (fabs(rdda->motor[i].motorIn.act_vel) > 0.0)) {    
-            if (pos[i] - contactDetectionPreviousVariable->pos_average[i] > contactDetectionParams->pos_deviation_threshold[i]) {    
+            if (pos[i] - contactDetectionPreviousVariable->pos_average[i] > contactDetectionParams->hard_contact_pos_deviation_threshold[i]) {    
                 contactDetectionParams->contact_flag_local[i] = 1;
                 rdda->motor[i].rddaPacket.contact_flag = 1;
                 rdda->motor[i].stiffness = contactDetectionParams->reflect_stiffness[i];
             }
             // else if ((filtered_pressure_change_slop[i] < - contactDetectionParams->pressure_change_threshold[i]) && (fabs(rdda->motor[i].motorIn.act_vel) > 0.0)) {
-            else if (pos[i] - contactDetectionPreviousVariable->pos_average[i] < -1.0*contactDetectionParams->pos_deviation_threshold[i]) {    
+            else if (pos[i] - contactDetectionPreviousVariable->pos_average[i] < -1.0*contactDetectionParams->hard_contact_pos_deviation_threshold[i]) {    
                 contactDetectionParams->contact_flag_local[i] = -1;
                 rdda->motor[i].rddaPacket.contact_flag = 1;
                 rdda->motor[i].stiffness = contactDetectionParams->reflect_stiffness[i];
             }
-            else contactDetectionParams->contact_flag_local[i] = 0;
+            else if (pos[i] - contactDetectionPreviousVariable->pos_average[i] > contactDetectionParams->soft_contact_pos_deviation_threshold[i]) {    
+                contactDetectionParams->soft_contact_count[i]++;
+                contactDetectionParams->contact_flag_local[i] = 0;
+                if (contactDetectionParams->soft_contact_count[i] > contactDetectionParams->soft_contact_count_threshold[i]) {
+                    contactDetectionParams->contact_flag_local[i] = 1;
+                    rdda->motor[i].rddaPacket.contact_flag = 1;
+                    rdda->motor[i].stiffness = contactDetectionParams->reflect_stiffness[i];
+                    contactDetectionParams->soft_contact_count[i] = 0;
+                }
+            }
+            else if (pos[i] - contactDetectionPreviousVariable->pos_average[i] < -1.0*contactDetectionParams->soft_contact_pos_deviation_threshold[i]) {    
+                contactDetectionParams->soft_contact_count[i]--;
+                contactDetectionParams->contact_flag_local[i] = 0;
+                if (contactDetectionParams->soft_contact_count[i] < -contactDetectionParams->soft_contact_count_threshold[i]) {
+                    contactDetectionParams->contact_flag_local[i] = -1;
+                    rdda->motor[i].rddaPacket.contact_flag = 1;
+                    rdda->motor[i].stiffness = contactDetectionParams->reflect_stiffness[i];
+                    contactDetectionParams->soft_contact_count[i] = 0;
+                }
+            }
+            else {
+                contactDetectionParams->contact_flag_local[i] = 0;
+                contactDetectionParams->soft_contact_count[i] = 0;
+            }
         }
         else {
             contactDetectionParams->contact_flag_local[i] = 0;
+            contactDetectionParams->soft_contact_count[i] = 0;
             contactDetectionPreviousVariable->contact_detection_count[i]--;
             if (contactDetectionPreviousVariable->contact_detection_count[i] == 0) {
                 rdda->motor[i].rddaPacket.contact_flag = 0;
@@ -193,7 +235,7 @@ void contactDetection(ContactDetectionParams *contactDetectionParams, ContactDet
     for (int i = 0; i < num; i ++) {
         if (contactDetectionParams->contact_flag_local[i] != 0) {
             contactDetectionPreviousVariable->contact_detection_count[i]--;
-            contactDetectionPreviousVariable->pos_collision[i] = rdda->motor[i].motorIn.act_pos - rdda->motor[i].init_pos;
+            contactDetectionPreviousVariable->pos_collision[i] = pos[i];
             rdda->motor[i].rddaPacket.pos_ref = contactDetectionPreviousVariable->pos_collision[i] + contactDetectionParams->contact_flag_local[i] * contactDetectionParams->reflect_distance[i];
             contactDetectionParams->reflect_flag[i] = 1;
         }
@@ -201,21 +243,22 @@ void contactDetection(ContactDetectionParams *contactDetectionParams, ContactDet
 
     /* back to collision position */
     for (int i = 0; i < num; i ++) {
-        if ((contactDetectionParams->reflect_flag[i] == 1) && (fabs(rdda->motor[i].motorIn.act_pos - rdda->motor[i].init_pos - rdda->motor[i].rddaPacket.pos_ref) <= contactDetectionParams->pos_deviation[i])) {
+        if ((contactDetectionParams->reflect_flag[i] == 1) && (fabs(pos[i] - rdda->motor[i].rddaPacket.pos_ref) <= contactDetectionParams->pos_deviation[i])) {
             contactDetectionParams->reflect_flag[i] = 0;
             contactDetectionParams->reflect_back_flag[i] = 1;
             contactDetectionPreviousVariable->pos_reflection[i] = rdda->motor[i].rddaPacket.pos_ref;
         }
-        if ((contactDetectionParams->reflect_back_flag[i] == 1) && (fabs(rdda->motor[i].motorIn.act_pos - rdda->motor[i].init_pos - contactDetectionPreviousVariable->pos_collision[i]) > contactDetectionParams->pos_deviation[i]) && (contactDetectionParams->time[i] <= 3.5)) {
+        if ((contactDetectionParams->reflect_back_flag[i] == 1) && (fabs(pos[i] - contactDetectionPreviousVariable->pos_collision[i]) > contactDetectionParams->pos_deviation[i]) && (contactDetectionParams->time[i] <= 3.5)) {
             rdda->motor[i].rddaPacket.pos_ref = reflectBack(contactDetectionPreviousVariable->pos_reflection[i], contactDetectionPreviousVariable->pos_collision[i], contactDetectionParams->time[i]);
             contactDetectionParams->time[i] += contactDetectionParams->sample_time;
         }
-        else if ((contactDetectionParams->reflect_back_flag[i] == 1) && (fabs(rdda->motor[i].motorIn.act_pos - rdda->motor[i].init_pos - contactDetectionPreviousVariable->pos_collision[i]) <= contactDetectionParams->pos_deviation[i]) && (fabs(rdda->motor[i].motorIn.act_vel) <= contactDetectionParams->vel_threshold[i])) {
+        else if ((contactDetectionParams->reflect_back_flag[i] == 1) && (fabs(pos[i] - contactDetectionPreviousVariable->pos_collision[i]) <= contactDetectionParams->pos_deviation[i]) && (fabs(rdda->motor[i].motorIn.act_vel) <= contactDetectionParams->vel_threshold[i])) {
             contactDetectionParams->reflect_back_flag[i] = 0;
             rdda->motor[i].rddaPacket.pos_ref = contactDetectionPreviousVariable->pos_collision[i];
-            rdda->motor[i].stiffness = 10.0;
+            // rdda->motor[i].stiffness = 10.0;
             contactDetectionParams->time[i] = 0.0;
             contactDetectionPreviousVariable->contact_detection_count[i] = contactDetectionParams->contact_detection_time[i];
+            rdda->motor[i].rddaPacket.contact_flag = 0;
         }
     }
 
@@ -228,7 +271,8 @@ void contactDetection(ContactDetectionParams *contactDetectionParams, ContactDet
         contactDetectionPreviousVariable->pos_deviation[i] = sqrt(contactDetectionPreviousVariable->pos_variance_sum[i] / (contactDetectionParams->pos_buffer_size[i] - 1));
         if (contactDetectionParams->location[i] == contactDetectionParams->pos_buffer_size[i] - 1) contactDetectionParams->location[i] = 0;
         else contactDetectionParams->location[i]++;
-        contactDetectionParams->pos_deviation_threshold[i] = 9.0 * contactDetectionPreviousVariable->pos_deviation[i];
+        contactDetectionParams->hard_contact_pos_deviation_threshold[i] = contactDetectionParams->hard_contact_pos_deviation_multiplier[i] * contactDetectionPreviousVariable->pos_deviation[i];
+        contactDetectionParams->soft_contact_pos_deviation_threshold[i] = contactDetectionParams->soft_contact_pos_deviation_multiplier[i] * contactDetectionPreviousVariable->pos_deviation[i];
     }
 
     /* previous variables update*/

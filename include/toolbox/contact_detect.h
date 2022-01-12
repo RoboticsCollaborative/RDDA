@@ -20,7 +20,12 @@ typedef struct
     double reflect_distance[2];
     int contact_detection_time[2];
     int pos_buffer_size[2];
-    double pos_deviation_threshold[2];
+    double hard_contact_pos_deviation_threshold[2];
+    double hard_contact_pos_deviation_multiplier[2];
+    double soft_contact_pos_deviation_threshold[2];
+    double soft_contact_pos_deviation_multiplier[2];
+    int soft_contact_count[2];
+    int soft_contact_count_threshold[2];
     int location[2];
     double pos_deviation[2];
     int contact_flag_local[2];
