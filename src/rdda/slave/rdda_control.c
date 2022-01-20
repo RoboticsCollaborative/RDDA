@@ -173,8 +173,8 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
         vel_sat[i] = rdda->motor[i].vel_sat;
         filtered_vel_sat[i] = secondOrderIIRFilter(vel_sat[i], previousVariables->vel_sat[i], previousVariables->prev_vel_sat[i], previousVariables->filtered_vel_sat[i], previousVariables->prev_filtered_vel_sat[i], secondOrderLowPassFilterParams->b0, secondOrderLowPassFilterParams->b1, secondOrderLowPassFilterParams->b2, secondOrderLowPassFilterParams->a1, secondOrderLowPassFilterParams->a2);
         filtered_vel_sat[i] = MIN(controlParams->max_velocity, filtered_vel_sat[i]);
-        // pos_ref[i] = trajectoryGenerator(filtered_pos_tar[i], previousVariables->pos_ref[i], filtered_vel_sat[i], controlParams->sample_time);
-        pos_ref[i] = rdda->motor[i].rddaPacket.pos_ref;
+        pos_ref[i] = trajectoryGenerator(filtered_pos_tar[i], previousVariables->pos_ref[i], filtered_vel_sat[i], controlParams->sample_time);
+        // pos_ref[i] = rdda->motor[i].rddaPacket.pos_ref;
     }
 
     /* sensor reading */
