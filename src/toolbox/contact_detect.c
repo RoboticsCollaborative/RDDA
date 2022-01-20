@@ -64,12 +64,12 @@ void contactDetectionInit(ContactDetectionParams *contactDetectionParams, Contac
     contactDetectionParams->hard_contact_pos_deviation_multiplier[1] = 9.0;
     contactDetectionParams->soft_contact_pos_deviation_threshold[0] = 1.0e-2;
     contactDetectionParams->soft_contact_pos_deviation_threshold[1] = 1.0e-2;
-    contactDetectionParams->soft_contact_pos_deviation_multiplier[0] = 4.0;
-    contactDetectionParams->soft_contact_pos_deviation_multiplier[1] = 4.0;
+    contactDetectionParams->soft_contact_pos_deviation_multiplier[0] = 3.0;
+    contactDetectionParams->soft_contact_pos_deviation_multiplier[1] = 3.0;
     contactDetectionParams->soft_contact_count[0] = 0;
     contactDetectionParams->soft_contact_count[1] = 0;
-    contactDetectionParams->soft_contact_count_threshold[0] = 50;
-    contactDetectionParams->soft_contact_count_threshold[1] = 50;
+    contactDetectionParams->soft_contact_count_threshold[0] = 70;
+    contactDetectionParams->soft_contact_count_threshold[1] = 70;
     contactDetectionParams->location[0] = 0;
     contactDetectionParams->location[1] = 0;
     contactDetectionParams->pos_deviation[0] = 1.0e-2;
@@ -235,7 +235,8 @@ void contactDetection(ContactDetectionParams *contactDetectionParams, ContactDet
     for (int i = 0; i < num; i ++) {
         if (contactDetectionParams->contact_flag_local[i] != 0) {
             contactDetectionPreviousVariable->contact_detection_count[i]--;
-            contactDetectionPreviousVariable->pos_collision[i] = pos[i];
+            // contactDetectionPreviousVariable->pos_collision[i] = pos[i];
+            contactDetectionPreviousVariable->pos_collision[i] = 0.0;
             rdda->motor[i].rddaPacket.pos_ref = contactDetectionPreviousVariable->pos_collision[i] + contactDetectionParams->contact_flag_local[i] * contactDetectionParams->reflect_distance[i];
             contactDetectionParams->reflect_flag[i] = 1;
         }
