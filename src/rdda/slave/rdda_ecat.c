@@ -120,8 +120,8 @@ initEcatSlaves(ecat_slaves *ecatSlave) {
        ecatSlave->bel[mot_id].counts_per_rad_sec = 667544.2144*10.0;
     //    ecatSlave->bel[mot_id].counts_per_rad = 83443.0268;
     //    ecatSlave->bel[mot_id].counts_per_rad_sec = 83442.0268*10.0;
-       ecatSlave->bel[mot_id].load_counts_per_rad = 52151.8917/327680*40000;
-       ecatSlave->bel[mot_id].load_counts_per_rad_sec = 52151.8917/327680*40000*10;
+       ecatSlave->bel[mot_id].load_counts_per_rad = 6366.1977;
+       ecatSlave->bel[mot_id].load_counts_per_rad_sec = 6366.1977*10.0*100.0;
        ecatSlave->bel[mot_id].pascal_per_count = 21.04178; // +-100 psi <-> +-689476 pascal <-> +-10 V <-> -32768 - 32767 (16bit)
        ecatSlave->bel[mot_id].nm_per_pascal = 2.822e-6;
        ecatSlave->bel[mot_id].units_per_nm = 500.0;

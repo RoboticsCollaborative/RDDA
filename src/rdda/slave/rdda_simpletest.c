@@ -83,7 +83,7 @@ void rdda_run (void *ifnameptr) {
      * comment out them when running DoB
      */
     pivGainSDOwrite(ecatSlaves->bel[0].slave_id, 0, 0); // Pp 400, Vp 100, Kp 18.6
-    pivGainSDOwrite(ecatSlaves->bel[1].slave_id, 0, 0);
+    pivGainSDOwrite(ecatSlaves->bel[1].slave_id, 0, 0); // 2000, 1024
     /**/
 
     initRddaStates(ecatSlaves, rdda);
@@ -101,6 +101,10 @@ void rdda_run (void *ifnameptr) {
     /* Initialise timestamps */
     int i = 0;
     //double r = 4.0; //inertia ratio
+    // double f_min = 0.01;
+    // double f_max = 1000;
+    // double T = 30;
+    // double chirp;
 
     while (!done) {
 
@@ -110,6 +114,11 @@ void rdda_run (void *ifnameptr) {
         time += 0.2e-3;
 
         mutex_lock(&rdda->mutex);
+        // if(time<5.0) chirp = 0.0;
+        // else if(time>T+5.0) chirp = 0.0;
+        // else chirp = 0.078 * sin( 2*M_PI*f_min*T/log(f_max/f_min) * (exp((time-5.0)/T*log(f_max/f_min))-1) );
+        // rdda->motor[1].motorOut.tau_off = chirp;
+        // controlParams.coupling_torque[1] = chirp;
 
         teleController(&teleParam, &controlParams, rdda);
         // contactDetection(&contactDetectionParams, &contactDetectionLowPassFilterParams, &contactDetectionHighPassFilterParams, &contactDetectionPreviousVariable, rdda);
@@ -125,7 +134,10 @@ void rdda_run (void *ifnameptr) {
         /* Error code detection */
         done = errorCheck(ecatSlaves);
 
-        //printf("%+10d,%+10d", ecatSlaves->bel[2].in_motor->analog_in,ecatSlaves->bel[3].in_motor->analog_in);
+        // rdda->motor[1].rddaPacket.test = rdda->motor[1].motorIn.load_pos;
+        // rdda->motor[0].rddaPacket.test = rdda->motor[1].motorIn.load_vel;
+        // rdda->motor[0].rddaPacket.test = rdda->motor[0].motorIn.act_pos - rdda->motor[0].rddaPacket.pos_in;
+        // rdda->motor[1].rddaPacket.test = rdda->motor[1].motorIn.act_pos - rdda->motor[1].rddaPacket.pos_in;
 
         /* save data to file */
         //fprintf(fptr, "%lf, %lf, %lf, %lf, %lf, %lf, %lf\n", rdda->motor[0].motorIn.act_pos, rdda->motor[2].motorIn.act_pos, rdda->motor[0].motorIn.act_vel, rdda->motor[2].motorIn.act_vel, rdda->psensor.analogIn.val1, rdda->psensor.analogIn.val3, time);
