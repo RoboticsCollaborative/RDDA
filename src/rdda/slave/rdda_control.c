@@ -273,7 +273,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, FirstOrderLowPassFi
     for (int i = 0; i < num; i ++) {
         /* direct equation */
         coupling_torque[i] = saturation(controlParams->max_external_torque[i], controlParams->coupling_torque[i]);
-        // Kp[i] = 0.0;
+        // Kp[i] = 1.0;
         // Kd[i] = MIN(2.0 * 0.5 * sqrt(Kp[i] * 1.463e-4), 0.08);
         // coupling_torque[i] = -1.0 * Kp[i] * motor_pos[i] - 1.0 * Kd[i] * motor_vel[i];
         integral_control_force[i] = previousVariables->integral_control_force[i] + controlParams->lambda[0] * controlParams->sample_time * (reference_force[i] + pressure[i] + finger_bk_comp_force[i] + hysteresis_force[i] + coupling_torque[i]);

@@ -16,6 +16,7 @@
 #include "rdda_base.h"
 #include "rdda_control.h"
 #include "contact_detect.h"
+#include "external_force_estimation.h"
 #include "tele_control.h"
 #include "shm_data.h"
 #include "shm.h"
@@ -44,6 +45,9 @@ void rdda_run (void *ifnameptr) {
     ContactDetectionLowPassFilterParams contactDetectionLowPassFilterParams;
     ContactDetectionHighPassFilterParams contactDetectionHighPassFilterParams;
     ContactDetectionPreviousVariable contactDetectionPreviousVariable;
+    /* External force estimation */
+    ExForceEstParams exForceEstParams;
+    ExForceEstVars exForceEstVars;
     /* Teleoperation */
     TeleParam teleParam;
 
@@ -91,6 +95,7 @@ void rdda_run (void *ifnameptr) {
     dobInit(&controlParams, &firstOrderLowPassFilterParams, &secondOrderLowPassFilterParams, &previousVariables, rdda);
     teleInit(&teleParam);
     contactDetectionInit(&contactDetectionParams, &contactDetectionLowPassFilterParams, &contactDetectionHighPassFilterParams, &contactDetectionPreviousVariable, rdda);
+    externalForceEstimationInit(&exForceEstParams, &exForceEstVars, rdda);
 
     /* Measure time interval for sleep */
     int usec_per_sec = 1000000;
@@ -102,8 +107,9 @@ void rdda_run (void *ifnameptr) {
     int i = 0;
     //double r = 4.0; //inertia ratio
     // double f_min = 0.01;
-    // double f_max = 1000;
+    // double f_max = 5;
     // double T = 30;
+    // double f_sine = 0.1;
     // double chirp;
 
     while (!done) {
@@ -116,13 +122,18 @@ void rdda_run (void *ifnameptr) {
         mutex_lock(&rdda->mutex);
         // if(time<5.0) chirp = 0.0;
         // else if(time>T+5.0) chirp = 0.0;
-        // else chirp = 0.078 * sin( 2*M_PI*f_min*T/log(f_max/f_min) * (exp((time-5.0)/T*log(f_max/f_min))-1) );
+        // else chirp = 0.3 * sin( 2*M_PI*f_min*T/log(f_max/f_min) * (exp((time-5.0)/T*log(f_max/f_min))-1) );
+        // if(time < 5.0) sine_wave = 0.0;
+        // else if (time > 2/f_sine + 5.0) sine_wave = 0.0;
+        // else sine_wave = 0.4 * (cos(2*M_PI*f_sine*(time - 5.0)) - 1.0);
+        // rdda->motor[1].motorOut.tg_pos = chirp;
         // rdda->motor[1].motorOut.tau_off = chirp;
         // controlParams.coupling_torque[1] = chirp;
 
         teleController(&teleParam, &controlParams, rdda);
         // contactDetection(&contactDetectionParams, &contactDetectionLowPassFilterParams, &contactDetectionHighPassFilterParams, &contactDetectionPreviousVariable, rdda);
         dobController(rdda, &controlParams, &firstOrderLowPassFilterParams, &secondOrderLowPassFilterParams, &previousVariables);
+        // externalForceEstimation(&exForceEstParams, &exForceEstVars, rdda);
 
         rdda_update(ecatSlaves, rdda);
         i++;

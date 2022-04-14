@@ -57,6 +57,7 @@ add_library(${PROJECT_NAME}_slave_lib
         src/toolbox/contact_detect.c
         src/shm/shm.c
         src/toolbox/slave/tele_control.c
+        src/toolbox/external_force_estimation.c
         )
 
 target_link_libraries(${PROJECT_NAME}_slave_lib soem ${OS_LIBS})
