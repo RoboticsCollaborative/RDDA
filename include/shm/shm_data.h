@@ -29,6 +29,8 @@ typedef struct {
     double tau;
     double wave_in;
     double wave_out;
+    double wave_in_aux;
+    double wave_out_aux;
     int contact_flag;
     double test;
 } RDDAPacket;
