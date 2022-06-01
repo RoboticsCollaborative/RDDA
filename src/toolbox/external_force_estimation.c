@@ -50,13 +50,13 @@ void externalForceEstimationInit(ExForceEstParams *exForceEstParams, ExForceEstV
     exForceEstParams->joint_torque_est_coeffs[12] = 0.08020776;
     exForceEstParams->joint_torque_est_coeffs[13] = 0.0;
 
-    double Ts = 0.2e-3;
-    double wc = 2 * M_PI * 100.0;
+    double Ts = 0.25e-3;
+    double wc = 2 * M_PI * 50.0;
     exForceEstParams->a1[0] = (2.0 - wc * Ts) / (2.0 + wc * Ts);
     exForceEstParams->b0[0] = wc * Ts / (2.0 + wc * Ts);
     exForceEstParams->b1[0] = wc * Ts / (2.0 + wc * Ts);
 
-    double wHP = 2 * M_PI * 1e-20;
+    double wHP = 2 * M_PI * 1e-100;
     exForceEstParams->a1[1] = (2.0 - wc * Ts) / (2.0 + wHP * Ts);
     exForceEstParams->b0[1] = 2.0 / (2.0 + wHP * Ts);
     exForceEstParams->b1[1] = -2.0 / (2.0 + wHP * Ts);
@@ -80,8 +80,8 @@ void externalForceEstimationInit(ExForceEstParams *exForceEstParams, ExForceEstV
         exForceEstVars->prev_filtered_joint_pos_est[i] = 0.0;
         exForceEstVars->prev_HP_filtered_joint_torque_est[i] = 0.0;
     }
-    exForceEstVars->initial_joint_torque_est[0] = 1.0 * rdda->psensor.analogIn.val1;// + exForceEstParams->joint_torque_est_coeffs[0] * exForceEstVars->prev_pos[0];
-    exForceEstVars->initial_joint_torque_est[1] = 1.0 * rdda->psensor.analogIn.val2;// + exForceEstParams->joint_torque_est_coeffs[0] * exForceEstVars->prev_pos[1];
+    exForceEstVars->initial_joint_torque_est[0] = 1.0 / 2 * rdda->psensor.analogIn.val1;// + exForceEstParams->joint_torque_est_coeffs[0] * exForceEstVars->prev_pos[0];
+    exForceEstVars->initial_joint_torque_est[1] = 1.0 / 2 * rdda->psensor.analogIn.val2;// + exForceEstParams->joint_torque_est_coeffs[0] * exForceEstVars->prev_pos[1];
     exForceEstVars->prev_pressure[0] = rdda->psensor.analogIn.val1;
     exForceEstVars->prev_pressure[1] = rdda->psensor.analogIn.val2;
 }
@@ -147,6 +147,7 @@ void externalForceEstimation(ExForceEstParams *exForceEstParams, ExForceEstVars 
     }
 
     rdda->motor[0].rddaPacket.test = filtered_joint_torque_est[1];
-    rdda->motor[1].rddaPacket.test = HP_filtered_joint_torque_est[1];
+    // rdda->motor[1].rddaPacket.test = exForceEstParams->joint_torque_est_coeffs[0] * pos[1] + exForceEstParams->joint_torque_est_coeffs[2 * (hose_model_dof + 1) + 1] * pos[1] * 1.0 - 0.01;
+    rdda->motor[1].rddaPacket.test = pos[1] * 10.0;
 
 }

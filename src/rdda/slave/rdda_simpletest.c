@@ -80,14 +80,14 @@ void rdda_run (void *ifnameptr) {
     printf("Input/output interface succeed.\n");
 
     /* timer */
-    cycletime = 200; /* in microseconds */
+    cycletime = 250; /* in microseconds */
 
     /* Initialize controller */
     /* These two lines are to initialize master to position mode while re-initializing piv gains,
      * comment out them when running DoB
      */
     pivGainSDOwrite(ecatSlaves->bel[0].slave_id, 0, 0); // Pp 400, Vp 100, Kp 18.6
-    pivGainSDOwrite(ecatSlaves->bel[1].slave_id, 0, 0); // 2000, 1024
+    pivGainSDOwrite(ecatSlaves->bel[1].slave_id, 0, 0); // 8000, 1024 Kp = 190 Nm/rad
     /**/
 
     initRddaStates(ecatSlaves, rdda);
@@ -109,7 +109,8 @@ void rdda_run (void *ifnameptr) {
     // double f_min = 0.01;
     // double f_max = 5;
     // double T = 30;
-    // double f_sine = 0.1;
+    // double f_sine = 3e-2;
+    // double sine_wave;
     // double chirp;
 
     while (!done) {
@@ -117,7 +118,7 @@ void rdda_run (void *ifnameptr) {
         /* Mark start time */
         clock_gettime(CLOCK_MONOTONIC, &startTime);
 
-        time += 0.2e-3;
+        time += 0.25e-3;
 
         mutex_lock(&rdda->mutex);
         // if(time<5.0) chirp = 0.0;
@@ -125,10 +126,10 @@ void rdda_run (void *ifnameptr) {
         // else chirp = 0.3 * sin( 2*M_PI*f_min*T/log(f_max/f_min) * (exp((time-5.0)/T*log(f_max/f_min))-1) );
         // if(time < 5.0) sine_wave = 0.0;
         // else if (time > 2/f_sine + 5.0) sine_wave = 0.0;
-        // else sine_wave = 0.4 * (cos(2*M_PI*f_sine*(time - 5.0)) - 1.0);
-        // rdda->motor[1].motorOut.tg_pos = chirp;
+        // else sine_wave = 0.1 * (sin(2*M_PI*f_sine*(time - 5.0)) - 0.0);
+        // rdda->motor[1].motorOut.tg_pos = sine_wave;
+        // rdda->motor[0].motorOut.tg_pos = 0.0;
         // rdda->motor[1].motorOut.tau_off = chirp;
-        // controlParams.coupling_torque[1] = chirp;
 
         teleController(&teleParam, &controlParams, rdda);
         // contactDetection(&contactDetectionParams, &contactDetectionLowPassFilterParams, &contactDetectionHighPassFilterParams, &contactDetectionPreviousVariable, rdda);
@@ -147,8 +148,6 @@ void rdda_run (void *ifnameptr) {
 
         // rdda->motor[1].rddaPacket.test = rdda->motor[1].motorIn.load_pos;
         // rdda->motor[0].rddaPacket.test = rdda->motor[1].motorIn.load_vel;
-        // rdda->motor[0].rddaPacket.test = rdda->motor[0].motorIn.act_pos - rdda->motor[0].rddaPacket.pos_in;
-        // rdda->motor[1].rddaPacket.test = rdda->motor[1].motorIn.act_pos - rdda->motor[1].rddaPacket.pos_in;
 
         /* save data to file */
         //fprintf(fptr, "%lf, %lf, %lf, %lf, %lf, %lf, %lf\n", rdda->motor[0].motorIn.act_pos, rdda->motor[2].motorIn.act_pos, rdda->motor[0].motorIn.act_vel, rdda->motor[2].motorIn.act_vel, rdda->psensor.analogIn.val1, rdda->psensor.analogIn.val3, time);

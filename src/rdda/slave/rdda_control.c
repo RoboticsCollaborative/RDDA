@@ -66,7 +66,7 @@ void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstO
     controlParams->max_stiffness = 40.0;
     controlParams->hysteresis_sigma = 400;
     controlParams->hysteresis_friction = 0.016;
-    controlParams->sample_time = 0.2e-3;
+    controlParams->sample_time = 0.25e-3;
     controlParams->gear_ratio = 1.33;
     controlParams->coupling_torque[0] = 0.0;
     controlParams->coupling_torque[1] = 0.0;

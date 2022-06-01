@@ -107,7 +107,7 @@ void rdda_run (void *ifnameptr) {
         /* Mark start time */
         clock_gettime(CLOCK_MONOTONIC, &startTime);
 
-        time += 0.2e-3;
+        time += 0.25e-3;
 
         mutex_lock(&rdda->mutex);
 
