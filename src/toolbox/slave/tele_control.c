@@ -4,6 +4,8 @@
 
 #include "tele_control.h"
 
+#define MIN(x,y) (x)<(y)?(x):(y)
+
 double teleFirstOrderIIRFilter(double input, double input_prev, double output_prev, double b0, double b1, double a1) {
     double output;
     output = b0 * input + b1 * input_prev + a1 * output_prev;
@@ -48,6 +50,10 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
     double wave_input[num];
     double wave_output[num];
 
+    double pos_master[num];
+    double spring_energy[num];
+    double wave_comp_coeff[num];
+
     double actual_pos_error[num];
     double predict_pos_error[num];
     double error_difference[num];
@@ -61,8 +67,12 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
     for (int i = 0; i < num; i ++) {
         pos[i] = rdda->motor[i].motorIn.act_pos - rdda->motor[i].init_pos;
         vel[i] = rdda->motor[i].motorIn.act_vel;
+        pos_master[i] = rdda->motor[i].rddaPacket.pos_in;
+        spring_energy[i] = 0.5 * teleParam->stiffness[i] * (pos_master[i] - pos[i]) * (pos_master[i] - pos[i]);
+        wave_comp_coeff[i] = MIN(1.0 - exp(-spring_energy[i] * 200), 0.99);
+        rdda->motor[i].rddaPacket.test = wave_comp_coeff[i];
         // wave_input[i] = rdda->motor[i].rddaPacket.wave_in;
-        wave_input[i] = rdda->motor[i].rddaPacket.wave_in + (rdda->motor[i].rddaPacket.wave_in_aux - rdda->motor[i].rddaPacket.wave_out) * 0.99;
+        wave_input[i] = rdda->motor[i].rddaPacket.wave_in + (rdda->motor[i].rddaPacket.wave_in_aux - rdda->motor[i].rddaPacket.wave_out) * wave_comp_coeff[i];
         rdda->motor[i].rddaPacket.wave_out_aux = wave_input[i];
     }
 
@@ -83,7 +93,7 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
 	    wave_output[i] = wave_input[i] - sqrt(2.0 / teleParam->wave_damping) * controlParams->coupling_torque[i];
         
         /* pos drift correction */
-        actual_pos_error[i] = rdda->motor[i].rddaPacket.pos_in - teleParam->pos_tar[i];
+        actual_pos_error[i] = pos_master[i] - teleParam->pos_tar[i];
         predict_pos_error[i] = -1.0 / sqrt(2.0 * teleParam->wave_damping) * teleParam->wave_int[i];
         error_difference[i] = predict_pos_error[i] - actual_pos_error[i];
         wave_correction[i] = 1.0 * sqrt(2.0 * teleParam->wave_damping) * (2.0 * M_PI * teleParam->lambda) * error_difference[i];
