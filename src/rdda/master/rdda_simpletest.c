@@ -76,7 +76,7 @@ void rdda_run (void *ifnameptr) {
     printf("Input/output interface succeed.\n");
 
     /* timer */
-    cycletime = 200; /* in microseconds */
+    cycletime = 250; /* in microseconds */
 
     /* Initialize controller */
     /* These two lines are to initialize master to position mode while re-initializing piv gains,
