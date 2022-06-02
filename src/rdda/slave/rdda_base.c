@@ -139,6 +139,7 @@ void initRddaStates(ecat_slaves *ecatSlaves, Rdda *rdda) {
         /* Init ROS outputs */
         rdda->motor[i].rddaPacket.contact_flag = 0;
         rdda->motor[i].rddaPacket.wave_out = 0.0;
+        rdda->motor[i].rddaPacket.wave_out_aux = 0.0;
         rdda->motor[i].rddaPacket.pos_out = 0.0;
         /* Init ROS inputs */
         rdda->motor[i].vel_sat = 10.0;
@@ -146,6 +147,7 @@ void initRddaStates(ecat_slaves *ecatSlaves, Rdda *rdda) {
         rdda->motor[i].stiffness = 0.0;
         rdda->motor[i].rddaPacket.pos_in = 0.0;
         rdda->motor[i].rddaPacket.wave_in = 0.0;
+        rdda->motor[i].rddaPacket.wave_in_aux = 0.0;
         rdda->motor[i].rddaPacket.pos_ref = 0.0;
         rdda->motor[i].rddaPacket.test = 0.0;
     }

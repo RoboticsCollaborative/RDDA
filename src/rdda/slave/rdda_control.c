@@ -57,7 +57,7 @@ void dobInit(ControlParams *controlParams, FirstOrderLowPassFilterParams *firstO
     controlParams->Kp[1] = 0.0;
     controlParams->Pp[1] = 0.0;
     controlParams->Vp[1] = 0.0;
-    controlParams->zeta = 1.0;
+    controlParams->zeta = 0.5;
     controlParams->max_external_torque[0] = 2.0; // ACD motor
     controlParams->max_external_torque[1] = 2.0;
     controlParams->max_inner_loop_torque_Nm = 0.5;
