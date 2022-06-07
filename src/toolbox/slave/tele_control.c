@@ -5,6 +5,7 @@
 #include "tele_control.h"
 
 #define MIN(x,y) (x)<(y)?(x):(y)
+#define MAX(x,y) (x)>(y)?(x):(y)
 
 double teleFirstOrderIIRFilter(double input, double input_prev, double output_prev, double b0, double b1, double a1) {
     double output;
@@ -31,7 +32,8 @@ void teleInit(TeleParam *teleParam) {
     /* symmetric stiffness */
     for (int i = 0; i < num; i ++) {
         teleParam->stiffness[i] = 20.0;
-        teleParam->damping[i] = 2.0 * teleParam->zeta * sqrt(teleParam->stiffness[i] * 1.463e-4);
+        teleParam->motor_inertia[i] = 1.463e-4;
+        teleParam->damping[i] = 2.0 * teleParam->zeta * sqrt(teleParam->stiffness[i] * teleParam->motor_inertia[i]);
     }
 
     for (int i = 0; i < num; i ++) {
@@ -51,13 +53,18 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
     double wave_output[num];
 
     double pos_master[num];
-    double spring_energy[num];
+    double energy_diff[num];
     double wave_comp_coeff[num];
 
     double actual_pos_error[num];
     double predict_pos_error[num];
     double error_difference[num];
     double wave_correction[num];
+
+    double energy_ratio = 10.0;
+    double beta = 200.0;
+    double wave_comp_coeff_upper_bound = 0.99;
+    double wave_comp_coeff_lower_bound = -1.0;
 
     int delay_index;
     int delay_difference;
@@ -68,9 +75,11 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
         pos[i] = rdda->motor[i].motorIn.act_pos - rdda->motor[i].init_pos;
         vel[i] = rdda->motor[i].motorIn.act_vel;
         pos_master[i] = rdda->motor[i].rddaPacket.pos_in;
-        spring_energy[i] = 0.5 * teleParam->stiffness[i] * (pos_master[i] - pos[i]) * (pos_master[i] - pos[i]);
-        wave_comp_coeff[i] = MIN(1.0 - exp(-spring_energy[i] * 200), 0.99);
+        energy_diff[i] = 0.5 * teleParam->stiffness[i] * (pos_master[i] - pos[i]) * (pos_master[i] - pos[i]) - 0.5 * teleParam->motor_inertia[i] * vel[i] * vel[i] * energy_ratio;
+        if (energy_diff[i] >= 0.0) wave_comp_coeff[i] = MIN(1.0 - exp(-energy_diff[i] * beta), wave_comp_coeff_upper_bound);
+        else wave_comp_coeff[i] = MAX(-1.0 + exp(energy_diff[i] * beta), wave_comp_coeff_lower_bound);
         rdda->motor[i].rddaPacket.test = wave_comp_coeff[i];
+        // wave_comp_coeff[i] = 0.0;
         // wave_input[i] = rdda->motor[i].rddaPacket.wave_in;
         wave_input[i] = rdda->motor[i].rddaPacket.wave_in + (rdda->motor[i].rddaPacket.wave_in_aux - rdda->motor[i].rddaPacket.wave_out) * wave_comp_coeff[i];
         rdda->motor[i].rddaPacket.wave_out_aux = wave_input[i];

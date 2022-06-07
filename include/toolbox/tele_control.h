@@ -20,6 +20,7 @@ typedef struct
     double zeta;
     double stiffness[MOTOR_NUM];
     double damping[MOTOR_NUM];
+    double motor_inertia[MOTOR_NUM];
     double wave_damping;
     double pos_tar_int[MOTOR_NUM];
     double pos_tar[MOTOR_NUM];
