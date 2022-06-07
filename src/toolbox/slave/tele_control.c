@@ -53,6 +53,7 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
     double wave_output[num];
 
     double pos_master[num];
+    double vel_master[num];
     double energy_diff[num];
     double wave_comp_coeff[num];
 
@@ -61,7 +62,7 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
     double error_difference[num];
     double wave_correction[num];
 
-    double energy_ratio = 10.0;
+    // double energy_ratio = 10.0;
     double beta = 200.0;
     double wave_comp_coeff_upper_bound = 0.99;
     double wave_comp_coeff_lower_bound = -1.0;
@@ -75,7 +76,8 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
         pos[i] = rdda->motor[i].motorIn.act_pos - rdda->motor[i].init_pos;
         vel[i] = rdda->motor[i].motorIn.act_vel;
         pos_master[i] = rdda->motor[i].rddaPacket.pos_in;
-        energy_diff[i] = 0.5 * teleParam->stiffness[i] * (pos_master[i] - pos[i]) * (pos_master[i] - pos[i]) - 0.5 * teleParam->motor_inertia[i] * vel[i] * vel[i] * energy_ratio;
+        vel_master[i] = rdda->motor[i].rddaPacket.vel_in;
+        energy_diff[i] = 0.5 * teleParam->stiffness[i] * (pos_master[i] - pos[i]) * (pos_master[i] - pos[i]) - 0.5 * teleParam->motor_inertia[i] * (vel[i] * vel[i] + vel_master[i] * vel_master[i]) / 2.0;
         if (energy_diff[i] >= 0.0) wave_comp_coeff[i] = MIN(1.0 - exp(-energy_diff[i] * beta), wave_comp_coeff_upper_bound);
         else wave_comp_coeff[i] = MAX(-1.0 + exp(energy_diff[i] * beta), wave_comp_coeff_lower_bound);
         rdda->motor[i].rddaPacket.test = wave_comp_coeff[i];
