@@ -155,7 +155,7 @@ void rdda_run (void *ifnameptr) {
         mutex_unlock(&rdda->mutex);
         clock_gettime(CLOCK_MONOTONIC, &endTime);
         controlInterval = (endTime.tv_sec-startTime.tv_sec)*usec_per_sec + (endTime.tv_nsec-startTime.tv_nsec)/nsec_per_usec;
-        printf("CT: %4d\r", controlInterval);
+        // printf("CT: %d\r", controlInterval);
         if (controlInterval >= cycletime) {
             printf("\nControl interval time exceeds defined cycle time, CT = %d\n", controlInterval);
             continue;
