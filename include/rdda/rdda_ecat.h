@@ -9,14 +9,11 @@
 #include <assert.h>
 
 #include "ethercat.h"
-#include "init_BEL.h"
+#include "init_AEV.h"
 #include "shm_data.h"
 #include "shm.h"
 
-// #define NSEC_PER_SEC 1000000000
-// #define COUNTS_PER_RADIAN 52151.8917
-
-/** BEL drive CSP Mode inputs to master */
+/** AEV drive CSP Mode inputs to master */
 typedef struct PACKED
 {
     /* PDO */
@@ -28,11 +25,10 @@ typedef struct PACKED
     int32 load_vel;   /* load encoder velocity (0x2231) */
     int32 load_pos;   /* load encoder position (0x2242) */
     uint32 latching_fault; /* load latching fault (0x2183)*/
-    // int16 error_code; /* load error code (0x603F)*/
     int16 analog_in;  /* general analog input (0x2200) */
 } motor_input;
 
-/** BEL drive CSP Mode outputs from master */
+/** AEV drive CSP Mode outputs from master */
 typedef struct PACKED
 {
     uint16 ctrl_wd;   /* control word (0x6040) */
@@ -41,16 +37,7 @@ typedef struct PACKED
     int16 tau_off;    /* torque offset (0x60B2) */
 } motor_output;
 
-/** EL3102 pressure sensor inputs to master */
-typedef struct PACKED
-{
-    uint8 stat1;
-    int16 val1;
-    uint8 stat2;
-    int16 val2;
-} analog_input;
-
-/** BEL slave class */
+/** AEV slave class */
 typedef struct
 {
     uint16 slave_id;
@@ -66,20 +53,12 @@ typedef struct
     double pascal_per_count;
     double nm_per_pascal;
     double units_per_nm;
-} bel_slave;
-
-/** EL3102 slave class */
-typedef struct
-{
-    uint16 slave_id;
-    analog_input *in_analog;
-} el3102_slave;
+} aev_slave;
 
 /** EtherCAT slave class */
 typedef struct
 {
-    bel_slave bel[2];
-    el3102_slave el3102;
+    aev_slave aev[MOTOR_COUNT];
     struct timespec ts;
 } ecat_slaves;
 

@@ -1,6 +1,6 @@
-/** init_BEL.c */
+/** init_AEV.c */
 
-#include "init_BEL.h"
+#include "init_AEV.h"
 
 /** SOEM wrapper for ec_SDOwrite().
  *
@@ -61,7 +61,6 @@ int mapMotorPDOs(uint16 slaveIdx)
 
     wkc += SDO_write8(slaveIdx, 0x1A01, 0, 0);           /* clear the PDO first */
     wkc += SDO_write32(slaveIdx, 0x1A01, 1, 0x21830020); /* Load error code */
-    // wkc += SDO_write32(slaveIdx, 0x1A01, 1, 0x603F0010); /* Load error code */
     wkc += SDO_write32(slaveIdx, 0x1A01, 2, 0x22000010); /* analog input */
     wkc += SDO_write8(slaveIdx, 0x1A01, 0, 2);           /* set number of objects mapped by PDO */
 
@@ -94,47 +93,12 @@ int mapMotorPDOs_callback(uint16 slaveIdx)
     return 0;
 }
 
-
-/** Initialize BEL/motor(ACD120-80-D) parameters via SDO
- *
- * @param slaveIdx      = Slave index.
- * @return 0.
- */
-int initMotor(uint16 slaveIdx)
-{
-    printf("Motor drive %d init\n", slaveIdx);
-
-    /* Clear latched faults */
-    SDO_write16(slaveIdx, 0x6040, 0, 0x008f); /* set bit 7 low-to-high to clear latched fault*/
-    SDO_write16(slaveIdx, 0x6040, 0, 0x000f); /* reset control word */
-
-    /* Motor params */
-    // SDO_write32(slaveIdx, 0x2383, 12, 25456);   /* motor torque constant */
-    // SDO_write32(slaveIdx, 0x2383, 13, 650000);  /* motor peak torque */
-    // SDO_write32(slaveIdx, 0x2383, 14, 200000);   /* motor continuous torque */
-    // SDO_write32(slaveIdx, 0x6076, 0, 2000);      /* motor rated torque */
-    SDO_write32(slaveIdx, 0x2383, 12, 22627);   /* motor torque constant */
-    SDO_write32(slaveIdx, 0x2383, 13, 580000);  /* motor peak torque */
-    SDO_write32(slaveIdx, 0x2383, 14, 200000);   /* motor continuous torque */
-    SDO_write32(slaveIdx, 0x6076, 0, 2000);      /* motor rated torque */
-
-    /* Loop gains */
-    SDO_write16(slaveIdx, 0x2382, 1, 0);        /* position loop gain (Pp) */
-    SDO_write16(slaveIdx, 0x2381, 1, 0);        /* velocity loop gain (Vp) */
-
-    /* Motor limits */
-    SDO_write16(slaveIdx, 0x2110, 0, 1400);     /* peak current limit */
-    SDO_write16(slaveIdx, 0x2111, 0, 700);      /* continuous current limit (units of 0.01A) */
-
-    return 0;
-}
-
 /** Initialize BEL/motor(ADR110-P-22-P) parameters via SDO
  *
  * @param slaveIdx      = Slave index.
  * @return 0.
  */
-int initNewMotor(uint16 slaveIdx)
+int initADRMotor(uint16 slaveIdx)
 {
     printf("Motor drive %d init\n", slaveIdx);
 

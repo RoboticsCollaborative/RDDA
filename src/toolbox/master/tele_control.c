@@ -12,7 +12,7 @@ double teleFirstOrderIIRFilter(double input, double input_prev, double output_pr
 
 void teleInit(TeleParam *teleParam) {
     /* parameter initialization */
-    int num = MOTOR_NUM;
+    int num = MOTOR_COUNT;
     teleParam->sample_time = 0.25e-3;
     teleParam->zeta = 0.5;//0.12;
     teleParam->wave_damping = 0.04;
@@ -25,7 +25,7 @@ void teleInit(TeleParam *teleParam) {
 }
 
 void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rdda) {
-    int num = MOTOR_NUM;
+    int num = MOTOR_COUNT;
 
     // double pos[num];
     double vel[num];
@@ -44,14 +44,5 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
         controlParams->coupling_torque[i] = -1.0 * (teleParam->wave_damping * vel[i] - sqrt(2 * teleParam->wave_damping) * wave_input[i]);
         rdda->motor[i].rddaPacket.wave_out = sqrt(2 * teleParam->wave_damping) * vel[i] - wave_input[i];
     }
-
-    // for (int i = 0; i < num; i ++) {
-    //     teleParam->pos_tar[i] = rdda->motor[i].rddaPacket.pos_in;
-    //     teleParam->vel_tar[i] = wave_input[i];
-    //     controlParams->coupling_torque[i] = teleParam->stiffness[i] * (teleParam->pos_tar[i] - pos[i]) + teleParam->damping[i] * (teleParam->vel_tar[i] - vel[i]);
-    //     rdda->motor[i].rddaPacket.wave_out = vel[i];
-    // }
-    // printf("%+2.4lf, %+2.4lf\r", pos[0], pos[1]);
-    // printf("%+2.4lf, %+2.4lf, %+2.4lf, %+2.4lf\r", pos[0], pos[1], rdda->psensor.analogIn.val1, rdda->psensor.analogIn.val2);
 
 }

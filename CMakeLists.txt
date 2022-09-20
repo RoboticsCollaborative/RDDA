@@ -8,17 +8,6 @@ set(OS_LIBS pthread rt m)
 # SOEM
 find_package(soem)
 
-#link_directories(/home/steph/SOEM/soem/)
-#add_library(SOEM_LIB STATIC /home/steph/SOEM/build/libsoem.a)
-#add_library(SOEM_LIB STATIC /home/steph/SOEM/soem/ethercat.h)
-#set_target_properties(SOEM_LIB PROPERTIES LINKER_LANGUAGE C)
-
-
-
-#FIND_LIBRARY(SOEM_LIB /home/step/SOEM/build)
-#link_directories(SOEM_LIB)
-#link_directories(/home/step/SOEM/build)
-
 # Add the headers from the <include> directory
 include_directories(
         include/${PROJECT_NAME}/
@@ -28,11 +17,10 @@ include_directories(
 
 # Add the source files from the <src> directory
 add_library(${PROJECT_NAME}_master_lib
-        src/${PROJECT_NAME}/master/rdda_ecat.c
-        src/${PROJECT_NAME}/common/init_BEL.c
-        src/${PROJECT_NAME}/master/rdda_base.c
-        src/${PROJECT_NAME}/master/rdda_control.c
-        src/toolbox/contact_detect.c
+        src/${PROJECT_NAME}/rdda_ecat.c
+        src/${PROJECT_NAME}/init_AEV.c
+        src/${PROJECT_NAME}/rdda_base.c
+        src/${PROJECT_NAME}/rdda_control.c
         src/shm/shm.c
         src/toolbox/master/tele_control.c)
 
@@ -40,7 +28,7 @@ target_link_libraries(${PROJECT_NAME}_master_lib soem ${OS_LIBS})
 
 # Add the executable files
 add_executable(${PROJECT_NAME}_master
-        src/${PROJECT_NAME}/master/rdda_simpletest.c
+        src/${PROJECT_NAME}/rdda_simpletest.c
         )
 
 # Linking for libraries
@@ -50,21 +38,19 @@ target_link_libraries(${PROJECT_NAME}_master
 
 ### Build RDDA slave
 add_library(${PROJECT_NAME}_slave_lib
-        src/${PROJECT_NAME}/slave/rdda_ecat.c
-        src/${PROJECT_NAME}/common/init_BEL.c
-        src/${PROJECT_NAME}/slave/rdda_base.c
-        src/${PROJECT_NAME}/slave/rdda_control.c
-        src/toolbox/contact_detect.c
+        src/${PROJECT_NAME}/rdda_ecat.c
+        src/${PROJECT_NAME}/init_AEV.c
+        src/${PROJECT_NAME}/rdda_base.c
+        src/${PROJECT_NAME}/rdda_control.c
         src/shm/shm.c
         src/toolbox/slave/tele_control.c
-        src/toolbox/external_force_estimation.c
         )
 
 target_link_libraries(${PROJECT_NAME}_slave_lib soem ${OS_LIBS})
 
 # Add the executable files
 add_executable(${PROJECT_NAME}_slave
-        src/${PROJECT_NAME}/slave/rdda_simpletest.c
+        src/${PROJECT_NAME}/rdda_simpletest.c
         )
 
 # Linking for libraries
