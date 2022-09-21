@@ -28,7 +28,7 @@ int SDO_write32(uint16 slave, uint16 index, uint8 subindex, uint32 value) {
     return wkc;
 }
 
-/** Map BEL motor drive PDOs in CSP mode.
+/** Map AEV motor drive PDOs in CSP mode.
  *
  * @param[in] slaveIdx    = Slave index.
  * @return 0 on success, -1 on failure.
@@ -43,12 +43,12 @@ int mapMotorPDOs(uint16 slaveIdx)
      *  These mapping are documented in the slave ESI file.
      */
 
-    /* BEL CSP RxPDOs (master outputs) */
+    /* AEV CSP RxPDOs (master outputs) */
     wkc += SDO_write8(slaveIdx, 0x1C12, 0, 0);           /* clear SM2 (slave RxPDOs) */
     wkc += SDO_write16(slaveIdx, 0x1C12, 1, 0x1700);     /* pre-mapped PDO */
     wkc += SDO_write8(slaveIdx, 0x1C12, 0, 1);           /* set # of mapped PDOs */
 
-    /* BEL CSP TxPDOs (master inputs) */
+    /* AEV CSP TxPDOs (master inputs) */
     /* Use user-defined PDO to map the load encoder position and velocity, you
      * need to reference documentation on PDO mapping objects to understand the
      * values set here.  In a nutshell:  {object index,sub-index,size in bits}
@@ -72,7 +72,7 @@ int mapMotorPDOs(uint16 slaveIdx)
     wkc += SDO_write8(slaveIdx, 0x1C13, 0, 3);           /* set # of mapped PDOs */
 
     /* as specified in ESI file, set control word during PRE->SAFE transition */
-    SDO_write16(slaveIdx, 0x6060, 0, 8);                 /* BEL set to CSP mode */
+    SDO_write16(slaveIdx, 0x6060, 0, 8);                 /* AEV set to CSP mode */
 
     if (wkc != 12)
         return 1;
@@ -93,7 +93,7 @@ int mapMotorPDOs_callback(uint16 slaveIdx)
     return 0;
 }
 
-/** Initialize BEL/motor(ADR110-P-22-P) parameters via SDO
+/** Initialize AEV/motor(ADR110-P-22-P) parameters via SDO
  *
  * @param slaveIdx      = Slave index.
  * @return 0.

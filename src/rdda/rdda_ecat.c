@@ -16,48 +16,45 @@ slaveIdentify(ecat_slaves *slave) {
     int buf = 0;
     for (idx = 1; idx <= ec_slavecount; idx++) {
         /* AEV motor drive */
-        if ((ec_slave[idx].eep_man == 0x000000ab) && (ec_slave[idx].eep_id == 0x00001110)) {
+        if ((ec_slave[idx].eep_man == 0x000000ab) && (ec_slave[idx].eep_id == 0x00001260)) {
             uint32 serial_num;
             buf = sizeof(serial_num);
             ec_SDOread(idx, 0x1018, 4, FALSE, &buf, &serial_num, EC_TIMEOUTRXM);
 
-            /* motor1 */
-            // new motor as tele-operator master
-            if (serial_num == 0x256145e) {
+            // printf("%d\n", serial_num);
+
+            /* motor0 */
+            // right fingers motor on panda
+            if (serial_num == 0x014369FB) {
                 slave->aev[0].slave_id = idx;
-                /* CompleteAccess disabled for AEV drive */
-                //ec_slave[slaveIdx].CoEdetails ^= ECT_COEDET_SDOCA;
                 /* Set PDO mapping */
                 printf("Found %s at position %d\n", ec_slave[idx].name, idx);
                 if (1 == mapMotorPDOs_callback(idx)) {
-                    fprintf(stderr, "Motor3 mapping failed!\n");
+                    fprintf(stderr, "Motor0 mapping failed!\n");
                     exit(1);
                 }
             }
-            /* motor2 */
-            // new motor as tele-operator master
-            if (serial_num == 0x2561457) {
+
+            /* motor1 */
+            // right thumb open-close motor on panda
+            if (serial_num == 0x0030E8D8) {
                 slave->aev[1].slave_id = idx;
-                /* CompleteAccess disabled for AEV drive */
-                //ec_slave[slaveIdx].CoEdetails ^= ECT_COEDET_SDOCA;
                 /* Set PDO mapping */
                 printf("Found %s at position %d\n", ec_slave[idx].name, idx);
                 if (1 == mapMotorPDOs_callback(idx)) {
-                    fprintf(stderr, "Motor3 mapping failed!\n");
+                    fprintf(stderr, "Motor1 mapping failed!\n");
                     exit(1);
                 }
             }
 
             /* motor2 */
-            // new motor as tele-operator master
-            if (serial_num == 0x2561457) {
-                slave->aev[1].slave_id = idx;
-                /* CompleteAccess disabled for AEV drive */
-                //ec_slave[slaveIdx].CoEdetails ^= ECT_COEDET_SDOCA;
+            // right thumb rotation motor on panda
+            if (serial_num == 0x014369F4) {
+                slave->aev[2].slave_id = idx;
                 /* Set PDO mapping */
                 printf("Found %s at position %d\n", ec_slave[idx].name, idx);
                 if (1 == mapMotorPDOs_callback(idx)) {
-                    fprintf(stderr, "Motor3 mapping failed!\n");
+                    fprintf(stderr, "Motor2 mapping failed!\n");
                     exit(1);
                 }
             }
@@ -84,8 +81,7 @@ initEcatSlaves(ecat_slaves *ecatSlave) {
         ecatSlave->aev[mot_id].counts_per_rad_sec = 1629746.617261*10.0;
         ecatSlave->aev[mot_id].load_counts_per_rad = 3183.0989;
         ecatSlave->aev[mot_id].load_counts_per_rad_sec = 3183.0989*10;
-        // ecatSlave->aev[mot_id].pascal_per_count = 68.9476; // +-100 psi <-> +-689476 pascal <-> +-10 V count unit: mV -> C/1000*689476/10
-        ecatSlave->aev[mot_id].pascal_per_count = 103.4214; // +-150 psi <-> +-1034214 pascal <-> +-10 V count unit: mV -> C/1000*1034214/10
+        ecatSlave->aev[mot_id].pascal_per_count = 172.3689; // 250 psi <-> 1723689.3233 pascal <-> 10 V // count unit: mV -> C/1000*1723689.3233/10
         ecatSlave->aev[mot_id].nm_per_pascal = 2.822e-6;
         ecatSlave->aev[mot_id].units_per_nm = 500.0;
     }

@@ -31,7 +31,8 @@ void rdda_update(ecat_slaves *ecatSlaves, Rdda *rdda) {
 
     double limit_int16 = 32767.0;
     double limit_int32 = 2147483647.0;
-    int16 pressure_offset_adr = 200;
+    
+    double pre_pressure = 360000; // unit pascal
 
     ec_receive_processdata(EC_TIMEOUTRET);
 
@@ -42,7 +43,7 @@ void rdda_update(ecat_slaves *ecatSlaves, Rdda *rdda) {
         rdda->motor[i].motorIn.act_tau = (double)(ecatSlaves->aev[i].in_motor->act_tau) / ecatSlaves->aev[i].units_per_nm;
         rdda->motor[i].motorIn.load_pos = (double)(ecatSlaves->aev[i].in_motor->load_pos) / ecatSlaves->aev[i].load_counts_per_rad;
         rdda->motor[i].motorIn.load_vel = (double)(ecatSlaves->aev[i].in_motor->load_vel) / ecatSlaves->aev[i].load_counts_per_rad_sec;
-        rdda->motor[i].motorIn.act_pre = (double)(ecatSlaves->aev[i].in_motor->analog_in + pressure_offset_adr) * ecatSlaves->aev[i].pascal_per_count * ecatSlaves->aev[i].nm_per_pascal;
+        rdda->motor[i].motorIn.act_pre = (double)(ecatSlaves->aev[i].in_motor->analog_in ) * ecatSlaves->aev[i].pascal_per_count * ecatSlaves->aev[i].nm_per_pascal - pre_pressure * ecatSlaves->aev[i].nm_per_pascal;
     }
     
     rdda->ts.nsec = ecatSlaves->ts.tv_nsec;

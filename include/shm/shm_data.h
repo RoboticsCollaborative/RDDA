@@ -64,7 +64,7 @@ typedef struct {
 
 /** EtherCAT slave class */
 typedef struct {
-    AEV_slave motor[2];
+    AEV_slave motor[MOTOR_COUNT];
     double freq_anti_alias;
     Timestamp ts;
     pthread_mutex_t mutex;
