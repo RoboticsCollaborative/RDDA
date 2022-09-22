@@ -19,7 +19,7 @@ void teleInit(TeleParam *teleParam) {
 
     /* symmetric stiffness */
     for (int i = 0; i < num; i ++) {
-        teleParam->stiffness[i] = 40.0;
+        teleParam->stiffness[i] = 20.0;
         teleParam->motor_inertia[i] = 1.463e-4;
         teleParam->damping[i] = 2.0 * teleParam->zeta * sqrt(teleParam->stiffness[i] * teleParam->motor_inertia[i]);
     }
@@ -40,7 +40,7 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
 
     /* wave tele */
     for (int i = 0; i < num; i ++) {
-        controlParams->coupling_torque[i] = -1.0 * ((teleParam->wave_damping * vel[i] - sqrt(2 * teleParam->wave_damping) * wave_input[i]));
+        controlParams->coupling_torque[i] = -1.0 * (teleParam->wave_damping * vel[i] + sqrt(2 * teleParam->wave_damping) * wave_input[i]);
         rdda->motor[i].rddaPacket.wave_out = -1.0 * sqrt(2 * teleParam->wave_damping) * vel[i] - wave_input[i];
     }
 

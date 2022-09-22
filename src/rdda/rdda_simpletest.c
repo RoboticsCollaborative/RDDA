@@ -87,7 +87,7 @@ void rdda_run (void *ifnameptr) {
 
         mutex_lock(&rdda->mutex);
 
-        // teleController(&teleParam, &controlParams, rdda);
+        teleController(&teleParam, &controlParams, rdda);
         dobController(rdda, &controlParams, &secondOrderLowPassFilterParams, &previousVariables);
 
         rdda_update(ecatSlaves, rdda);
