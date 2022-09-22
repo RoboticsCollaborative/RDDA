@@ -67,7 +67,7 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
     for (int i = 0; i < num; i ++) {
         pos[i] = rdda->motor[i].motorIn.act_pos - rdda->motor[i].init_pos;
         vel[i] = rdda->motor[i].motorIn.act_vel;
-        pos_master[i] = rdda->motor[i].rddaPacket.pos_in;
+        pos_master[i] = -1.0 * rdda->motor[i].rddaPacket.pos_in;
         wave_input[i] = rdda->motor[i].rddaPacket.wave_in;
         rdda->motor[i].rddaPacket.wave_out_aux = wave_input[i];
     }
