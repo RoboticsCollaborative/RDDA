@@ -45,18 +45,16 @@ void rdda_update(ecat_slaves *ecatSlaves, Rdda *rdda) {
         // rdda->motor[i].motorIn.load_vel = (double)(ecatSlaves->aev[i].in_motor->load_vel) / ecatSlaves->aev[i].load_counts_per_rad_sec;
         rdda->motor[i].motorIn.act_pre = (double)(ecatSlaves->aev[i].in_motor->analog_in ) * ecatSlaves->aev[i].pascal_per_count * ecatSlaves->aev[i].nm_per_pascal - pre_pressure * ecatSlaves->aev[i].nm_per_pascal;
     }
-
-    printf("%+lf\r", rdda->motor[0].motorIn.act_pre);
     
     rdda->ts.nsec = ecatSlaves->ts.tv_nsec;
     rdda->ts.sec = ecatSlaves->ts.tv_sec;
 
     /* Outputs */
-    ecatSlaves->aev[0].out_motor->ctrl_wd = 15;//15;
-    ecatSlaves->aev[1].out_motor->ctrl_wd = 15;
-    ecatSlaves->aev[2].out_motor->ctrl_wd = 15;
+    // ecatSlaves->aev[3].out_motor->ctrl_wd = 0;//15;
+    // ecatSlaves->aev[4].out_motor->ctrl_wd = 0;
+    // ecatSlaves->aev[5].out_motor->ctrl_wd = 0;
     for (int j = 0; j < MOTOR_COUNT; j++) {
-        // ecatSlaves->aev[j].out_motor->ctrl_wd = 0;
+        ecatSlaves->aev[j].out_motor->ctrl_wd = 0;
         ecatSlaves->aev[j].out_motor->tg_pos = (int32)saturation(limit_int32, ecatSlaves->aev[j].init_pos_cnts + (int32)saturation(limit_int32, rdda->motor[j].motorOut.tg_pos * ecatSlaves->aev[j].counts_per_rad));
         ecatSlaves->aev[j].out_motor->vel_off = (int32)saturation(limit_int32, rdda->motor[j].motorOut.vel_off * ecatSlaves->aev[j].counts_per_rad_sec);
         ecatSlaves->aev[j].out_motor->tau_off = (int16)saturation(limit_int16, rdda->motor[j].motorOut.tau_off * ecatSlaves->aev[j].units_per_nm);
@@ -152,6 +150,7 @@ void initRddaStates(ecat_slaves *ecatSlaves, Rdda *rdda) {
     }
     rdda->freq_anti_alias = 500;
     rdda->ts.sec = rdda->ts.nsec = 0;
+    rdda->error_signal.error_in = 0;
 }
 
 /** Error Check
@@ -160,7 +159,7 @@ void initRddaStates(ecat_slaves *ecatSlaves, Rdda *rdda) {
  */
 
 int errorCheck(ecat_slaves *ecatSlaves) {
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < MOTOR_COUNT; i++) {
         if (ecatSlaves->aev[i].in_motor->latching_fault == 0x0001) {
             printf("Fault: Data flash CRC failure on aev[%d]. This fault is considered fatal and cannot be cleared\n", i);
             return 1;

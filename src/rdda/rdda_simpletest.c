@@ -20,10 +20,11 @@
 #include "shm.h"
 
 volatile sig_atomic_t done = 0;
+volatile sig_atomic_t error_signal = 0;
 void intHandler (int sig) {
     if (sig == SIGINT) {
         done = 1;
-        printf("Received interrupt");
+        printf("Received interrupt\n");
     }
 }
 
@@ -79,21 +80,26 @@ void rdda_run (void *ifnameptr) {
     struct timespec startTime, endTime;
     int controlInterval;
     rdda_gettime(ecatSlaves);
+    int local_error_signal;
+    int remote_error_signal;
 
-    while (!done) {
+    while (!done && !error_signal) {
 
         /* Mark start time */
         clock_gettime(CLOCK_MONOTONIC, &startTime);
 
         mutex_lock(&rdda->mutex);
 
-        teleController(&teleParam, &controlParams, rdda);
+        // teleController(&teleParam, &controlParams, rdda);
         dobController(rdda, &controlParams, &secondOrderLowPassFilterParams, &previousVariables);
 
         rdda_update(ecatSlaves, rdda);
 
         /* Error code detection */
-        done = errorCheck(ecatSlaves);
+        local_error_signal = errorCheck(ecatSlaves);
+        rdda->error_signal.error_out = local_error_signal;
+        remote_error_signal = rdda->error_signal.error_in;
+        error_signal = local_error_signal || remote_error_signal;
 
         mutex_unlock(&rdda->mutex);
 
@@ -117,29 +123,46 @@ int main(int argc, char **argv) {
     pthread_t rt_thread;
     struct sched_param param;
     int policy = SCHED_FIFO;
+    char enter;
+    char *last_five = &argv[0][strlen(argv[0])-5];
 
     printf("SOEM (Simple Open EtherCAT Master)\nRDDA-HAND Run\n");
 
     if (argc > 1) {
 
+        while(!done) {
+            /* Create realtime thread */
+            pthread_create(&rt_thread, NULL, (void *)&rdda_run, (void *)argv[1]);
+            // rdda_run(argv[1]);
 
-        /* Create realtime thread */
-        pthread_create(&rt_thread, NULL, (void *)&rdda_run, (void *)argv[1]);
-        // rdda_run(argv[1]);
+            /* Scheduler */
+            memset(&param, 0, sizeof(param));
+            param.sched_priority = 40;
+            pthread_setschedparam(rt_thread, policy, &param);
 
-        /* Scheduler */
-        memset(&param, 0, sizeof(param));
-        param.sched_priority = 40;
-        pthread_setschedparam(rt_thread, policy, &param);
+            /* Core-Iso */
+            cpu_set_t CPU3;
+            CPU_ZERO(&CPU3);
+            CPU_SET(3, &CPU3);
+            pthread_setaffinity_np(rt_thread, sizeof(CPU3), &CPU3);
 
-        /* Core-Iso */
-        cpu_set_t CPU3;
-        CPU_ZERO(&CPU3);
-        CPU_SET(3, &CPU3);
-        pthread_setaffinity_np(rt_thread, sizeof(CPU3), &CPU3);
+            /* Wait until sub-thread is finished */
+            pthread_join(rt_thread, NULL);
 
-        /* Wait until sub-thread is finished */
-        pthread_join(rt_thread, NULL);
+            if (!done && error_signal) {
+                if (!strcmp(last_five, "aster")) {
+                    printf("Error diagnosed, restart control. Press Enter\n");
+                    while(1) {
+                        enter = fgetc(stdin);
+                        if (enter == 0x0A) break;
+                        enter = getchar();
+                    }
+                }
+                else if (!strcmp(last_five, "slave")) {
+                    printf("Error diagnosed, restart control\n");
+                }
+            }
+        }
     }
     else {
         printf("Usage: haptic_run ifname1\nifname = enp1s0 for example\n");

@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <pthread.h>
 
-#define MOTOR_COUNT 3
+#define MOTOR_COUNT 6
 
 /** AEV drive CSP Mode inputs to master */
 typedef struct {
@@ -62,12 +62,19 @@ typedef struct {
     int64_t nsec;
 } Timestamp;
 
+/** Error signal*/
+typedef struct {
+    int error_in;
+    int error_out;
+} Error_signal;
+
 /** EtherCAT slave class */
 typedef struct {
     AEV_slave motor[MOTOR_COUNT];
     double freq_anti_alias;
     Timestamp ts;
     pthread_mutex_t mutex;
+    Error_signal error_signal;
 } Rdda;
 
 #endif //RDDA_SHM_DATA_H

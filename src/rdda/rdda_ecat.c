@@ -89,6 +89,72 @@ slaveIdentify(ecat_slaves *slave) {
                 }
             }
 
+            /* motor3 */
+            // left fingers motor on panda
+            // if (serial_num == 0x014369F4) {
+            //     slave->aev[3].slave_id = idx;
+            //     /* Set PDO mapping */
+            //     printf("Found %s at position %d\n", ec_slave[idx].name, idx);
+            //     if (1 == mapMotorPDOs_callback(idx)) {
+            //         fprintf(stderr, "Motor3 mapping failed!\n");
+            //         exit(1);
+            //     }
+            // }
+            // left fingers motor on smarty arm
+            if (serial_num == 0x014369F8) {
+                slave->aev[3].slave_id = idx;
+                /* Set PDO mapping */
+                printf("Found %s at position %d\n", ec_slave[idx].name, idx);
+                if (1 == mapMotorPDOs_callback(idx)) {
+                    fprintf(stderr, "Motor3 mapping failed!\n");
+                    exit(1);
+                }
+            }
+
+            /* motor4 */
+            // right thumb open-close motor on panda
+            // if (serial_num == 0x0030E8D8) {
+            //     slave->aev[4].slave_id = idx;
+            //     /* Set PDO mapping */
+            //     printf("Found %s at position %d\n", ec_slave[idx].name, idx);
+            //     if (1 == mapMotorPDOs_callback(idx)) {
+            //         fprintf(stderr, "Motor4 mapping failed!\n");
+            //         exit(1);
+            //     }
+            // }
+            // left thumb open-close motor on smarty arm
+            if (serial_num == 0x014369F1) {
+                slave->aev[4].slave_id = idx;
+                /* Set PDO mapping */
+                printf("Found %s at position %d\n", ec_slave[idx].name, idx);
+                if (1 == mapMotorPDOs_callback(idx)) {
+                    fprintf(stderr, "Motor4 mapping failed!\n");
+                    exit(1);
+                }
+            }
+
+            /* motor5 */
+            // left thumb rotation motor on panda
+            // if (serial_num == 0x014369F4) {
+            //     slave->aev[5].slave_id = idx;
+            //     /* Set PDO mapping */
+            //     printf("Found %s at position %d\n", ec_slave[idx].name, idx);
+            //     if (1 == mapMotorPDOs_callback(idx)) {
+            //         fprintf(stderr, "Motor5 mapping failed!\n");
+            //         exit(1);
+            //     }
+            // }
+            // left thumb rotation motor on smarty arm
+            if (serial_num == 0x014369F9) {
+                slave->aev[5].slave_id = idx;
+                /* Set PDO mapping */
+                printf("Found %s at position %d\n", ec_slave[idx].name, idx);
+                if (1 == mapMotorPDOs_callback(idx)) {
+                    fprintf(stderr, "Motor5 mapping failed!\n");
+                    exit(1);
+                }
+            }
+
         }
 
     }
@@ -165,7 +231,7 @@ ecat_slaves *initEcatConfig(void *ifnameptr) {
     /* Locate slaves */
     slaveIdentify(ecatSlaves);
 
-    if (ecatSlaves->aev[0].slave_id == 0 || ecatSlaves->aev[1].slave_id == 0 || ecatSlaves->aev[2].slave_id == 0) {
+    if (ecatSlaves->aev[3].slave_id == 0 || ecatSlaves->aev[4].slave_id == 0 || ecatSlaves->aev[5].slave_id == 0) {
             fprintf(stderr, "Slaves identification failure!");
             exit(1);
     }
