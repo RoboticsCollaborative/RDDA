@@ -21,7 +21,7 @@ void teleInit(TeleParam *teleParam) {
     teleParam->wave_damping = 0.04;
     teleParam->lambda = 10.0; //20.0; //0.1;
     teleParam->delay_current_index = 0;
-    teleParam->delay_cycle_previous = 6;
+    teleParam->delay_cycle_previous = 16;
 
     for (int i = 0; i < num; i ++) {
         teleParam->vel_tar[i] = 0.0;
@@ -61,7 +61,8 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
 
     int delay_index;
     int delay_difference;
-    int delay_cycle_current = 20;
+    int delay_cycle_current = 16;
+    // delay_cycle_current = rdda->stamp.delay_cycle;
 
     /* pos, vel & wave input */
     for (int i = 0; i < num; i ++) {

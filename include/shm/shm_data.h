@@ -68,6 +68,12 @@ typedef struct {
     int error_out;
 } Error_signal;
 
+/* time stamp */
+typedef struct {
+    double remote_stamp;
+    int delay_cycle;
+} Stamp;
+
 /** EtherCAT slave class */
 typedef struct {
     AEV_slave motor[MOTOR_COUNT];
@@ -75,6 +81,7 @@ typedef struct {
     Timestamp ts;
     pthread_mutex_t mutex;
     Error_signal error_signal;
+    Stamp stamp;
 } Rdda;
 
 #endif //RDDA_SHM_DATA_H

@@ -151,6 +151,7 @@ void initRddaStates(ecat_slaves *ecatSlaves, Rdda *rdda) {
     rdda->freq_anti_alias = 500;
     rdda->ts.sec = rdda->ts.nsec = 0;
     rdda->error_signal.error_in = 0;
+    rdda->stamp.delay_cycle = 16;
 }
 
 /** Error Check
