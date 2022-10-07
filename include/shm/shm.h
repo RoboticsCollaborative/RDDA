@@ -16,7 +16,7 @@
 #define SHM_SIZE    4096*2
 
 
-Rdda *initRdda();
+Rdda *initRdda(char* name);
 int mutex_lock(pthread_mutex_t *mutex);
 int mutex_unlock(pthread_mutex_t *mutex);
 

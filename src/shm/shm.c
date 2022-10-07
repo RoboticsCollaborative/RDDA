@@ -1,6 +1,7 @@
 #include "shm.h"
 
-char* RDDA_DATA     =   (char *)"/rdda_data";
+char* RDDA_DATA_RIGHT     =   (char *)"/rdda_data_right";
+char* RDDA_DATA_LEFT     =   (char *)"/rdda_data_left";
 
 /** Acquire robust mutex
   *
@@ -97,16 +98,27 @@ createSharedMemory(char *shm_name, void **p) {
  *
  * @return jointCommands pointer.
  */
-Rdda *initRdda() {
+Rdda *initRdda(char* name) {
 
     Rdda *rdda;
     void *p;
+    char *np = &name[0];
 
-    if (!createSharedMemory(RDDA_DATA, &p)) {
-        rdda = (Rdda *) p;
-    } else {
-        fprintf(stderr, "open(RDDA_DATA)\n");
-        return NULL;
+    if (*np == 'r') {
+        if (!createSharedMemory(RDDA_DATA_RIGHT, &p)) {
+            rdda = (Rdda *) p;
+        } else {
+            fprintf(stderr, "open(RDDA_DATA)\n");
+            return NULL;
+        }
+    }
+    else if (*np == 'l') {
+        if (!createSharedMemory(RDDA_DATA_LEFT, &p)) {
+            rdda = (Rdda *) p;
+        } else {
+            fprintf(stderr, "open(RDDA_DATA)\n");
+            return NULL;
+        }
     }
 
     /* initialise mutex lock */

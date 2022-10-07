@@ -30,6 +30,7 @@ void intHandler (int sig) {
 
 void rdda_run (void *ifnameptr) {
     char *ifname = ifnameptr;
+    char *ip;
     /* EtherCAT struct */
     ecat_slaves *ecatSlaves;
     /* User friendly struct */
@@ -45,7 +46,24 @@ void rdda_run (void *ifnameptr) {
     int cycletime = 250; /* in microseconds */;
 
     /* Configure ethercat network and slaves. */
-    ecatSlaves = initEcatConfig(ifname);
+    if (!strcmp(ifname, "right_gripper")) {
+        ip = (char*)("enx000ec682ae62");
+    }
+    else if (!strcmp(ifname, "left_gripper")) {
+        ip = (char*)("enx000ec682b118");
+    }
+    else if (!strcmp(ifname, "right_glove")) {
+        ip = (char*)("enx000ec682b0fb");
+    }
+    else if (!strcmp(ifname, "left_glove")) {
+        ip = (char*)("enxb49cdff1de4f");
+    }
+    else {
+        printf("Wrong hand name called.\n");
+        exit(1);
+    }
+
+    ecatSlaves = initEcatConfig(ip);
     if (ecatSlaves == NULL) {
         fprintf(stderr, "Init ecatslaves failed.\n");
         exit(1);
@@ -53,7 +71,7 @@ void rdda_run (void *ifnameptr) {
     printf("Network configuration succeed.\n");
 
     /* Initialize user-friendly struct */
-    rdda = initRdda();
+    rdda = initRdda(ifname);
     if (rdda == NULL) {
         fprintf(stderr, "Init rdda failed.\n");
         exit(1);
@@ -67,9 +85,6 @@ void rdda_run (void *ifnameptr) {
     pivGainSDOwrite(ecatSlaves->aev[0].slave_id, 0, 0); // Pp 400, Vp 100, Kp 18.6
     pivGainSDOwrite(ecatSlaves->aev[1].slave_id, 0, 0);
     pivGainSDOwrite(ecatSlaves->aev[2].slave_id, 0, 0);
-    pivGainSDOwrite(ecatSlaves->aev[3].slave_id, 0, 0); // Pp 400, Vp 100, Kp 18.6
-    pivGainSDOwrite(ecatSlaves->aev[4].slave_id, 0, 0);
-    pivGainSDOwrite(ecatSlaves->aev[5].slave_id, 0, 0);
     /**/
 
     initRddaStates(ecatSlaves, rdda);

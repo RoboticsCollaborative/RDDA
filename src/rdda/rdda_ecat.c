@@ -92,7 +92,7 @@ slaveIdentify(ecat_slaves *slave) {
             /* motor3 */
             // left fingers motor on panda
             if (serial_num == 0x014369F7) {
-                slave->aev[3].slave_id = idx;
+                slave->aev[0].slave_id = idx;
                 /* Set PDO mapping */
                 printf("Found %s at position %d\n", ec_slave[idx].name, idx);
                 if (1 == mapMotorPDOs_callback(idx)) {
@@ -102,7 +102,7 @@ slaveIdentify(ecat_slaves *slave) {
             }
             // left fingers motor on smarty arm
             if (serial_num == 0x014369F8) {
-                slave->aev[3].slave_id = idx;
+                slave->aev[0].slave_id = idx;
                 /* Set PDO mapping */
                 printf("Found %s at position %d\n", ec_slave[idx].name, idx);
                 if (1 == mapMotorPDOs_callback(idx)) {
@@ -114,7 +114,7 @@ slaveIdentify(ecat_slaves *slave) {
             /* motor4 */
             // left thumb open-close motor on panda
             if (serial_num == 0x014369FF) {
-                slave->aev[4].slave_id = idx;
+                slave->aev[1].slave_id = idx;
                 /* Set PDO mapping */
                 printf("Found %s at position %d\n", ec_slave[idx].name, idx);
                 if (1 == mapMotorPDOs_callback(idx)) {
@@ -124,7 +124,7 @@ slaveIdentify(ecat_slaves *slave) {
             }
             // left thumb open-close motor on smarty arm
             if (serial_num == 0x014369F1) {
-                slave->aev[4].slave_id = idx;
+                slave->aev[1].slave_id = idx;
                 /* Set PDO mapping */
                 printf("Found %s at position %d\n", ec_slave[idx].name, idx);
                 if (1 == mapMotorPDOs_callback(idx)) {
@@ -136,7 +136,7 @@ slaveIdentify(ecat_slaves *slave) {
             /* motor5 */
             // left thumb rotation motor on panda
             if (serial_num == 0x01436A02) {
-                slave->aev[5].slave_id = idx;
+                slave->aev[2].slave_id = idx;
                 /* Set PDO mapping */
                 printf("Found %s at position %d\n", ec_slave[idx].name, idx);
                 if (1 == mapMotorPDOs_callback(idx)) {
@@ -146,7 +146,7 @@ slaveIdentify(ecat_slaves *slave) {
             }
             // left thumb rotation motor on smarty arm
             if (serial_num == 0x014369F9) {
-                slave->aev[5].slave_id = idx;
+                slave->aev[2].slave_id = idx;
                 /* Set PDO mapping */
                 printf("Found %s at position %d\n", ec_slave[idx].name, idx);
                 if (1 == mapMotorPDOs_callback(idx)) {
@@ -231,10 +231,9 @@ ecat_slaves *initEcatConfig(void *ifnameptr) {
     /* Locate slaves */
     slaveIdentify(ecatSlaves);
 
-    if (ecatSlaves->aev[0].slave_id == 0 || ecatSlaves->aev[1].slave_id == 0 || ecatSlaves->aev[2].slave_id == 0 ||
-        ecatSlaves->aev[3].slave_id == 0 || ecatSlaves->aev[4].slave_id == 0 || ecatSlaves->aev[5].slave_id == 0) {
-            fprintf(stderr, "Slaves identification failure!");
-            exit(1);
+    if (ecatSlaves->aev[0].slave_id == 0 || ecatSlaves->aev[1].slave_id == 0 || ecatSlaves->aev[2].slave_id == 0) {
+        fprintf(stderr, "Slaves identification failure!");
+        exit(1);
     }
 
     /* If Complete Access (CA) disabled => auto-mapping work */

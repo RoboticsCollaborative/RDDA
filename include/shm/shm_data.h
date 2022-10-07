@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <pthread.h>
 
-#define MOTOR_COUNT 6
+#define MOTOR_COUNT 3
 
 /** AEV drive CSP Mode inputs to master */
 typedef struct {
