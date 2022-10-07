@@ -32,7 +32,7 @@ void rdda_update(ecat_slaves *ecatSlaves, Rdda *rdda) {
     double limit_int16 = 32767.0;
     double limit_int32 = 2147483647.0;
     
-    double pre_pressure = 380000; // unit pascal
+    double pre_pressure = 390000; // unit pascal
 
     ec_receive_processdata(EC_TIMEOUTRET);
 
@@ -50,9 +50,6 @@ void rdda_update(ecat_slaves *ecatSlaves, Rdda *rdda) {
     rdda->ts.sec = ecatSlaves->ts.tv_sec;
 
     /* Outputs */
-    // ecatSlaves->aev[3].out_motor->ctrl_wd = 0;//15;
-    // ecatSlaves->aev[4].out_motor->ctrl_wd = 0;
-    // ecatSlaves->aev[5].out_motor->ctrl_wd = 0;
     for (int j = 0; j < MOTOR_COUNT; j++) {
         ecatSlaves->aev[j].out_motor->ctrl_wd = 15;
         ecatSlaves->aev[j].out_motor->tg_pos = (int32)saturation(limit_int32, ecatSlaves->aev[j].init_pos_cnts + (int32)saturation(limit_int32, rdda->motor[j].motorOut.tg_pos * ecatSlaves->aev[j].counts_per_rad));

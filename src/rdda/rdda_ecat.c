@@ -231,8 +231,8 @@ ecat_slaves *initEcatConfig(void *ifnameptr) {
     /* Locate slaves */
     slaveIdentify(ecatSlaves);
 
-    if (ecatSlaves->aev[0].slave_id == 0 || ecatSlaves->aev[1].slave_id == 0 || ecatSlaves->aev[2].slave_id == 0) {
-    // if( ecatSlaves->aev[3].slave_id == 0 || ecatSlaves->aev[4].slave_id == 0 || ecatSlaves->aev[5].slave_id == 0) {
+    if (ecatSlaves->aev[0].slave_id == 0 || ecatSlaves->aev[1].slave_id == 0 || ecatSlaves->aev[2].slave_id == 0 ||
+        ecatSlaves->aev[3].slave_id == 0 || ecatSlaves->aev[4].slave_id == 0 || ecatSlaves->aev[5].slave_id == 0) {
             fprintf(stderr, "Slaves identification failure!");
             exit(1);
     }

@@ -67,6 +67,9 @@ void rdda_run (void *ifnameptr) {
     pivGainSDOwrite(ecatSlaves->aev[0].slave_id, 0, 0); // Pp 400, Vp 100, Kp 18.6
     pivGainSDOwrite(ecatSlaves->aev[1].slave_id, 0, 0);
     pivGainSDOwrite(ecatSlaves->aev[2].slave_id, 0, 0);
+    pivGainSDOwrite(ecatSlaves->aev[3].slave_id, 0, 0); // Pp 400, Vp 100, Kp 18.6
+    pivGainSDOwrite(ecatSlaves->aev[4].slave_id, 0, 0);
+    pivGainSDOwrite(ecatSlaves->aev[5].slave_id, 0, 0);
     /**/
 
     initRddaStates(ecatSlaves, rdda);
@@ -90,7 +93,7 @@ void rdda_run (void *ifnameptr) {
 
         mutex_lock(&rdda->mutex);
 
-        // teleController(&teleParam, &controlParams, rdda);
+        teleController(&teleParam, &controlParams, rdda);
         dobController(rdda, &controlParams, &secondOrderLowPassFilterParams, &previousVariables);
 
         rdda_update(ecatSlaves, rdda);
