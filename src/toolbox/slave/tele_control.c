@@ -61,8 +61,8 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
 
     int delay_index;
     int delay_difference;
-    int delay_cycle_current;
-    delay_cycle_current = MAX(rdda->ts.delay_cycle, 2);
+    int delay_cycle_current = 16;
+    // delay_cycle_current = MAX(rdda->ts.delay_cycle, 2);
 
     /* pos, vel & wave input */
     for (int i = 0; i < num; i ++) {
