@@ -31,7 +31,7 @@ void teleInit(TeleParam *teleParam) {
 
     /* symmetric stiffness */
     for (int i = 0; i < num; i ++) {
-        teleParam->stiffness[i] = 20.0;
+        teleParam->stiffness[i] = 30.0;
         teleParam->motor_inertia[i] = 1.463e-4;
         teleParam->damping[i] = 2.0 * teleParam->zeta * sqrt(teleParam->stiffness[i] * teleParam->motor_inertia[i]);
     }
@@ -63,19 +63,21 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
     int delay_difference;
     int delay_cycle_current = 16;
     // delay_cycle_current = MAX(rdda->ts.delay_cycle, 2);
+    double tele_ratio = 1.5;
 
     /* pos, vel & wave input */
     for (int i = 0; i < num; i ++) {
         pos[i] = rdda->motor[i].motorIn.act_pos - rdda->motor[i].init_pos;
         vel[i] = rdda->motor[i].motorIn.act_vel;
-        pos_master[i] = -1.0 * rdda->motor[i].rddaPacket.pos_in;
+        pos_master[i] = -1.0 * rdda->motor[i].rddaPacket.pos_in * tele_ratio;
         wave_input[i] = rdda->motor[i].rddaPacket.wave_in;
         rdda->motor[i].rddaPacket.wave_out_aux = wave_input[i];
     }
 
     /* wave tele */
-    delay_index = teleParam->delay_current_index - delay_cycle_current;
-    delay_difference = delay_cycle_current - teleParam->delay_cycle_previous;
+    delay_cycle_current = MIN(delay_cycle_current, MAX_BUFF);
+    delay_index = teleParam->delay_current_index - 2 * delay_cycle_current;
+    delay_difference = 2 * (delay_cycle_current - teleParam->delay_cycle_previous);
     if (delay_index < 0) {
         delay_index += MAX_BUFF;
     }
@@ -106,14 +108,14 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
         }
         else if (delay_difference > 0) {
             for (int j = 1; j <= delay_difference; j ++) {
-                if (delay_index + j >= MAX_BUFF) teleParam->wave_int[i] += teleParam->wave_history[i][delay_index + j - MAX_BUFF] * teleParam->sample_time;
-                else teleParam->wave_int[i] += teleParam->wave_history[i][delay_index + j] * teleParam->sample_time;
+                if (delay_index - j < 0) teleParam->wave_int[i] += teleParam->wave_history[i][delay_index - j + MAX_BUFF] * teleParam->sample_time;
+                else teleParam->wave_int[i] += teleParam->wave_history[i][delay_index - j] * teleParam->sample_time;
             }
         }
         else {
             for (int j = 0; j < -delay_difference; j ++) {
-                if (delay_index - j < 0) teleParam->wave_int[i] -= teleParam->wave_history[i][delay_index - j + MAX_BUFF] * teleParam->sample_time;
-                else teleParam->wave_int[i] -= teleParam->wave_history[i][delay_index - j] * teleParam->sample_time;
+                if (delay_index + j >= MAX_BUFF) teleParam->wave_int[i] -= teleParam->wave_history[i][delay_index + j - MAX_BUFF] * teleParam->sample_time;
+                else teleParam->wave_int[i] -= teleParam->wave_history[i][delay_index + j] * teleParam->sample_time;
             }
         }
         teleParam->wave_int[i] += wave_output[i] * teleParam->sample_time;

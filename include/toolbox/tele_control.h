@@ -11,7 +11,7 @@
 #include "shm_data.h"
 #include "rdda_base.h"
 
-#define MAX_BUFF 2000
+#define MAX_BUFF 8000
 
 typedef struct
 {
