@@ -30,7 +30,7 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
 
     double vel[num];
     double wave_input[num];
-    double tele_ratio = 1.5;
+    double tele_ratio = 1.0;
 
     /* pos, vel & wave input */
     for (int i = 0; i < num; i ++) {

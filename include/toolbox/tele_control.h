@@ -25,7 +25,7 @@ typedef struct
     double pos_tar[MOTOR_COUNT];
     double vel_tar[MOTOR_COUNT];
     double lambda;
-    int delay_current_index;
+    int current_timestamp;
     int delay_cycle_previous;
     double wave_int[MOTOR_COUNT];
     double wave_history[MOTOR_COUNT][MAX_BUFF];
