@@ -64,7 +64,7 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
     int delay_difference;
     int delay_cycle_current = 32;
     // delay_cycle_current = rdda->ts.delay_cycle;
-    double tele_ratio = 2.0;
+    double tele_ratio = 1.5;
 
     /* pos, vel & wave input */
     for (int i = 0; i < num; i ++) {
