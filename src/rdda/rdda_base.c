@@ -143,6 +143,7 @@ void initRddaStates(ecat_slaves *ecatSlaves, Rdda *rdda) {
         rdda->motor[i].rddaPacket.wave_in = 0.0;
         rdda->motor[i].rddaPacket.wave_in_aux = 0.0;
         rdda->motor[i].rddaPacket.pos_ref = 0.0;
+        rdda->motor[i].rddaPacket.tau_ref = 0.0;
         rdda->motor[i].rddaPacket.test = 0.0;
     }
     rdda->freq_anti_alias = 500;

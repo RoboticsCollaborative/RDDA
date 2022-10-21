@@ -161,7 +161,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, SecondOrderLowPassF
 
     /* reference force */
     for (int i = 0; i < num; i ++) {
-        reference_force[i] = controlParams->Vp[i] * (vel_ref[i] - motor_vel[i]);
+        reference_force[i] = controlParams->Vp[i] * (vel_ref[i] - motor_vel[i]) + rdda->motor[i].rddaPacket.tau_ref;
     }
 
     /* disturbance observer */
