@@ -69,7 +69,7 @@ slaveIdentify(ecat_slaves *slave) {
 
             /* motor2 */
             // right thumb rotation motor on panda
-            if (serial_num == 0x014369F4) {
+            if (serial_num == 0x014369F3) {
                 slave->aev[2].slave_id = idx;
                 /* Set PDO mapping */
                 printf("Found %s at position %d\n", ec_slave[idx].name, idx);
