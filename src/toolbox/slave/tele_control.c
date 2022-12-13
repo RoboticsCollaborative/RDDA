@@ -28,11 +28,12 @@ void teleInit(TeleParam *teleParam) {
         teleParam->pos_tar[i] = 0.0;
         teleParam->pos_tar_int[i] = 0.0;
         teleParam->wave_int[i] = 0.0;
+        teleParam->wave_input_prev[i] = 0.0;
     }
 
     /* symmetric stiffness */
     for (int i = 0; i < num; i ++) {
-        teleParam->stiffness[i] = 30.0;
+        teleParam->stiffness[i] = 25.0;
         teleParam->motor_inertia[i] = 1.463e-4;
         teleParam->damping[i] = 2.0 * teleParam->zeta * sqrt(teleParam->stiffness[i] * teleParam->motor_inertia[i]);
     }
@@ -60,19 +61,29 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
     double error_difference[num];
     double wave_correction[num];
 
+    double wave_input_filter_corner_freq = 2.0 * M_PI * 100.0;
+    double wave_input_unfiltered[num];
+
     int delay_index;
     int delay_difference;
-    int delay_cycle_current = 8;
+    int delay_cycle_current = 4;
     // delay_cycle_current = rdda->ts.delay_cycle;
-    double tele_ratio = 1.0;
+    double tele_ratio = 1.2;
 
     /* pos, vel & wave input */
     for (int i = 0; i < num; i ++) {
         pos[i] = rdda->motor[i].motorIn.act_pos - rdda->motor[i].init_pos;
         vel[i] = rdda->motor[i].motorIn.act_vel;
         pos_master[i] = -1.0 * rdda->motor[i].rddaPacket.pos_in * tele_ratio;
-        wave_input[i] = rdda->motor[i].rddaPacket.wave_in;
-        rdda->motor[i].rddaPacket.wave_out_aux = wave_input[i];
+        wave_input_unfiltered[i] = rdda->motor[i].rddaPacket.wave_in;
+        rdda->motor[i].rddaPacket.wave_out_aux = wave_input_unfiltered[i]; // aux is unfiltered
+    }
+
+    /* wave input filter */
+    for (int i = 0; i < num; i ++) {
+        wave_input_unfiltered[i] = wave_input_unfiltered[i];
+        wave_input[i] = (wave_input_unfiltered[i] * wave_input_filter_corner_freq * teleParam->sample_time + teleParam->wave_input_prev[i]) / (1.0 + wave_input_filter_corner_freq * teleParam->sample_time);
+        teleParam->wave_input_prev[i] = wave_input[i];
     }
 
     /* wave tele */

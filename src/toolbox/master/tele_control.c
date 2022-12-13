@@ -19,7 +19,7 @@ void teleInit(TeleParam *teleParam) {
 
     /* symmetric stiffness */
     for (int i = 0; i < num; i ++) {
-        teleParam->stiffness[i] = 30.0;
+        teleParam->stiffness[i] = 25.0;
         teleParam->motor_inertia[i] = 1.463e-4;
         teleParam->damping[i] = 2.0 * teleParam->zeta * sqrt(teleParam->stiffness[i] * teleParam->motor_inertia[i]);
     }
@@ -30,7 +30,7 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
 
     double vel[num];
     double wave_input[num];
-    double tele_ratio = 1.0;
+    double tele_ratio = 1.2;
 
     /* pos, vel & wave input */
     for (int i = 0; i < num; i ++) {
