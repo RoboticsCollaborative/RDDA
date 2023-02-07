@@ -42,6 +42,8 @@ void teleInit(TeleParam *teleParam) {
         for (int j = 0; j < MAX_BUFF; j ++) {
             teleParam->wave_history[i][j] = 0.0;
         }
+        teleParam->wave_input_prev[i] = 0.0;
+        teleParam->wave_input_filtered_prev[i] = 0.0;
     }
 
 }
@@ -81,9 +83,11 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
 
     /* wave input filter */
     for (int i = 0; i < num; i ++) {
-        wave_input_unfiltered[i] = wave_input_unfiltered[i];
-        wave_input[i] = (wave_input_unfiltered[i] * wave_input_filter_corner_freq * teleParam->sample_time + teleParam->wave_input_prev[i]) / (1.0 + wave_input_filter_corner_freq * teleParam->sample_time);
-        teleParam->wave_input_prev[i] = wave_input[i];
+        wave_input[i] = ((wave_input_unfiltered[i] + teleParam->wave_input_prev[i]) * wave_input_filter_corner_freq * teleParam->sample_time
+                        + (2.0 - wave_input_filter_corner_freq * teleParam->sample_time) * teleParam->wave_input_filtered_prev[i])
+                        / (2.0 + wave_input_filter_corner_freq * teleParam->sample_time);
+        teleParam->wave_input_prev[i] = wave_input_unfiltered[i];
+        teleParam->wave_input_filtered_prev[i] = wave_input[i];
     }
 
     /* wave tele */

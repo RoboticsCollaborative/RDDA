@@ -30,6 +30,7 @@ typedef struct
     double wave_int[MOTOR_COUNT];
     double wave_history[MOTOR_COUNT][MAX_BUFF];
     double wave_input_prev[MOTOR_COUNT];
+    double wave_input_filtered_prev[MOTOR_COUNT];
 } TeleParam;
 
 void teleInit(TeleParam *teleParam);
