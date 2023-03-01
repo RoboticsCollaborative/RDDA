@@ -28,6 +28,7 @@ typedef struct
     double gear_ratio;
     double coupling_torque[MOTOR_COUNT];
     double pos_ref[MOTOR_COUNT];
+    double Kf[MOTOR_COUNT];
 } ControlParams;
 
 typedef struct

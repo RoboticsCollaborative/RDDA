@@ -43,6 +43,7 @@ void dobInit(ControlParams *controlParams, SecondOrderLowPassFilterParams *secon
         controlParams->Vp[i] = 0.0;
         controlParams->max_external_torque[i] = 2.0; // ACD motor
         controlParams->coupling_torque[i] = 0.0;
+        controlParams->Kf[i] = 1.0;
     }
 
     controlParams->cutoff_frequency_LPF[0] = 20.0; // Q for overall DOB
@@ -104,6 +105,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, SecondOrderLowPassF
     double saturated_feedback_force[num];
 
     double reference_force[num];
+    double ff_force[num];
 
     double pos_tar[num];
     double filtered_pos_tar[num];
@@ -164,6 +166,11 @@ void dobController(Rdda *rdda, ControlParams *controlParams, SecondOrderLowPassF
         reference_force[i] = controlParams->Vp[i] * (vel_ref[i] - motor_vel[i]) + rdda->motor[i].rddaPacket.tau_ref;
     }
 
+    /* feedforward force */
+    for (int i = 0; i < num; i ++) {
+        ff_force[i] = controlParams->Kf[i] * pressure[i];
+    }
+
     /* disturbance observer */
     /* nominal force */
     for (int i = 0; i < num; i ++) {
@@ -174,10 +181,10 @@ void dobController(Rdda *rdda, ControlParams *controlParams, SecondOrderLowPassF
     for (int i = 0; i < num; i ++) {
         /* direct equation */
         coupling_torque[i] = saturation(controlParams->max_external_torque[i], controlParams->coupling_torque[i]);
-        integral_control_force[i] = previousVariables->integral_control_force[i] + controlParams->lambda[0] * controlParams->sample_time * (reference_force[i] + pressure[i] + coupling_torque[i]);
+        integral_control_force[i] = previousVariables->integral_control_force[i] + controlParams->lambda[0] * controlParams->sample_time * (reference_force[i] + pressure[i] + ff_force[i] + coupling_torque[i]);
         saturated_feedback_force[i] = saturation(controlParams->max_inner_loop_torque_Nm, integral_control_force[i] - nominal_force_integration[i]);
         integral_control_force[i] = saturated_feedback_force[i] + nominal_force_integration[i];
-        output_force[i] = coupling_torque[i] + saturated_feedback_force[i];
+        output_force[i] = coupling_torque[i] + reference_force[i] + ff_force[i] + saturated_feedback_force[i];
     }
 
     /* motor output with torque saturation */
