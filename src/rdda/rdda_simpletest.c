@@ -19,6 +19,21 @@
 #include "shm_data.h"
 #include "shm.h"
 
+typedef struct {
+    double mean;
+    double unbias_variance;
+    double mean_difference_square;
+} Loop;
+
+void online_mean_variance_calculation (Loop *loop, int32 index, int controlInterval) {
+    double previous_mean = loop->mean;
+    loop->mean = previous_mean + ((double)(controlInterval) - previous_mean) / index;
+    loop->mean_difference_square += ((double)(controlInterval) - previous_mean) * ((double)(controlInterval) - loop->mean);
+    if (index == 1) loop->unbias_variance = loop->mean_difference_square;
+    else loop->unbias_variance = loop->mean_difference_square / (index - 1);
+    printf("Control loop time mean is %10.4f us and variance is %10.4f us^2\r", loop->mean, loop->unbias_variance);
+}
+
 volatile sig_atomic_t done = 0;
 volatile sig_atomic_t error_signal = 0;
 void intHandler (int sig) {
@@ -101,6 +116,12 @@ void rdda_run (void *ifnameptr) {
     int local_error_signal;
     int remote_error_signal;
 
+    /* Calculate loop rate mean and variance */
+    Loop loop;
+    loop.mean = 0.0;
+    loop.mean_difference_square = 0.0;
+    int32 index;
+
     while (!done && !error_signal) {
 
         /* Mark start time */
@@ -123,6 +144,10 @@ void rdda_run (void *ifnameptr) {
 
         clock_gettime(CLOCK_MONOTONIC, &endTime);
         controlInterval = (endTime.tv_sec-startTime.tv_sec)*usec_per_sec + (endTime.tv_nsec-startTime.tv_nsec)/nsec_per_usec;
+
+        index++;
+        online_mean_variance_calculation(&loop, index, controlInterval);
+
         if (controlInterval >= cycletime) {
             printf("\nControl interval time exceeds defined cycle time, CT = %d\n", controlInterval);
             continue;
