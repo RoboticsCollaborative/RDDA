@@ -108,6 +108,7 @@ int initADRMotor(uint16 slaveIdx)
 
     /* Motor params */
     SDO_write32(slaveIdx, 0x2383, 12, 22627);   /* motor torque constant */
+    // SDO_write32(slaveIdx, 0x2383, 12, 29500);   /* motor torque constant */
     SDO_write32(slaveIdx, 0x2383, 13, 580000);  /* motor peak torque */
     SDO_write32(slaveIdx, 0x2383, 14, 200000);   /* motor continuous torque */
     SDO_write32(slaveIdx, 0x6076, 0, 2000);      /* motor rated torque */
