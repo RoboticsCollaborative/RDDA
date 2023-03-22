@@ -135,7 +135,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, SecondOrderLowPassF
     for (int i = 0; i < num; i ++) {
         motor_pos[i] = rdda->motor[i].motorIn.act_pos - rdda->motor[i].init_pos;
         motor_vel[i] = rdda->motor[i].motorIn.act_vel;
-        pressure[i] = rdda->motor[i].motorIn.act_pre;
+        // pressure[i] = rdda->motor[i].motorIn.act_pre;
     }
 
     /* Stiffness reading */
@@ -168,7 +168,8 @@ void dobController(Rdda *rdda, ControlParams *controlParams, SecondOrderLowPassF
 
     /* feedforward force */
     for (int i = 0; i < num; i ++) {
-        ff_force[i] = controlParams->Kf[i] * pressure[i];
+        coupling_torque[i] = saturation(controlParams->max_external_torque[i], controlParams->coupling_torque[i]);
+        ff_force[i] = controlParams->Kf[i] * (pressure[i] + reference_force[i] + coupling_torque[i]);
     }
 
     /* disturbance observer */
@@ -180,8 +181,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, SecondOrderLowPassF
     /* output force */
     for (int i = 0; i < num; i ++) {
         /* direct equation */
-        coupling_torque[i] = saturation(controlParams->max_external_torque[i], controlParams->coupling_torque[i]);
-        integral_control_force[i] = previousVariables->integral_control_force[i] + controlParams->lambda[0] * controlParams->sample_time * (reference_force[i] + pressure[i] + ff_force[i] + coupling_torque[i]);
+        integral_control_force[i] = previousVariables->integral_control_force[i] + controlParams->lambda[0] * controlParams->sample_time * (reference_force[i] + pressure[i] + coupling_torque[i] + ff_force[i]);
         saturated_feedback_force[i] = saturation(controlParams->max_inner_loop_torque_Nm, integral_control_force[i] - nominal_force_integration[i]);
         integral_control_force[i] = saturated_feedback_force[i] + nominal_force_integration[i];
         output_force[i] = coupling_torque[i] + reference_force[i] + ff_force[i] + saturated_feedback_force[i];

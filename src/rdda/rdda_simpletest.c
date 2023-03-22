@@ -125,14 +125,15 @@ void rdda_run (void *ifnameptr) {
     int32 index;
 
     // double f_min = 0.01;
-    // double f_max = 10;
+    // double f_max = 1000;
     // double chirp;
     // double T = 30;
     // double time = 0.0;
-    // double f_sine = 2e-2;
+    // double f_sine = 2e-1;
     // double sine_wave;
+    // double cosine_wave;
 
-    // double Kp = 30.0;
+    // double Kp = 20.0;
     // double Kd;
 
     while (!done && !error_signal) {
@@ -145,18 +146,22 @@ void rdda_run (void *ifnameptr) {
         // time += 0.25e-3;
         // if(time<5.0) chirp = 0.0;
         // else if(time>T+5.0) chirp = 0.0;
-        // else chirp = 0.5 * sin( 2*M_PI*f_min*T/log(f_max/f_min) * (exp((time-5.0)/T*log(f_max/f_min))-1) );
+        // else chirp = 0.01 * sin( 2*M_PI*f_min*T/log(f_max/f_min) * (exp((time-5.0)/T*log(f_max/f_min))-1) );
+        // rdda->motor[0].motorOut.tau_off = chirp;
+        // controlParams.coupling_torque[0] = chirp;
+        // rdda->motor[0].rddaPacket.test = chirp;
 
-        // if(time < 5.0) sine_wave = 0.0;
-        // else if (time > 2/f_sine + 5.0) sine_wave = 0.0;
-        // else sine_wave = 0.5 * (sin(2*M_PI*f_sine*(time - 5.0)) - 0.0);
-
-        // rdda->motor[1].motorOut.tau_off = sine_wave;
-        // controlParams.coupling_torque[1] = sine_wave;
-        // rdda->motor[1].rddaPacket.test = sine_wave;
+        // if(time < 5.0) { sine_wave = 0.0; cosine_wave = 0.0; }
+        // else if (time > 2/f_sine + 5.0) { sine_wave = 0.0; cosine_wave = 0.0; }
+        // else { sine_wave = 0.3 * (sin(2*M_PI*f_sine*(time - 5.0)) - 0.0); cosine_wave = 0.3 *2*M_PI*f_sine * (cos(2*M_PI*f_sine*(time - 5.0)) - 0.0); }
+        // rdda->motor[0].motorOut.tau_off = sine_wave;
+        // rdda->motor[0].rddaPacket.test = sine_wave;
 
         // Kd = MIN(2.0 * 0.5 * sqrt(Kp * 1.463e-4), 0.08);
-        // rdda->motor[0].motorOut.tau_off = -1.0 * Kp * (rdda->motor[0].motorIn.act_pos - rdda->motor[0].init_pos) - 1.0 * Kd * rdda->motor[0].motorIn.act_vel;
+        // rdda->motor[0].motorOut.tau_off = Kp * sine_wave + Kd * cosine_wave
+        // -1.0 * Kp * (rdda->motor[0].motorIn.act_pos - rdda->motor[0].init_pos) - 1.0 * Kd * rdda->motor[0].motorIn.act_vel;
+        // controlParams.coupling_torque[0] = Kp * sine_wave + Kd * cosine_wave
+        // -1.0 * Kp * (rdda->motor[0].motorIn.act_pos - rdda->motor[0].init_pos) - 1.0 * Kd * rdda->motor[0].motorIn.act_vel;
         // rdda->motor[0].rddaPacket.test = rdda->motor[0].motorOut.tau_off;
 
         teleController(&teleParam, &controlParams, rdda);
