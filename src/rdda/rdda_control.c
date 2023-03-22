@@ -135,7 +135,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, SecondOrderLowPassF
     for (int i = 0; i < num; i ++) {
         motor_pos[i] = rdda->motor[i].motorIn.act_pos - rdda->motor[i].init_pos;
         motor_vel[i] = rdda->motor[i].motorIn.act_vel;
-        // pressure[i] = rdda->motor[i].motorIn.act_pre;
+        pressure[i] = rdda->motor[i].motorIn.act_pre;
     }
 
     /* Stiffness reading */
