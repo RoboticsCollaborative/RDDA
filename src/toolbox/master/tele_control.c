@@ -19,8 +19,8 @@ void teleInit(TeleParam *teleParam) {
 
     /* symmetric stiffness */
     for (int i = 0; i < num; i ++) {
-        teleParam->stiffness[i] = 25.0;
-        teleParam->motor_inertia[i] = 1.463e-4;
+        teleParam->stiffness[i] = 20.0;
+        teleParam->motor_inertia[i] = 1.463e-4 / 2.0;
         teleParam->damping[i] = 2.0 * teleParam->zeta * sqrt(teleParam->stiffness[i] * teleParam->motor_inertia[i]);
     }
 }
