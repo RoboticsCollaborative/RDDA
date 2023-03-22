@@ -23,6 +23,9 @@ void teleInit(TeleParam *teleParam) {
         teleParam->motor_inertia[i] = 1.463e-4 / 2.0;
         teleParam->damping[i] = 2.0 * teleParam->zeta * sqrt(teleParam->stiffness[i] * teleParam->motor_inertia[i]);
     }
+
+    teleParam->delay_cycle_previous = 4;
+
 }
 
 void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rdda) {
@@ -43,6 +46,12 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
     for (int i = 0; i < num; i ++) {
         controlParams->coupling_torque[i] = -1.0 * (teleParam->wave_damping * vel[i] * tele_ratio + sqrt(2 * teleParam->wave_damping) * wave_input[i]);
         rdda->motor[i].rddaPacket.wave_out = -1.0 * sqrt(2 * teleParam->wave_damping) * vel[i] * tele_ratio - wave_input[i];
+    }
+
+    // energy observer
+    for (int i = 0; i < num; i ++) {
+        rdda->motor[i].rddaPacket.energy_observer = -0.5 * (rdda->ts.delay_cycle - teleParam->delay_cycle_previous) * wave_input[i] * wave_input[i];
+        teleParam->delay_cycle_previous = rdda->ts.delay_cycle;
     }
 
 }

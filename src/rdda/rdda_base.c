@@ -148,11 +148,12 @@ void initRddaStates(ecat_slaves *ecatSlaves, Rdda *rdda) {
         rdda->motor[i].rddaPacket.pos_ref = 0.0;
         rdda->motor[i].rddaPacket.tau_ref = 0.0;
         rdda->motor[i].rddaPacket.test = 0.0;
+        rdda->motor[i].rddaPacket.energy_observer = 0.0;
     }
     rdda->freq_anti_alias = 500;
     rdda->ts.sec = rdda->ts.nsec = 0;
     rdda->error_signal.error_in = 0;
-    rdda->ts.delay_cycle = 16;
+    rdda->ts.delay_cycle = 4;
 }
 
 /** Error Check
