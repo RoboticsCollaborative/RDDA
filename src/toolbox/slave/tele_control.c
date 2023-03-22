@@ -74,6 +74,8 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
     // delay_cycle_current = rdda->ts.delay_cycle;
     double tele_ratio = 1.0;
 
+    double finger_damping = 1e-6;
+
     /* pos, vel & wave input */
     for (int i = 0; i < num; i ++) {
         pos[i] = rdda->motor[i].motorIn.act_pos - rdda->motor[i].init_pos;
@@ -150,7 +152,8 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
 
     // energy observer
     for (int i = 0; i < num; i ++) {
-        rdda->motor[i].rddaPacket.energy_observer = -0.5 * (rdda->ts.delay_cycle - teleParam->delay_cycle_previous) * wave_input_unfiltered[i] * wave_input_unfiltered[i];
+        rdda->motor[i].rddaPacket.energy_observer += finger_damping * vel[i] * vel[i]
+        -0.5 * (rdda->ts.delay_cycle - teleParam->delay_cycle_previous) * wave_input_unfiltered[i] * wave_input_unfiltered[i];
         teleParam->delay_cycle_previous = rdda->ts.delay_cycle;
     }
 }
