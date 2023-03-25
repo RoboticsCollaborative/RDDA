@@ -37,7 +37,7 @@ void dobInit(ControlParams *controlParams, SecondOrderLowPassFilterParams *secon
     /* control parameters initialization */
     for (int i = 0; i < MOTOR_COUNT; i ++) {
         controlParams->motor_inertia[i] = 1.463e-4;;
-        controlParams->motor_damping[i] = 0.0;
+        controlParams->motor_damping[i] = -0.006; // 0.0;
         controlParams->Kp[i] = 0.0; // max stable value 60 (40) with zeta = 0.3 and max_velocity <= 5.0 when DOB turned off
         controlParams->Pp[i] = 0.0;
         controlParams->Vp[i] = 0.0;
