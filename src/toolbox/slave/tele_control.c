@@ -105,6 +105,7 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
     for (int i = 0; i < num; i ++) {
         teleParam->pos_tar_int[i] += teleParam->vel_tar[i] * teleParam->sample_time;
         teleParam->pos_tar[i] = teleParam->pos_tar_int[i];
+        rdda->motor[i].rddaPacket.pos_d_out = teleParam->pos_tar[i];
         teleParam->vel_tar[i] = (sqrt(2.0 * teleParam->wave_damping) * wave_input[i] + teleParam->damping[i] * vel[i] + teleParam->stiffness[i] * (pos[i] - teleParam->pos_tar[i])) / (teleParam->damping[i] + teleParam->wave_damping);
         controlParams->coupling_torque[i] = teleParam->stiffness[i] * (teleParam->pos_tar[i] - pos[i]) + teleParam->damping[i] * (teleParam->vel_tar[i] - vel[i]);
 	    wave_output[i] = wave_input[i] - sqrt(2.0 / teleParam->wave_damping) * controlParams->coupling_torque[i];

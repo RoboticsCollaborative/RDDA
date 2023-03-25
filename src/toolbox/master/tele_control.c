@@ -10,6 +10,12 @@ double teleFirstOrderIIRFilter(double input, double input_prev, double output_pr
     return output;
 }
 
+void matrixMuliply(double first[MOTOR_COUNT][MOTOR_COUNT], double second[MOTOR_COUNT], double result[MOTOR_COUNT]) {
+    for (int i = 0; i < MOTOR_COUNT; i ++) {
+        result[i] = first[i][0] * second[0] + first[i][1] * second[1] + first[i][2] * second[2];
+    }
+}
+
 void teleInit(TeleParam *teleParam) {
     /* parameter initialization */
     int num = MOTOR_COUNT;
@@ -26,6 +32,55 @@ void teleInit(TeleParam *teleParam) {
 
     teleParam->delay_cycle_previous = 4;
 
+    for (int i = 0; i < num; i ++) {
+        for (int j = 0; j < SLAVE_PLANT_STATE_NUM; j ++) {
+            teleParam->pred_input_int[i][j] = 0.0;
+            teleParam->pred_force_int[i][j] = 0.0;
+            for (int k = 0; k < MAX_BUFF; k ++) {
+                teleParam->pred_input_history[i][j][k] = 0.0;
+                teleParam->pred_force_history[i][j][k] = 0.0;
+            }
+        }
+        teleParam->pred_vs[i] = 0.0;
+    }
+
+    teleParam->current_timestamp = 0;
+
+    // for round loop delay at 0.1s
+    teleParam->eAT[0][0] = 0.999999999995760;
+    teleParam->eAT[0][1] = 0.000000000004229;
+    teleParam->eAT[0][2] = 0.001828750000000;
+    teleParam->eAT[1][0] = 0.999999999995749;
+    teleParam->eAT[1][1] = 0.000000000004240;
+    teleParam->eAT[1][2] = 0.001828750000009;
+    teleParam->eAT[2][0] = 0.000000002312434;
+    teleParam->eAT[2][1] = -0.000000002312510;
+    teleParam->eAT[2][2] = -0.000000000000183;
+
+    teleParam->eAdT[0][0] = 0.940188978523100;
+    teleParam->eAdT[0][1] = 0.059811021476900;
+    teleParam->eAdT[0][2] = 0.000122030965721;
+    teleParam->eAdT[1][0] = 0.004180358404841;
+    teleParam->eAdT[1][1] = 0.995819641595159;
+    teleParam->eAdT[1][2] = 0.000241653008674;
+    teleParam->eAdT[2][0] = 32.705958428926962;
+    teleParam->eAdT[2][1] = -32.705958428926969;
+    teleParam->eAdT[2][2] = 0.933270832141819;
+
+    teleParam->eAdTB[0] = 0.000362909019697;
+    teleParam->eAdTB[1] = 0.000047184647095;
+    teleParam->eAdTB[2] = 0.188214770465666;
+
+    teleParam->eAdTG[0] = -0.000166822919645;
+    teleParam->eAdTG[1] = -0.000330352711790;
+    teleParam->eAdTG[2] = -1.275831622886970;
+
+    teleParam->C[0] = -72.292821889918784;
+    teleParam->C[1] = 72.292821889918784;
+    teleParam->C[2] = 0.138257068694781;
+
+    teleParam->D = 0.022374891789457;
+
 }
 
 void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rdda) {
@@ -33,8 +88,16 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
 
     double vel[num];
     double wave_input[num];
+    double wave_out[num];
     double tele_ratio = 1.0;
     double finger_damping = 1e-4;
+
+    double delay_state[SLAVE_PLANT_STATE_NUM];
+    double pred_state[SLAVE_PLANT_STATE_NUM];
+    double temp_mm_in[SLAVE_PLANT_STATE_NUM];
+    double temp_mm_out[SLAVE_PLANT_STATE_NUM];
+    int delay_index;
+    int delay_cycle_current = 400; // round loop 0.1s delay
 
     /* pos, vel & wave input */
     for (int i = 0; i < num; i ++) {
@@ -46,7 +109,59 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
     /* wave tele */
     for (int i = 0; i < num; i ++) {
         controlParams->coupling_torque[i] = -1.0 * (teleParam->wave_damping * vel[i] * tele_ratio + sqrt(2 * teleParam->wave_damping) * wave_input[i]);
-        rdda->motor[i].rddaPacket.wave_out = -1.0 * sqrt(2 * teleParam->wave_damping) * vel[i] * tele_ratio - wave_input[i];
+        wave_out[i] = -1.0 * sqrt(2 * teleParam->wave_damping) * vel[i] * tele_ratio - wave_input[i];
+        rdda->motor[i].rddaPacket.wave_out = wave_out[i];
+    }
+
+    delay_index = teleParam->current_timestamp -  delay_cycle_current;
+    if (delay_index < 0) {
+        delay_index += MAX_BUFF;
+    }
+
+    for (int i = 0; i < num; i ++) {
+        delay_state[0] = rdda->motor[i].rddaPacket.pos_d_in;
+        delay_state[1] = rdda->motor[i].rddaPacket.pos_in;
+        delay_state[2] = rdda->motor[i].rddaPacket.vel_in;
+
+        for (int j = 0; j < SLAVE_PLANT_STATE_NUM; j ++){
+            temp_mm_in[j] = teleParam->pred_input_int[i][j];
+        }
+        matrixMuliply(teleParam->eAdT, temp_mm_in, temp_mm_out);
+        for (int j = 0; j < SLAVE_PLANT_STATE_NUM; j ++){
+            teleParam->pred_input_int[i][j] = temp_mm_out[j]; 
+        }
+        for (int j = 0; j < SLAVE_PLANT_STATE_NUM; j ++){
+            teleParam->pred_input_int[i][j] -= teleParam->pred_input_history[i][j][delay_index] * teleParam->sample_time;
+            teleParam->pred_input_int[i][j] += teleParam->eAdTB[j] * wave_out[i] * teleParam->sample_time;
+            teleParam->pred_input_history[i][j][teleParam->current_timestamp] = teleParam->eAdTB[j] * wave_out[i];
+        }
+
+        for (int j = 0; j < SLAVE_PLANT_STATE_NUM; j ++){
+            temp_mm_in[j] = teleParam->pred_force_int[i][j];
+        }
+        matrixMuliply(teleParam->eAdT, temp_mm_in, temp_mm_out);
+        for (int j = 0; j < SLAVE_PLANT_STATE_NUM; j ++){
+            teleParam->pred_force_int[i][j] = temp_mm_out[j]; 
+        }
+        for (int j = 0; j < SLAVE_PLANT_STATE_NUM; j ++){
+            teleParam->pred_force_int[i][j] -= teleParam->pred_force_history[i][j][delay_index] * teleParam->sample_time;
+            teleParam->pred_force_int[i][j] += teleParam->eAdTG[j] * rdda->motor[i].rddaPacket.pre_in * teleParam->sample_time;
+            teleParam->pred_force_history[i][j][teleParam->current_timestamp] = teleParam->eAdTG[j] * rdda->motor[i].rddaPacket.pre_in;
+        }
+
+        for (int j = 0; j < SLAVE_PLANT_STATE_NUM; j ++) {
+            matrixMuliply(teleParam->eAT, delay_state, pred_state);
+            pred_state[j] += teleParam->pred_input_int[i][j] + teleParam->pred_force_int[i][j];
+        }
+
+        teleParam->pred_vs[i] = teleParam->C[0] * pred_state[0] + teleParam->C[1] * pred_state[1] + teleParam->C[1] * pred_state[1]
+                            + teleParam->D * wave_out[i];
+        rdda->motor[i].rddaPacket.test = teleParam->pred_vs[i];
+    }
+
+    teleParam->current_timestamp++;
+    if (teleParam->current_timestamp >= MAX_BUFF) {
+        teleParam->current_timestamp = 0;
     }
 
     // energy observer

@@ -12,6 +12,7 @@
 #include "rdda_base.h"
 
 #define MAX_BUFF 8000
+#define SLAVE_PLANT_STATE_NUM 3
 
 typedef struct
 {
@@ -31,6 +32,18 @@ typedef struct
     double wave_history[MOTOR_COUNT][MAX_BUFF];
     double wave_input_prev[MOTOR_COUNT];
     double wave_input_filtered_prev[MOTOR_COUNT];
+
+    double eAT[SLAVE_PLANT_STATE_NUM][SLAVE_PLANT_STATE_NUM];
+    double eAdT[SLAVE_PLANT_STATE_NUM][SLAVE_PLANT_STATE_NUM];
+    double eAdTB[SLAVE_PLANT_STATE_NUM];
+    double eAdTG[SLAVE_PLANT_STATE_NUM];
+    double C[SLAVE_PLANT_STATE_NUM];
+    double D;
+    double pred_input_int[MOTOR_COUNT][SLAVE_PLANT_STATE_NUM];
+    double pred_input_history[MOTOR_COUNT][SLAVE_PLANT_STATE_NUM][MAX_BUFF];
+    double pred_force_int[MOTOR_COUNT][SLAVE_PLANT_STATE_NUM];
+    double pred_force_history[MOTOR_COUNT][SLAVE_PLANT_STATE_NUM][MAX_BUFF];
+    double pred_vs[MOTOR_COUNT];
 } TeleParam;
 
 void teleInit(TeleParam *teleParam);

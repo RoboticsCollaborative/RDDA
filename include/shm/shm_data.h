@@ -27,11 +27,14 @@ typedef struct {
 typedef struct {
     double pos_in;
     double pos_out;
+    double pos_d_in;
+    double pos_d_out;
     double vel_in;
     double vel_out;
     double pos_ref;  /* for homing */
     double tau_ref; /* homing hold position */
     // double vel;
+    double pre_in;
     double tau;
     double wave_in;
     double wave_out;
