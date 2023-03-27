@@ -67,13 +67,13 @@ void teleInit(TeleParam *teleParam) {
     teleParam->eAdT[2][1] = -32.705958428926969;
     teleParam->eAdT[2][2] = 0.933270832141819;
 
-    teleParam->eAdTB[0] = 0.000362909019697;
-    teleParam->eAdTB[1] = 0.000047184647095;
-    teleParam->eAdTB[2] = 0.188214770465666;
+    teleParam->eAdTB[0] = 0.000362909019697e4;
+    teleParam->eAdTB[1] = 0.000047184647095e4;
+    teleParam->eAdTB[2] = 0.188214770465666e4;
 
-    teleParam->eAdTG[0] = -0.000166822919645;
-    teleParam->eAdTG[1] = -0.000330352711790;
-    teleParam->eAdTG[2] = -1.275831622886970;
+    teleParam->eAdTG[0] = -0.000166822919645e4;
+    teleParam->eAdTG[1] = -0.000330352711790e4;
+    teleParam->eAdTG[2] = -1.275831622886970e4;
 
     teleParam->C[0] = -72.292821889918784;
     teleParam->C[1] = 72.292821889918784;
@@ -106,6 +106,12 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
         rdda->motor[i].rddaPacket.wave_out_aux = wave_input[i];
     }
 
+    for (int i = 0; i < num; i ++) {
+        if (teleParam->pred_vs[i] * teleParam->pred_vs[i] < wave_input[i] * wave_input[i]) {
+            wave_input[i] = teleParam->pred_vs[i];
+        }
+    }
+
     /* wave tele */
     for (int i = 0; i < num; i ++) {
         controlParams->coupling_torque[i] = -1.0 * (teleParam->wave_damping * vel[i] * tele_ratio + sqrt(2 * teleParam->wave_damping) * wave_input[i]);
@@ -126,12 +132,17 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
         for (int j = 0; j < SLAVE_PLANT_STATE_NUM; j ++){
             temp_mm_in[j] = teleParam->pred_input_int[i][j];
         }
-        matrixMuliply(teleParam->eAdT, temp_mm_in, temp_mm_out);
-        for (int j = 0; j < SLAVE_PLANT_STATE_NUM; j ++){
-            teleParam->pred_input_int[i][j] = temp_mm_out[j]; 
+        for (int j = 0; j < SLAVE_PLANT_STATE_NUM; j ++) {
+            teleParam->pred_input_int[i][j] = teleParam->eAdT[j][0] * temp_mm_in[0] + teleParam->eAdT[j][1] * temp_mm_in[1] + teleParam->eAdT[j][2] * temp_mm_in[2];
         }
         for (int j = 0; j < SLAVE_PLANT_STATE_NUM; j ++){
-            teleParam->pred_input_int[i][j] -= teleParam->pred_input_history[i][j][delay_index] * teleParam->sample_time;
+            temp_mm_in[j] = teleParam->pred_input_history[i][j][delay_index];
+        }
+        for (int j = 0; j < SLAVE_PLANT_STATE_NUM; j ++) {
+            temp_mm_out[j] = teleParam->eAT[j][0] * temp_mm_in[0] + teleParam->eAT[j][1] * temp_mm_in[1] + teleParam->eAT[j][2] * temp_mm_in[2];
+        }
+        for (int j = 0; j < SLAVE_PLANT_STATE_NUM; j ++){
+            teleParam->pred_input_int[i][j] -= temp_mm_out[j] * teleParam->sample_time;
             teleParam->pred_input_int[i][j] += teleParam->eAdTB[j] * wave_out[i] * teleParam->sample_time;
             teleParam->pred_input_history[i][j][teleParam->current_timestamp] = teleParam->eAdTB[j] * wave_out[i];
         }
@@ -139,23 +150,29 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
         for (int j = 0; j < SLAVE_PLANT_STATE_NUM; j ++){
             temp_mm_in[j] = teleParam->pred_force_int[i][j];
         }
-        matrixMuliply(teleParam->eAdT, temp_mm_in, temp_mm_out);
-        for (int j = 0; j < SLAVE_PLANT_STATE_NUM; j ++){
-            teleParam->pred_force_int[i][j] = temp_mm_out[j]; 
+        for (int j = 0; j < SLAVE_PLANT_STATE_NUM; j ++) {
+            teleParam->pred_force_int[i][j] = teleParam->eAdT[j][0] * temp_mm_in[0] + teleParam->eAdT[j][1] * temp_mm_in[1] + teleParam->eAdT[j][2] * temp_mm_in[2];
         }
         for (int j = 0; j < SLAVE_PLANT_STATE_NUM; j ++){
-            teleParam->pred_force_int[i][j] -= teleParam->pred_force_history[i][j][delay_index] * teleParam->sample_time;
-            teleParam->pred_force_int[i][j] += teleParam->eAdTG[j] * rdda->motor[i].rddaPacket.pre_in * teleParam->sample_time;
-            teleParam->pred_force_history[i][j][teleParam->current_timestamp] = teleParam->eAdTG[j] * rdda->motor[i].rddaPacket.pre_in;
+            temp_mm_in[j] = teleParam->pred_force_history[i][j][delay_index];
+        }
+        for (int j = 0; j < SLAVE_PLANT_STATE_NUM; j ++) {
+            temp_mm_out[j] = teleParam->eAT[j][0] * temp_mm_in[0] + teleParam->eAT[j][1] * temp_mm_in[1] + teleParam->eAT[j][2] * temp_mm_in[2];
+        }
+        for (int j = 0; j < SLAVE_PLANT_STATE_NUM; j ++){
+            teleParam->pred_force_int[i][j] -= temp_mm_out[j] * teleParam->sample_time;
+            teleParam->pred_force_int[i][j] += teleParam->eAdTG[j] * (-1.0 * rdda->motor[i].rddaPacket.pre_in) * teleParam->sample_time;
+            teleParam->pred_force_history[i][j][teleParam->current_timestamp] = teleParam->eAdTG[j] * (-1.0 * rdda->motor[i].rddaPacket.pre_in);
         }
 
         for (int j = 0; j < SLAVE_PLANT_STATE_NUM; j ++) {
-            matrixMuliply(teleParam->eAT, delay_state, pred_state);
+            pred_state[j] = teleParam->eAT[j][0] * delay_state[0] + teleParam->eAT[j][1] * delay_state[1] + teleParam->eAT[j][2] * delay_state[2];
             pred_state[j] += teleParam->pred_input_int[i][j] + teleParam->pred_force_int[i][j];
         }
 
-        teleParam->pred_vs[i] = teleParam->C[0] * pred_state[0] + teleParam->C[1] * pred_state[1] + teleParam->C[1] * pred_state[1]
+        teleParam->pred_vs[i] = teleParam->C[0] * pred_state[0] + teleParam->C[1] * pred_state[1] + teleParam->C[2] * pred_state[2]
                             + teleParam->D * wave_out[i];
+
         rdda->motor[i].rddaPacket.test = teleParam->pred_vs[i];
     }
 
