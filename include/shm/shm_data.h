@@ -42,7 +42,7 @@ typedef struct {
     double wave_out_aux;
     int contact_flag;
     double test;
-    double energy_observer;
+    double delay_energy_reservior;
 } RDDAPacket;
 
 /** AEV slave class */

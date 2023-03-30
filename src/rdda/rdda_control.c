@@ -4,9 +4,6 @@
 
 #include "rdda_control.h"
 
-#define MIN(x,y) (x)<(y)?(x):(y)
-#define MAX(x,y) (x)>(y)?(x):(y)
-
 double firstOrderIIRFilter(double input, double input_prev, double output_prev, double b0, double b1, double a1) {
     double output;
     output = b0 * input + b1 * input_prev + a1 * output_prev;
@@ -37,7 +34,7 @@ void dobInit(ControlParams *controlParams, SecondOrderLowPassFilterParams *secon
     /* control parameters initialization */
     for (int i = 0; i < MOTOR_COUNT; i ++) {
         controlParams->motor_inertia[i] = 1.463e-4;;
-        controlParams->motor_damping[i] = -0.006; // 0.0;
+        controlParams->motor_damping[i] = 0.0; // 0.0;
         controlParams->Kp[i] = 0.0; // max stable value 60 (40) with zeta = 0.3 and max_velocity <= 5.0 when DOB turned off
         controlParams->Pp[i] = 0.0;
         controlParams->Vp[i] = 0.0;
@@ -136,6 +133,11 @@ void dobController(Rdda *rdda, ControlParams *controlParams, SecondOrderLowPassF
         motor_pos[i] = rdda->motor[i].motorIn.act_pos - rdda->motor[i].init_pos;
         motor_vel[i] = rdda->motor[i].motorIn.act_vel;
         pressure[i] = rdda->motor[i].motorIn.act_pre;
+    }
+
+    /* negative damping tunning based on energy reservoir */
+    for (int i = 0; i < num; i ++) {
+        controlParams->motor_damping[i] = -1.0 * (1.0 - exp(-1.0 * rdda->motor[i].rddaPacket.delay_energy_reservior)) * 0.0065;
     }
 
     /* Stiffness reading */

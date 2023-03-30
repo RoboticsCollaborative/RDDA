@@ -42,20 +42,22 @@ void teleInit(TeleParam *teleParam) {
             }
         }
         teleParam->pred_vs[i] = 0.0;
+        teleParam->pred_energy_reservoir[i] = 0.0;
     }
 
     teleParam->current_timestamp = 0;
 
-    // for round loop delay at 0.1s
-    teleParam->eAT[0][0] = 0.999999999995760;
-    teleParam->eAT[0][1] = 0.000000000004229;
-    teleParam->eAT[0][2] = 0.001828750000000;
-    teleParam->eAT[1][0] = 0.999999999995749;
-    teleParam->eAT[1][1] = 0.000000000004240;
-    teleParam->eAT[1][2] = 0.001828750000009;
-    teleParam->eAT[2][0] = 0.000000002312434;
-    teleParam->eAT[2][1] = -0.000000002312510;
-    teleParam->eAT[2][2] = -0.000000000000183;
+    // for round loop delay at 0.05s
+
+    teleParam->eAT[0][0] = 0.999998564024166;
+    teleParam->eAT[0][1] = 0.000001435975829;
+    teleParam->eAT[0][2] = 0.001828747367233;
+    teleParam->eAT[1][0] = 0.999997058640263;
+    teleParam->eAT[1][1] = 0.000002941359732;
+    teleParam->eAT[1][2] = 0.001828750239185;
+    teleParam->eAT[2][0] = 0.000785222599180;
+    teleParam->eAT[2][1] = -0.000785222599255;
+    teleParam->eAT[2][2] = 0.000001439653587;
 
     teleParam->eAdT[0][0] = 0.940188978523100;
     teleParam->eAdT[0][1] = 0.059811021476900;
@@ -90,14 +92,15 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
     double wave_input[num];
     double wave_out[num];
     double tele_ratio = 1.0;
-    double finger_damping = 1e-4;
+    double finger_damping = 0.0065;
 
     double delay_state[SLAVE_PLANT_STATE_NUM];
     double pred_state[SLAVE_PLANT_STATE_NUM];
     double temp_mm_in[SLAVE_PLANT_STATE_NUM];
     double temp_mm_out[SLAVE_PLANT_STATE_NUM];
     int delay_index;
-    int delay_cycle_current = 400; // round loop 0.1s delay
+    int delay_cycle_current = 200; // round loop 0.05s delay
+    // double energy_reservoir_coeff = 1e2;
 
     /* pos, vel & wave input */
     for (int i = 0; i < num; i ++) {
@@ -106,11 +109,15 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
         rdda->motor[i].rddaPacket.wave_out_aux = wave_input[i];
     }
 
-    for (int i = 0; i < num; i ++) {
-        if (teleParam->pred_vs[i] * teleParam->pred_vs[i] < wave_input[i] * wave_input[i]) {
-            wave_input[i] = teleParam->pred_vs[i];
-        }
-    }
+    // for (int i = 0; i < num; i ++) {
+    //     teleParam->pred_energy_reservoir[i] += (wave_input[i] * wave_input[i] - teleParam->pred_vs[i] * teleParam->pred_vs[i]) * teleParam->sample_time;
+    //     teleParam->pred_energy_reservoir[i] = MAX(teleParam->pred_energy_reservoir[i], 0.0);
+    //     wave_input[i] = wave_input[i] + (1.0 - exp(-1.0 * energy_reservoir_coeff * teleParam->pred_energy_reservoir[i])) * (teleParam->pred_vs[i] - wave_input[i]);
+    //     // if (teleParam->pred_vs[i] * teleParam->pred_vs[i] < wave_input[i] * wave_input[i]) {
+    //     //     wave_input[i] = teleParam->pred_vs[i];
+    //     // }
+    //     rdda->motor[i].rddaPacket.wave_out_aux = wave_input[i];
+    // }
 
     /* wave tele */
     for (int i = 0; i < num; i ++) {
@@ -181,9 +188,9 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
         teleParam->current_timestamp = 0;
     }
 
-    // energy observer
+    // varying delay energy reservoir
     for (int i = 0; i < num; i ++) {
-        rdda->motor[i].rddaPacket.energy_observer += (finger_damping * vel[i] * vel[i]
+        rdda->motor[i].rddaPacket.delay_energy_reservior += ((finger_damping + controlParams->motor_damping[i]) * vel[i] * vel[i]
         -0.5 * (rdda->ts.delay_cycle - teleParam->delay_cycle_previous) * wave_input[i] * wave_input[i]) * teleParam->sample_time;
         teleParam->delay_cycle_previous = rdda->ts.delay_cycle;
     }

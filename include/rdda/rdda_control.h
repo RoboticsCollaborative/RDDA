@@ -9,6 +9,9 @@
 #include "shm_data.h"
 #include "rdda_base.h"
 
+#define MIN(x,y) (x)<(y)?(x):(y)
+#define MAX(x,y) (x)>(y)?(x):(y)
+
 typedef struct
 {
     double motor_inertia[MOTOR_COUNT];

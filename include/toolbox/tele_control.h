@@ -44,6 +44,8 @@ typedef struct
     double pred_force_int[MOTOR_COUNT][SLAVE_PLANT_STATE_NUM];
     double pred_force_history[MOTOR_COUNT][SLAVE_PLANT_STATE_NUM][MAX_BUFF];
     double pred_vs[MOTOR_COUNT];
+    
+    double pred_energy_reservoir[MOTOR_COUNT];
 } TeleParam;
 
 void teleInit(TeleParam *teleParam);
