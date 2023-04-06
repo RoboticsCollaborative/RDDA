@@ -19,7 +19,7 @@ void teleInit(TeleParam *teleParam) {
     teleParam->sample_time = 0.25e-3;
     teleParam->zeta = 0.5;//0.12;
     teleParam->wave_damping = 0.04;
-    teleParam->lambda = 10.0; //20.0; //0.1;
+    teleParam->lambda = 1.0; //20.0; //0.1;
     teleParam->current_timestamp = 0;
     teleParam->delay_cycle_previous = 8;
 
@@ -65,8 +65,8 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
     double error_difference[num];
     double wave_correction[num];
 
-    double wave_input_filter_corner_freq = 2.0 * M_PI * 100.0;
-    double wave_input_unfiltered[num];
+    // double wave_input_filter_corner_freq = 2.0 * M_PI * 100.0;
+    // double wave_input_unfiltered[num];
 
     int delay_index;
     // int delay_difference;
@@ -81,18 +81,19 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
         pos[i] = rdda->motor[i].motorIn.act_pos - rdda->motor[i].init_pos;
         vel[i] = rdda->motor[i].motorIn.act_vel;
         pos_master[i] = -1.0 * rdda->motor[i].rddaPacket.pos_in * tele_ratio;
-        wave_input_unfiltered[i] = rdda->motor[i].rddaPacket.wave_in;
-        rdda->motor[i].rddaPacket.wave_out_aux = wave_input_unfiltered[i]; // aux is unfiltered
+        // wave_input_unfiltered[i] = rdda->motor[i].rddaPacket.wave_in;
+        wave_input[i] = rdda->motor[i].rddaPacket.wave_in;
+        rdda->motor[i].rddaPacket.wave_out_aux = wave_input[i]; // aux is unfiltered
     }
 
-    /* wave input filter */
-    for (int i = 0; i < num; i ++) {
-        wave_input[i] = ((wave_input_unfiltered[i] + teleParam->wave_input_prev[i]) * wave_input_filter_corner_freq * teleParam->sample_time
-                        + (2.0 - wave_input_filter_corner_freq * teleParam->sample_time) * teleParam->wave_input_filtered_prev[i])
-                        / (2.0 + wave_input_filter_corner_freq * teleParam->sample_time);
-        teleParam->wave_input_prev[i] = wave_input_unfiltered[i];
-        teleParam->wave_input_filtered_prev[i] = wave_input[i];
-    }
+    // /* wave input filter */
+    // for (int i = 0; i < num; i ++) {
+    //     wave_input[i] = ((wave_input_unfiltered[i] + teleParam->wave_input_prev[i]) * wave_input_filter_corner_freq * teleParam->sample_time
+    //                     + (2.0 - wave_input_filter_corner_freq * teleParam->sample_time) * teleParam->wave_input_filtered_prev[i])
+    //                     / (2.0 + wave_input_filter_corner_freq * teleParam->sample_time);
+    //     teleParam->wave_input_prev[i] = wave_input_unfiltered[i];
+    //     teleParam->wave_input_filtered_prev[i] = wave_input[i];
+    // }
 
     /* wave tele */
     delay_cycle_current = MAX(MIN(delay_cycle_current, 100), 2);
@@ -106,23 +107,25 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
         teleParam->pos_tar_int[i] += teleParam->vel_tar[i] * teleParam->sample_time;
         teleParam->pos_tar[i] = teleParam->pos_tar_int[i];
         rdda->motor[i].rddaPacket.pos_d_out = teleParam->pos_tar[i];
-        teleParam->vel_tar[i] = (sqrt(2.0 * teleParam->wave_damping) * wave_input[i] + teleParam->damping[i] * vel[i] + teleParam->stiffness[i] * (pos[i] - teleParam->pos_tar[i])) / (teleParam->damping[i] + teleParam->wave_damping);
-        controlParams->coupling_torque[i] = teleParam->stiffness[i] * (teleParam->pos_tar[i] - pos[i]) + teleParam->damping[i] * (teleParam->vel_tar[i] - vel[i]);
-	    wave_output[i] = wave_input[i] - sqrt(2.0 / teleParam->wave_damping) * controlParams->coupling_torque[i];
-        
+
         /* pos drift correction */
         actual_pos_error[i] = pos_master[i] - teleParam->pos_tar[i];
         predict_pos_error[i] = -1.0 / sqrt(2.0 * teleParam->wave_damping) * teleParam->wave_int[i];
         error_difference[i] = predict_pos_error[i] - actual_pos_error[i];
-        wave_correction[i] = 1.0 * sqrt(2.0 * teleParam->wave_damping) * (2.0 * M_PI * teleParam->lambda) * error_difference[i];
-        if (error_difference[i] * wave_output[i] <= 0) {
-            if (fabs(wave_correction[i]) < fabs(wave_output[i])) {
-                wave_output[i] += wave_correction[i];
+        wave_correction[i] = -1.0 * sqrt(2.0 * teleParam->wave_damping) * (2.0 * M_PI * teleParam->lambda) * error_difference[i];
+        if (wave_correction[i] * wave_input[i] < 0) {
+            if (fabs(wave_correction[i]) < fabs(wave_input[i])) {
+                wave_input[i] += wave_correction[i];
             }
             else {
-                wave_output[i] = 0.0;
+                wave_input[i] = 0.0;
             }
         }
+
+        teleParam->vel_tar[i] = (sqrt(2.0 * teleParam->wave_damping) * wave_input[i] + teleParam->damping[i] * vel[i] + teleParam->stiffness[i] * (pos[i] - teleParam->pos_tar[i])) / (teleParam->damping[i] + teleParam->wave_damping);
+        controlParams->coupling_torque[i] = teleParam->stiffness[i] * (teleParam->pos_tar[i] - pos[i]) + teleParam->damping[i] * (teleParam->vel_tar[i] - vel[i]);
+	    wave_output[i] = wave_input[i] - sqrt(2.0 / teleParam->wave_damping) * controlParams->coupling_torque[i];
+        
         // /* check time-varying current delay cycle */
         // if (delay_difference == 0) {
         teleParam->wave_int[i] -= teleParam->wave_history[i][delay_index] * teleParam->sample_time;
@@ -154,7 +157,7 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
     // time delay energy reservoir
     for (int i = 0; i < num; i ++) {
         rdda->motor[i].rddaPacket.delay_energy_reservior += ((finger_damping + controlParams->motor_damping[i]) * vel[i] * vel[i]
-        -0.5 * (rdda->ts.delay_cycle - teleParam->delay_cycle_previous) * wave_input_unfiltered[i] * wave_input_unfiltered[i]) * teleParam->sample_time;
+        -0.5 * (rdda->ts.delay_cycle - teleParam->delay_cycle_previous) * wave_input[i] * wave_input[i]) * teleParam->sample_time;
         teleParam->delay_cycle_previous = rdda->ts.delay_cycle;
     }
 }
