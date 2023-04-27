@@ -138,6 +138,7 @@ void dobController(Rdda *rdda, ControlParams *controlParams, SecondOrderLowPassF
     /* negative damping tunning based on energy reservoir */
     for (int i = 0; i < num; i ++) {
         controlParams->motor_damping[i] = -1.0 * (1.0 - exp(-10.0 * rdda->motor[i].rddaPacket.delay_energy_reservior)) * 0.0065;
+        // controlParams->motor_damping[i] = -0.0065;
         rdda->motor[i].rddaPacket.test = controlParams->motor_damping[i];
     }
 

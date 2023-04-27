@@ -140,7 +140,7 @@ void initRddaStates(ecat_slaves *ecatSlaves, Rdda *rdda) {
         rdda->motor[i].rddaPacket.pos_out = 0.0;
         /* Init ROS inputs */
         rdda->motor[i].vel_sat = 10.0;
-        rdda->motor[i].tau_sat = 5.0;
+        rdda->motor[i].tau_sat = 2.0;
         rdda->motor[i].stiffness = 0.0;
         rdda->motor[i].rddaPacket.pos_in = 0.0;
         rdda->motor[i].rddaPacket.pos_d_in = 0.0;
