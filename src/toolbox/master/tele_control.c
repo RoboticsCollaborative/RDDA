@@ -47,17 +47,16 @@ void teleInit(TeleParam *teleParam) {
 
     teleParam->current_timestamp = 0;
 
-    // for round loop delay at 0.05s
-
-    teleParam->eAT[0][0] = 0.999998564024166;
-    teleParam->eAT[0][1] = 0.000001435975829;
-    teleParam->eAT[0][2] = 0.001828747367233;
-    teleParam->eAT[1][0] = 0.999997058640263;
-    teleParam->eAT[1][1] = 0.000002941359732;
-    teleParam->eAT[1][2] = 0.001828750239185;
-    teleParam->eAT[2][0] = 0.000785222599180;
-    teleParam->eAT[2][1] = -0.000785222599255;
-    teleParam->eAT[2][2] = 0.000001439653587;
+    // for round loop delay at 0.2s
+    teleParam->eAT[0][0] = 0.999999999999978;
+    teleParam->eAT[0][1] = 0.000000000000000;
+    teleParam->eAT[0][2] = 0.001828750000000;
+    teleParam->eAT[1][0] = 0.999999999999978;
+    teleParam->eAT[1][1] = 0.000000000000000;
+    teleParam->eAT[1][2] = 0.001828750000000;
+    teleParam->eAT[2][0] = -0.000000000000076;
+    teleParam->eAT[2][1] = 0.000000000000000;
+    teleParam->eAT[2][2] = -0.000000000000000;
 
     teleParam->eAdT[0][0] = 0.940188978523100;
     teleParam->eAdT[0][1] = 0.059811021476900;
@@ -99,7 +98,7 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
     double temp_mm_in[SLAVE_PLANT_STATE_NUM];
     double temp_mm_out[SLAVE_PLANT_STATE_NUM];
     int delay_index;
-    int delay_cycle_current = 200; // round loop 0.05s delay
+    int delay_cycle_current = 800; // round loop 0.05s delay
     // double energy_reservoir_coeff = 1e2;
 
     /* pos, vel & wave input */
