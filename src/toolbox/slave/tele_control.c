@@ -75,7 +75,7 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
     // int delay_difference;
     int delay_cycle_current = 4;
     // delay_cycle_current = rdda->ts.delay_cycle;
-    double tele_ratio = 1.2;
+    double tele_ratio = 1.1;
 
     double finger_damping = 0.0065;
 
