@@ -46,6 +46,7 @@ void teleInit(TeleParam *teleParam) {
         }
         teleParam->pred_vs[i] = 0.0;
         teleParam->pred_energy_reservoir[i] = 0.0;
+        teleParam->energy_tdpa_local[i] = 0.0;
     }
 
     teleParam->current_timestamp = 0;
@@ -123,6 +124,7 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
 
     /* wave tele */
     for (int i = 0; i < num; i ++) {
+        // Disable coupling torque if tdpa is used instead of wave variable
         controlParams->coupling_torque[i] = -1.0 * (teleParam->wave_damping * vel[i] * tele_ratio + sqrt(2 * teleParam->wave_damping) * wave_input[i]);
         wave_out[i] = -1.0 * sqrt(2 * teleParam->wave_damping) * vel[i] * tele_ratio - wave_input[i];
         rdda->motor[i].rddaPacket.wave_out = wave_out[i];
@@ -196,5 +198,23 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
         -0.5 * (rdda->ts.delay_cycle - teleParam->delay_cycle_previous) * wave_input[i] * wave_input[i]) * teleParam->sample_time;
         teleParam->delay_cycle_previous = rdda->ts.delay_cycle;
     }
+
+    // // TDPA
+    // double energy_change[num];
+    // double coupling_torque[num];
+    // double eps = 1e-6;
+    // double energy_net_in[num];
+    // for (int i = 0; i < num; i ++) {
+    //     coupling_torque[i] = rdda->motor[i].rddaPacket.coupling_torque_in;
+    //     energy_change[i] = coupling_torque[i] * vel[i] * teleParam->sample_time;;
+        
+    //     if (energy_change[i] >= 0) rdda->motor[i].rddaPacket.energy_tdpa_out += energy_change[i];
+    //     else teleParam->energy_tdpa_local[i] -= energy_change[i];
+
+    //     energy_net_in[i] = teleParam->energy_tdpa_local[i] - rdda->motor[i].rddaPacket.energy_tdpa_in;
+    //     if (energy_net_in[i] >= 0 && fabs(vel[i]) > eps) controlParams->coupling_torque[i] = -1.0 * (coupling_torque[i] + energy_net_in[i] / teleParam->sample_time / vel[i]);
+    //     else controlParams->coupling_torque[i] = -1.0 * coupling_torque[i];
+
+    // }
 
 }

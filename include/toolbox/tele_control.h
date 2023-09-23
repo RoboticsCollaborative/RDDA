@@ -46,6 +46,7 @@ typedef struct
     double pred_vs[MOTOR_COUNT];
     
     double pred_energy_reservoir[MOTOR_COUNT];
+    double energy_tdpa_local[MOTOR_COUNT];
 } TeleParam;
 
 void teleInit(TeleParam *teleParam);

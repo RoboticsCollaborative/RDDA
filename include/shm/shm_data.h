@@ -43,6 +43,10 @@ typedef struct {
     int contact_flag;
     double test;
     double delay_energy_reservior;
+    double energy_tdpa_in;
+    double energy_tdpa_out;
+    double coupling_torque_in;
+    double coupling_torque_out;
 } RDDAPacket;
 
 /** AEV slave class */

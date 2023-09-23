@@ -29,6 +29,7 @@ void teleInit(TeleParam *teleParam) {
         teleParam->pos_tar_int[i] = 0.0;
         teleParam->wave_int[i] = 0.0;
         teleParam->wave_input_prev[i] = 0.0;
+        teleParam->energy_tdpa_local[i] = 0.0;
     }
 
     /* symmetric stiffness */
@@ -75,7 +76,7 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
     // int delay_difference;
     int delay_cycle_current = 4;
     // delay_cycle_current = rdda->ts.delay_cycle;
-    double tele_ratio = 1.1;
+    double tele_ratio = 1.0;
 
     double finger_damping = 0.0065;
 
@@ -126,6 +127,7 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
         }
 
         teleParam->vel_tar[i] = (sqrt(2.0 * teleParam->wave_damping) * wave_input[i] + teleParam->damping[i] * vel[i] + teleParam->stiffness[i] * (pos[i] - teleParam->pos_tar[i])) / (teleParam->damping[i] + teleParam->wave_damping);
+        // Disable coupling torque if tdpa is used instead of wave variable
         controlParams->coupling_torque[i] = teleParam->stiffness[i] * (teleParam->pos_tar[i] - pos[i]) + teleParam->damping[i] * (teleParam->vel_tar[i] - vel[i]);
 	    wave_output[i] = wave_input[i] - sqrt(2.0 / teleParam->wave_damping) * controlParams->coupling_torque[i];
         
@@ -163,4 +165,30 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
         -0.5 * (rdda->ts.delay_cycle - teleParam->delay_cycle_previous) * wave_input[i] * wave_input[i]) * teleParam->sample_time;
         teleParam->delay_cycle_previous = rdda->ts.delay_cycle;
     }
+
+    // // tdpa
+    // double vel_master[num];
+    // double energy_change[num];
+    // double coupling_torque[num];
+    // double eps = 1e-6;
+    // double energy_net_in[num];
+    // for (int i = 0; i < num; i ++) {
+    //     vel_master[i] = -1.0 * rdda->motor[i].rddaPacket.vel_in;
+    //     coupling_torque[i] = teleParam->stiffness[i] * (pos_master[i] - pos[i]) + teleParam->damping[i] * (vel_master[i] - vel[i]);
+    //     energy_change[i] = coupling_torque[i] * vel[i] * teleParam->sample_time;;
+        
+    //     if (energy_change[i] >= 0) rdda->motor[i].rddaPacket.energy_tdpa_out += energy_change[i];
+    //     else teleParam->energy_tdpa_local[i] -= energy_change[i];
+
+    //     energy_net_in[i] = teleParam->energy_tdpa_local[i] - rdda->motor[i].rddaPacket.energy_tdpa_in;
+    //     if (energy_net_in[i] >= 0 && fabs(coupling_torque[i]) > eps) {
+    //         vel_master[i] += energy_net_in[i] / teleParam->sample_time / coupling_torque[i];
+    //         pos_master[i] += energy_net_in[i] / coupling_torque[i] * 0.5;
+    //         coupling_torque[i] = teleParam->stiffness[i] * (pos_master[i] - pos[i]) + teleParam->damping[i] * (vel_master[i] - vel[i]);
+    //     }
+    //     controlParams->coupling_torque[i] = coupling_torque[i];
+    //     rdda->motor[i].rddaPacket.coupling_torque_out = coupling_torque[i];
+    // }
+
+
 }
