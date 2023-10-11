@@ -208,13 +208,15 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
     //     coupling_torque[i] = rdda->motor[i].rddaPacket.coupling_torque_in;
     //     energy_change[i] = coupling_torque[i] * vel[i] * teleParam->sample_time;;
         
-    //     if (energy_change[i] >= 0) rdda->motor[i].rddaPacket.energy_tdpa_out += energy_change[i];
-    //     else teleParam->energy_tdpa_local[i] -= energy_change[i];
+    //     if (energy_change[i] > 0) rdda->motor[i].rddaPacket.energy_tdpa_out += energy_change[i];
+    //     else if (energy_change[i] < 0) teleParam->energy_tdpa_local[i] -= energy_change[i];
 
     //     energy_net_in[i] = teleParam->energy_tdpa_local[i] - rdda->motor[i].rddaPacket.energy_tdpa_in;
-    //     if (energy_net_in[i] >= 0 && fabs(vel[i]) > eps) controlParams->coupling_torque[i] = -1.0 * (coupling_torque[i] + energy_net_in[i] / teleParam->sample_time / vel[i]);
+    //     if (energy_net_in[i] > 0 && fabs(vel[i]) > eps) controlParams->coupling_torque[i] = -1.0 * (coupling_torque[i] + energy_net_in[i] / teleParam->sample_time / vel[i]);
     //     else controlParams->coupling_torque[i] = -1.0 * coupling_torque[i];
 
+    //     rdda->motor[i].rddaPacket.pos_out = pos[i];
+    //     rdda->motor[i].rddaPacket.vel_out = vel[i];
     // }
 
 }
