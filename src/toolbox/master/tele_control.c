@@ -94,7 +94,7 @@ void teleController(TeleParam *teleParam, ControlParams *controlParams, Rdda *rd
     double vel[num];
     double wave_input[num];
     double wave_out[num];
-    double tele_ratio = 1.1;
+    double tele_ratio = 1.2;
     double finger_damping = 0.0065;
 
     double delay_state[SLAVE_PLANT_STATE_NUM];
